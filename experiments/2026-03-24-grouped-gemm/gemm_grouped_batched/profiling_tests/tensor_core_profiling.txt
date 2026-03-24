@@ -1,0 +1,7 @@
+
+==ERROR== An error was reported by the driver:
+==ERROR== For more information, see /tmp/nsight-compute-201e-b207.log
+==ERROR== Cuda driver is not compatible with Nsight Compute.
+==ERROR== For more information, see /tmp/nsight-compute-201e-b207.log
+==PROF== Connected to process 1471760 (/home/mike/anaconda3/envs/corrcal_dev/bin/python3.13)
+==ERROR== The application returned an error code (11).

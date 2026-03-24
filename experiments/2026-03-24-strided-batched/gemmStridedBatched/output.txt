@@ -1,0 +1,128 @@
+Note: Outputs were done comparing strided batched gemm to generic cupy matmul.
+    This was also done after moving the handle creation outside of the kernel call
+    which I still have to figure out if was the best decision. => Does not destroy
+    the handle and release the allocated hardware until the interpreter (or Python)
+    is closed which may or may nopt be a bad thing. Probably needs better consider-
+    ation long-term.
+
+To compile to here quickly, write:
+
+    python3 gemm_batched.py | tee -a output.txt
+
+------------------------------------------------------------------------------------------
+RESULTS ARE TIMED IN THE FOLLOWING WAY:
+        start_gemm = cp.cuda.Event()
+        stop_gemm = cp.cuda.Event()
+
+        start_cupy = cp.cuda.Event()
+        stop_cupy = cp.cuda.Event()
+
+        start_gemm.record()
+        n_trials = 200
+
+        for _ in range(n_trials):
+            stridedBatched_matmul(A_array=A_array, B_array=B_array)
+
+        stop_gemm.record()
+        stop_gemm.synchronize()
+
+        t_ms_gemm = cp.cuda.get_elapsed_time(start_gemm, stop_gemm) / n_trials
+        print("average time for gemm (ms):", t_ms_gemm)
+
+------------------------------------------------------------------------------------------
+
+Great! The gemm result matches the numpy result
+
+average time for gemm (ms): 0.11148960113525391
+average time for cupy (ms): 0.17484800338745118
+
+
+average time for gemm (ms): 0.6180249786376953
+average time for cupy (ms): 0.13616640090942383
+
+ 
+Dimensions of the matrices were: 
+A(100, 3000, 5), B(100, 5, 1000) 
+
+average time for gemm (ms): 10.8180322265625
+average time for cupy (ms): 5.293997802734375
+NEW RESULT
+
+
+Dimensions of the matrices were: 
+A->(100, 1000, 5), B->(100, 5, 1000) 
+
+average time for gemm (ms): 3.9391436767578125
+average time for cupy (ms): 1.795609588623047
+
+ 
+ NEW RESULT
+
+Dimensions of the matrices were: 
+A->(500, 1000, 5), B->(500, 5, 1000) 
+
+average time for gemm (ms): 17.919227294921875
+average time for cupy (ms): 8.8385791015625
+
+ 
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dimensions of the matrices were: 
+A->(50, 3000, 5), B->(50, 5, 1000) 
+
+average time for gemm (ms): 5.61112548828125
+average time for cupy (ms): 2.5974578857421875
+
+ 
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dimensions of the matrices were: 
+A->(50, 3000, 5), B->(50, 5, 3000) 
+
+average time for gemm (ms): 16.363299560546874
+average time for cupy (ms): 7.779051513671875
+
+ 
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dimensions of the matrices were: 
+A->(50, 5, 3000), B->(50, 3000, 5) 
+
+average time for gemm (ms): 0.5408000183105469
+average time for cupy (ms): 0.16745983123779296
+
+ 
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dimensions of the matrices were: 
+A->(50, 3, 3000), B->(50, 3000, 3) 
+
+average time for gemm (ms): 0.43628543853759766
+average time for cupy (ms): 0.14336000442504881
+
+ 
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dimensions of the matrices were: 
+A->(50, 3, 3000), B->(50, 3000, 3) 
+
+average time for gemm (ms): 0.43980289459228517
+average time for cupy (ms): 0.11941887855529786
+
+ 
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dimensions of the matrices were: 
+A->(500, 3, 3000), B->(500, 3000, 3) 
+
+average time for gemm (ms): 0.5554278564453125
+average time for cupy (ms): 0.24301055908203126
+
+ 
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Dimensions of the matrices were: 
+A->(1000, 3, 3000), B->(1000, 3000, 3) 
+
+average time for gemm (ms): 0.8473651123046875
+average time for cupy (ms): 0.44292606353759767

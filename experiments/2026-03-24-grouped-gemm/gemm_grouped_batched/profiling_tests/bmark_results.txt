@@ -1,0 +1,187 @@
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 10 
+Number of eigenmodes: 3 
+Numbe of sources: 1
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 5.887404025997967e-05  gpu: 5.7886720001697546e-05
+
+CuBLAS times:
+cpu: 5.746244074543938e-05  gpu: 8.050528062507507e-05
+
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 100 
+Number of eigenmodes: 3 
+Numbe of sources: 1
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 7.435976905981079e-05  gpu: 8.993792057037354e-05
+
+CuBLAS times:
+cpu: 8.823158917948603e-05  gpu: 0.00021300000369548798
+
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 500 
+Number of eigenmodes: 3 
+Numbe of sources: 1
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 0.00015152743144426496  gpu: 0.0006919372788071634
+
+CuBLAS times:
+cpu: 0.00011928420048207044  gpu: 0.001476280316710472
+
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 1000 
+Number of eigenmodes: 3 
+Numbe of sources: 1
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 0.0002683326002443209  gpu: 0.001752759997844696
+
+CuBLAS times:
+cpu: 0.0002684625203255564  gpu: 0.0028718694543838504
+
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 1000 
+Number of eigenmodes: 3 
+Numbe of sources: 1
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 0.000207408711721655  gpu: 0.00169359360575676
+
+CuBLAS times:
+cpu: 0.00016316191031364723  gpu: 0.002804620492458344
+
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 2000 
+Number of eigenmodes: 3 
+Numbe of sources: 1
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 0.0004348597300122492  gpu: 0.008349909739494324
+
+CuBLAS times:
+cpu: 0.000304654409410432  gpu: 0.009487759342193603
+
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 2500 
+Number of eigenmodes: 3 
+Numbe of sources: 1
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 0.00048541189113166183  gpu: 0.012993666915893553
+
+CuBLAS times:
+cpu: 0.0002652725102961995  gpu: 0.013913774070739744
+
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 500 
+Number of eigenmodes: 3 
+Numbe of sources: 5
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 0.0001688069081865251  gpu: 0.0008347033619880678
+
+CuBLAS times:
+cpu: 0.000133151731279213  gpu: 0.001221949124932289
+
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 500 
+Number of eigenmodes: 5 
+Numbe of sources: 10
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 0.00027012182836188  gpu: 0.0010754048007726668
+
+CuBLAS times:
+cpu: 0.0001900721504352987  gpu: 0.0012763443201780317
+
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 1000 
+Number of eigenmodes: 5 
+Numbe of sources: 10
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 0.00032658798852935433  gpu: 0.004166133773326874
+
+CuBLAS times:
+cpu: 0.00019934746029321105  gpu: 0.002817157125473022
+
+
+NEW RESULT~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Parameters:
+Number of antennas (Re Im split): 1000 
+Number of eigenmodes: 5 
+Numbe of sources: 20
+
+Checking correctness with np.allclose (default params):
+CuPy and cuBLAS match
+
+CuPy times:
+cpu: 0.00026860292098717764  gpu: 0.0026920038270950315
+
+CuBLAS times:
+cpu: 0.00020575765985995532  gpu: 0.002766110725402832
+
