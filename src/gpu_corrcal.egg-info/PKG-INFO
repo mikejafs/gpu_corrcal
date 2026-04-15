@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: gpu_corrcal
+Version: 0.1.0
+Summary: GPU-accelerated correlation calibration tools
+Author: Michael Jafs
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: numpy
+Requires-Dist: scipy
+Requires-Dist: cupy-cuda12x
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: black; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
