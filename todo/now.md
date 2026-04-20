@@ -2,7 +2,7 @@
 
 - [2026-03-24](#2026-03-24)
 - [2026-03-04](#2026-03-04) $\rightarrow$ ***From backlog thesis project roughwork*** 
-- [2026-04-25](#2026-04-25)
+- [2026-04-15](#2026-04-15)
   
 ## 2026-03-24
 
@@ -47,10 +47,11 @@
    ~~1. **$\Rightarrow$ Simply add current results to the results folder with some description of what we did to achieve these plots.**~~
 
 
-## 2026-04-25
+## 2026-04-15
 - Continue reading through the gpu_techniques file to better understand the kernel $\rightarrow$ we're almost there....
 - double check sizings for bandpass cal cov as soon as we begin this to be sure it will work with current implementation
 - Get going on bandpass (as soon as remotely confortable if asked to explain the gpu kernel):
   - Create dedicated bandpass repo and start committing code to and experiments folder
     - likely just begin trying to get a covariance written down
 - ***GET CUPY SEFL-CONTAINED LIBRARY FINISHED AND DONE WITH SO CAN POST TO THE WEBSITE***
+- **Code up relevant tests for correctness and timing comparisons relative to the hardcoded, bobby's, and cupy version $\Rightarrow$ Then fully ready to begin coding other corrcal inversion functions**

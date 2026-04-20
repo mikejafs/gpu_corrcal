@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.insert(0, os.path.abspath("../cuBLAS/gemm_grouped_batched"))
 
-from gridding import *
+from utils.gridding import *
 
 # print(os.path.abspath("../cuBLAS/gemm_grouped_batched"))
 

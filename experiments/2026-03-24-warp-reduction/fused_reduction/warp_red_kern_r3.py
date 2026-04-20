@@ -11,12 +11,12 @@ import numpy as np
 import sys
 import os
 
-current_path = os.path.dirname(os.path.abspath(__file__))
-base_dir = os.path.abspath(os.path.join(current_path, "..", "gemm_grouped_batched"))
-sys.path.insert(0, base_dir)
+# current_path = os.path.dirname(os.path.abspath(__file__))
+# base_dir = os.path.abspath(os.path.join(current_path, "..", "gemm_grouped_batched"))
+# sys.path.insert(0, base_dir)
 
-from gridding import *
-from simulate_params import *
+from utils.gridding import *
+from utils.simulate_params import *
 from cupyx.profiler import benchmark
 
 
@@ -30,6 +30,18 @@ from cupyx.profiler import benchmark
 
 
 kernel_r3 = r'''
+
+/*----------------------------------------------------------------------
+Note that warp_sum and accumulate_sym6_r3 are helper functions
+designed to execute inline in the location they are written in the
+following main function. 
+
+__device__ indicates they are only meant to be ran from the GPU code
+__forceinline__ indicates they are meant to act like helper functions
+                and the compiler is to paste the function body directly
+                into the call site
+----------------------------------------------------------------------*/
+
 __device__ __forceinline__ float warp_sum(float v) {
     unsigned mask = 0xffffffffu;
     v += __shfl_down_sync(mask, v, 16);
@@ -52,6 +64,10 @@ void accumulate_sym6_r3(const float* __restrict__ D,
     int tid = (int)threadIdx.x;
     int T   = (int)blockDim.x;
 
+    // This loop means the threads are distributed for each i so long as i_total < T
+    // if i_total > T, then another iteration of the loop unfolds and each i member
+    // is sent forward by a factor equal to T
+
     for (int i = start + tid; i < stop; i += T) {
         float wi = 1/w[i];
 
@@ -72,6 +88,9 @@ void accumulate_sym6_r3(const float* __restrict__ D,
         acc[5] += wd2*d2;   // 22
     }
 }
+
+/*----------The beginning of the "main" kernel----------*/
+// Two helper functions are called within...
 
 extern "C" __global__
 void cov_reduce_r3_sym6_warp(const float* __restrict__ D,
@@ -101,24 +120,30 @@ void cov_reduce_r3_sym6_warp(const float* __restrict__ D,
     if (lane == 0) {
         #pragma unroll
         for (int t=0;t<6;++t) {
-            sh[t * num_warps + warp] = acc[t];
+            sh[t * num_warps + warp] = acc[t];  //write stuff from accumulate function to shared mem
         }
     }
-    __syncthreads();
+    __syncthreads();  //make sure all warps finish writing before trying to do anything else
 
     if (warp == 0) {
         float v[6];
-        if (lane < num_warps) {
+        if (lane < num_warps) {     //This is now a new warp for the warp in sh mem, 
+                                    //since we only have warps 0, 1, 2, 3 (128 threads)
+                                    //this is a clever way of noting the answer will live
+                                    //in either index 0, 1, 2, or 3 in the sh mem warp ~~ I think...
+
             #pragma unroll
             for (int t=0;t<6;++t) v[t] = sh[t * num_warps + lane];
         } else {
             #pragma unroll
-            for (int t=0;t<6;++t) v[t] = 0.0f;
+            for (int t=0;t<6;++t) v[t] = 0.0f;      //This is only here so that all lanes in the warp can participate
+                                                    //in the warm sum primitive to follow
         }
 
         #pragma unroll
         for (int t=0;t<6;++t) v[t] = warp_sum(v[t]);
 
+        // This last bit is just creating the 3x3 matrix from the upper triangular data
         if (lane == 0) {
             //float* out = C6 + (size_t)b * 6;
             float* out = C6 + (size_t)b * 9;
@@ -204,7 +229,7 @@ if __name__ == "__main__":
 
     """~~~~~~~~~~~~~~~~~~~~~ Reduction Kernel benchmark tests ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"""
 
-    time = True
+    time = False
     if time:
         #WARP REDUCTION TIMES
         times = (benchmark(cov_reduce_sym_r3, (w, D3, edges), n_repeat = 100))
