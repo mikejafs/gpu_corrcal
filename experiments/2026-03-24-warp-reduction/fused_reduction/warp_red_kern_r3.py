@@ -194,7 +194,7 @@ if __name__ == "__main__":
     #Simulating the parameters
     n_eig = 3
     rows = 20
-    cols = 20
+    cols = 31
     n_ant = rows*cols
     print(f"Number of antennas: {n_ant}")
 
@@ -232,7 +232,7 @@ if __name__ == "__main__":
     time = False
     if time:
         #WARP REDUCTION TIMES
-        times = (benchmark(cov_reduce_sym_r3, (w, D3, edges), n_repeat = 100))
+        times = (benchmark(cov_reduce_sym_r3, (w, D3, edges), n_repeat = 1000))
         # gpu_times = gpu_times.split()
         # gpu_cpu_t = float(gpu_times[3])/1e6
         # gpu_gpu_t = float(gpu_times[14])/1e6
@@ -240,8 +240,8 @@ if __name__ == "__main__":
         gpu_t_s = times.gpu_times
         cpu_t_s = times.cpu_times
 
-        avg_gpu_t = cp.mean(gpu_t_s)
-        avg_cpu_t = cp.mean(cpu_t_s)
+        avg_gpu_t = cp.mean(gpu_t_s) * 1e6
+        avg_cpu_t = cp.mean(cpu_t_s) * 1e6
 
         # print(gpu_cpu_t, gpu_gpu_t)
         print()

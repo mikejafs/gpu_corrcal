@@ -234,7 +234,21 @@ void cov_reduce_sym_warp(const float* __restrict__ D,
         // The original kernel does this with 9 manual assignments.
         // We generalize with a loop that mirrors the packing order.
         if (lane == 0) {{
-            float* out = C_out + (size_t)b * N_EIG * N_EIG;
+            float* out = C_out + (size_t)b * N_EIG * N_EIG;     //Note this is just computing an address
+                                                                //C_out is the beginning and b * n_eig * n_eig
+                                                                //is just moving to the beginning of block b 
+                                                                //in memory
+
+            /*
+            Aside: Yes, float *out creates a pointer variable called out
+                that is happening in a register, private to the individual
+                thread. But this is not the same thing as memory initialization.
+                There is no memory allocation, just the creation of a 
+                variable for this individual thread that points to the
+                desired location in memory that we want to write to.
+                (size_t)b * n_eig * n_eig is literally just adding 
+                b*n_eig*n_eig bytes to the C_out pointers original address. 
+            */
 
             int idx = 0;
             #pragma unroll
@@ -539,8 +553,9 @@ if __name__ == "__main__":
 
     rows, cols = 20, 31
     n_ant = rows * cols
+    print(f"For all tests, n_ant={n_ant}")
 
-    for n_eig in [1, 2, 3, 4, 5, 8, 9, 10]:
+    for n_eig in [1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 18, 22, 24, 26, 30]:
         cp.random.seed(42)
         spms = SimCorrcalParams(n_ant, n_eig, n_src=1, precision='float32', xp=cp)
         edges = spms.edges(rows, cols, use_random=False)

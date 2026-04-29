@@ -23,9 +23,9 @@ current_path = os.path.dirname(os.path.abspath(__file__))
 base_dir = os.path.abspath(os.path.join(current_path, "..", "gemm_grouped_batched"))
 sys.path.insert(0, base_dir)
 
-from gridding import *
-from simulate_params import *
-from zp_puregpu_funcs_py import *
+from utils.gridding import *
+from utils.simulate_params import *
+from utils.zp_puregpu_funcs_py import *
 from cupyx.profiler import benchmark
 
 

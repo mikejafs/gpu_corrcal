@@ -1,6 +1,6 @@
-# Experiment Notes
+# Fused Reduction-Specific Experiment Notes
 
-- [Experiment Notes](#experiment-notes)
+- [Fused Reduction-Specific Experiment Notes](#fused-reduction-specific-experiment-notes)
     - [Feb 26 2026](#feb-26-2026)
     - [April 4 2026](#april-4-2026)
     - [April 15 2026](#april-15-2026)

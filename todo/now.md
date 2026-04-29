@@ -55,3 +55,4 @@
     - likely just begin trying to get a covariance written down
 - ***GET CUPY SEFL-CONTAINED LIBRARY FINISHED AND DONE WITH SO CAN POST TO THE WEBSITE***
 - **Code up relevant tests for correctness and timing comparisons relative to the hardcoded, bobby's, and cupy version $\Rightarrow$ Then fully ready to begin coding other corrcal inversion functions**
+- *URGENT:* To the above point, essentially following the TODOs listed within the warp reduction experiment as the main priority so we can get moving to writing the next functions asap 
