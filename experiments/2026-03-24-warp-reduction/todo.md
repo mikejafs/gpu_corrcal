@@ -29,7 +29,11 @@
 
 ## Ongoing
 - determine the best way to slot in PMPP reading + exercises (leaving this here, since I want to progress this but not too sure where is the best place to write this...)
+
 - Also working through small examples from the NVIDIA HPC GPU hub on github (see useful resources) -- keep this on going for areas of difficulty atm
+
+### Update 
+- Probably easiest to pick a day or two each week and just straight up read PMPP chapters with some additional hands-on stuff from GPU HPC hub -- ***DON'T SPEND A LOT OF TIME HERE $\Rightarrow$ JUST KICK-START EACH DAY WITH THIS FOR FURTHER GPU INTUITION/BACKGROUND***
 
 
 ## 2026-04-20

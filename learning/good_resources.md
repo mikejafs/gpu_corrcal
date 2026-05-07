@@ -1,6 +1,8 @@
 #CUDA Resources
 
 ## CUDA Programming Guides
+- HPC GPU Hub by Nvidia themselves -- greate series of hands-on colab files for a lot of the basics: https://github.com/NVIDIA/accelerated-computing-hub/blob/main/README.md
+
 
 ## technical blogs
 
@@ -11,3 +13,5 @@
 Multiplication Kernels through CUTLASS: https://xianweiz.github.io/doc/papers/cutlass_applsci23.pdf
 - Anatomy of High-Performance Matrix
 Multiplication: https://www.cs.utexas.edu/~flame/pubs/GotoTOMS.pdf
+
+

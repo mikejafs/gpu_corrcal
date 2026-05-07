@@ -10,4 +10,6 @@ https://developer.nvidia.com/blog/using-cuda-warp-level-primitives/?utm_source=c
 ## Optimizing CUDA matmul kernel (better utilizing FLOPS)
 https://siboehm.com/articles/22/CUDA-MMM
 
+## CUDA fundamentals
+- HPC GPU Hub by Nvidia themselves -- greate series of hands-on colab files for a lot of the basics: https://github.com/NVIDIA/accelerated-computing-hub/blob/main/README.md
 
