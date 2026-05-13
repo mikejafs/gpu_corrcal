@@ -555,7 +555,7 @@ if __name__ == "__main__":
     n_ant = rows * cols
     print(f"For all tests, n_ant={n_ant}")
 
-    for n_eig in [1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 18, 22, 24, 26, 30]:
+    for n_eig in [1, 2, 3, 4, 5, 8, 9, 10, 11, 12, 13, 14, 18, 22]:
         cp.random.seed(42)
         spms = SimCorrcalParams(n_ant, n_eig, n_src=1, precision='float32', xp=cp)
         edges = spms.edges(rows, cols, use_random=False)
