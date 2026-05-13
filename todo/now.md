@@ -1,5 +1,7 @@
 # General TODOs
 
+*Note that this file should be more for todos at a high level like "work on this experiment todos" or "add results to this", begin thinking about such and such etc... Not concrete plans at a granular level partaining to a particular experiment or sub file*
+
 - [2026-03-24](#2026-03-24)
 - [2026-03-04](#2026-03-04) $\rightarrow$ ***From backlog thesis project roughwork*** 
 - [2026-04-15](#2026-04-15)

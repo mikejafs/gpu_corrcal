@@ -34,6 +34,7 @@
 
 ### Update 
 - Probably easiest to pick a day or two each week and just straight up read PMPP chapters with some additional hands-on stuff from GPU HPC hub -- ***DON'T SPEND A LOT OF TIME HERE $\Rightarrow$ JUST KICK-START EACH DAY WITH THIS FOR FURTHER GPU INTUITION/BACKGROUND***
+  - Yes this is a good idea... Perhaps one chapter at a time. Pick a day of the week when we have the time in the morning or something and just begin working thorugh the week on that.
 
 
 ## 2026-04-20
