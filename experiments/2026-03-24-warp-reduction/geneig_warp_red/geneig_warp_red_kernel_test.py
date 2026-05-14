@@ -375,7 +375,7 @@ def test_against_numpy(n_eig, n_ant=400, rows=20, cols=20):
 
     # --- CuPy Reference ---
     zp_w_inv, nb, lb = zeroPad(w, edges_gpu, return_inv=True, dtype=cp.float32)
-    zp_D, nb, lb = zeroPad(D, edges_gpu, return_inv=True, dtype=cp.float32)
+    zp_D, nb, lb = zeroPad(D, edges_gpu, return_inv=False, dtype=cp.float32)
 
     CuPy_ref = cupy_matmul(zp_w_inv, zp_D)
     CuPy_ref_np = cp.asnumpy(CuPy_ref)
@@ -396,6 +396,7 @@ def test_against_numpy(n_eig, n_ant=400, rows=20, cols=20):
         inv_w = (1.0/wb).astype(np.float64)  # higher precision for reference
         Db64 = Db.astype(np.float64)
         C_ref[b] = (Db64.T * inv_w) @ Db64     # D^T @ diag(1/w) @ D
+
 
     # --- Compare ---
     # Use a relative tolerance since values scale with segment size
