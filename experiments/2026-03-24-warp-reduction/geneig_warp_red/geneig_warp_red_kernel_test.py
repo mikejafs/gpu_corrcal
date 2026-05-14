@@ -573,7 +573,7 @@ if __name__ == "__main__":
     print("Benchmark: varying n_eig")
     print("-" * 60)
 
-    rows, cols = 20, 31
+    rows, cols = 44, 44
     n_ant = rows * cols
     print(f"For all tests, n_ant={n_ant}")
 
