@@ -206,7 +206,7 @@ if __name__ == "__main__":
     w = sim_data[0]
     D3 = sim_data[1]
 
-    w = 1/w
+    # w = 1/w
 
 
     """
