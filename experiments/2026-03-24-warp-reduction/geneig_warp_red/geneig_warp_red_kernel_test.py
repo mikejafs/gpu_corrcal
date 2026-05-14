@@ -339,8 +339,8 @@ def cov_reduce_sym(w, D, edges, threads=128):
 # ============================================================================
 
 #Adding extra Cupy comparison the way it's actually done for good measure
-def cupy_matmul(noise, diffuse):
-    temp = noise[..., None] * diffuse
+def cupy_matmul(inv_noise, diffuse):
+    temp = inv_noise[..., None] * diffuse
     out = cp.transpose(diffuse, [0, 2, 1]) @ temp
     cp.cuda.Stream.null.synchronize()
     return out
@@ -407,9 +407,11 @@ def test_against_numpy(n_eig, n_ant=400, rows=20, cols=20):
     status = "PASS" if ok else "FAIL"
     print(f"max_rel_err={rel_err:.2e}  [{status}]")
     
+    print(70*"~")
+
     cupy_ok = np.allclose(C_gpu_np, CuPy_ref_np)
-    status = "CuPy PASS" if cupy_ok else "CuPy FAIL"
-    print(f"Against CuPy: {status}")
+    cupy_status = "CuPy PASS" if cupy_ok else "CuPy FAIL"
+    print(f"Against CuPy: {cupy_status}")
     return ok
 
 
@@ -560,7 +562,7 @@ if __name__ == "__main__":
 
     # ---- Test 2: correctness for various n_eig values ----
     print()
-    print("Test 2: Correctness vs NumPy reference")
+    print("Test 2: Correctness vs NumPy reference and vs CuPy Reference")
     print("-" * 60)
     for n_eig in [1, 2, 3, 4, 5, 8]:
         test_against_numpy(n_eig)
