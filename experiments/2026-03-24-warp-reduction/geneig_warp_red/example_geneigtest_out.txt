@@ -1,0 +1,41 @@
+
+Generalized Warp Reduction Kernel
+============================================================
+
+Test 1: Generalized n_eig=3 vs original r3 kernel
+------------------------------------------------------------
+  Checking generalized n_eig=3 vs original r3 kernel... PASS (within float32 tolerance, not bitwise)
+
+Test 2: Correctness vs NumPy reference
+------------------------------------------------------------
+  n_eig=1  n_ant=400  max_rel_err=1.13e-07  [PASS]
+  n_eig=2  n_ant=400  max_rel_err=1.11e-07  [PASS]
+  n_eig=3  n_ant=400  max_rel_err=1.09e-07  [PASS]
+  n_eig=4  n_ant=400  max_rel_err=1.07e-07  [PASS]
+  n_eig=5  n_ant=400  max_rel_err=1.07e-07  [PASS]
+  n_eig=8  n_ant=400  max_rel_err=1.06e-07  [PASS]
+
+Benchmark: varying n_eig
+------------------------------------------------------------
+For all tests, n_ant=620
+  n_eig=1  n_sym=  1  gpu=    18.8 us  cpu=    13.8 us
+  n_eig=2  n_sym=  3  gpu=    19.0 us  cpu=    14.0 us
+  n_eig=3  n_sym=  6  gpu=    21.4 us  cpu=    13.6 us
+  n_eig=4  n_sym= 10  gpu=    30.4 us  cpu=    13.6 us
+  n_eig=5  n_sym= 15  gpu=    34.4 us  cpu=    13.8 us
+  n_eig=8  n_sym= 36  gpu=    48.9 us  cpu=    13.7 us
+  n_eig=9  n_sym= 45  gpu=    53.9 us  cpu=    13.9 us
+  n_eig=10  n_sym= 55  gpu=    59.4 us  cpu=    13.7 us
+  n_eig=11  n_sym= 66  gpu=    65.4 us  cpu=    13.6 us
+  n_eig=12  n_sym= 78  gpu=    72.7 us  cpu=    13.9 us
+  n_eig=13  n_sym= 91  gpu=    79.6 us  cpu=    13.8 us
+  n_eig=14  n_sym=105  gpu=    89.0 us  cpu=    13.6 us
+  n_eig=15  n_sym=120  gpu=    97.8 us  cpu=    13.6 us
+  n_eig=16  n_sym=136  gpu=   116.1 us  cpu=    14.4 us
+  n_eig=17  n_sym=153  gpu=   130.0 us  cpu=    13.5 us
+  n_eig=18  n_sym=171  gpu=   142.8 us  cpu=    13.9 us
+  n_eig=19  n_sym=190  gpu=   155.9 us  cpu=    13.7 us
+  n_eig=20  n_sym=210  gpu=   170.3 us  cpu=    13.9 us
+  n_eig=21  n_sym=231  gpu=   185.5 us  cpu=    14.1 us
+  n_eig=22  n_sym=253  gpu=   427.0 us  cpu=    14.6 us
+
