@@ -1,8 +1,0 @@
-numpy
-scipy
-cupy-cuda12x
-
-[dev]
-pytest
-black
-ruff
