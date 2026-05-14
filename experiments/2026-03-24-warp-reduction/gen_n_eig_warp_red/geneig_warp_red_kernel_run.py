@@ -73,6 +73,7 @@ def test_gen_warp_kernel():
 
 if __name__ == "__main__":
     test_gen_warp_kernel()
+    print("Everything is working")
 
 
 
