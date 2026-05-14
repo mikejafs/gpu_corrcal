@@ -147,7 +147,7 @@ void launch_two_level_warp_reduction(
     int threads_per_block
 ){
     int n_sym = n_eig * (n_eig + 1) / 2;
-    int threads_per_block = 128;
+    // int threads_per_block = 128;
 
     dim3 grid(nb);
     dim3 block(threads_per_block);
