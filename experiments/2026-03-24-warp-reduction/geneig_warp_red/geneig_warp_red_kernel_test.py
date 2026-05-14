@@ -405,13 +405,13 @@ def test_against_numpy(n_eig, n_ant=400, rows=20, cols=20):
 
     ok = rel_err < 1e-4  # float32 vs float64 reference
     status = "PASS" if ok else "FAIL"
-    print(f"max_rel_err={rel_err:.2e}  [{status}]")
     
-    print(70*"~")
-
     cupy_ok = np.allclose(C_gpu_np, CuPy_ref_np)
     cupy_status = "CuPy PASS" if cupy_ok else "CuPy FAIL"
-    print(f"Against CuPy: {cupy_status}")
+    
+    print(f"max_rel_err={rel_err:.2e}  [{status}] ~~ Against CuPy: [{cupy_status}]")
+    
+    print(f"")
     return ok
 
 
