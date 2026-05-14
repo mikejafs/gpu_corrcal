@@ -359,7 +359,7 @@ def test_against_numpy(n_eig, n_ant=400, rows=20, cols=20):
     sim_data = spms.sim_data()
     w = sim_data[0]
     D = sim_data[1]
-    w = 1.0 / w  # match the convention in the original test script
+    # w = 1.0 / w  # match the convention in the original test script
 
     # --- GPU computation ---
     C_gpu = cov_reduce_sym(w, D, edges_gpu)
@@ -378,7 +378,7 @@ def test_against_numpy(n_eig, n_ant=400, rows=20, cols=20):
             continue
         Db = D_np[s:e]             # (seg_len, n_eig)
         wb = w_np[s:e]             # (seg_len,)
-        inv_w = (1.0 / wb).astype(np.float64)  # higher precision for reference
+        inv_w = (wb).astype(np.float64)  # higher precision for reference
         Db64 = Db.astype(np.float64)
         C_ref[b] = (Db64.T * inv_w) @ Db64     # D^T @ diag(1/w) @ D
 
@@ -413,7 +413,7 @@ def test_matches_r3_kernel():
     sim_data = spms.sim_data()
     w = sim_data[0]
     D = sim_data[1]
-    w = 1.0 / w
+    # w = 1.0 / w
 
     # Original r3 kernel (imported from your existing code or inlined here)
     kernel_r3_source = r'''
@@ -561,7 +561,7 @@ if __name__ == "__main__":
         edges = spms.edges(rows, cols, use_random=False)
         edges_gpu = cp.asarray(edges)
         sim_data = spms.sim_data()
-        w = 1.0 / sim_data[0]
+        w = sim_data[0]
         D = sim_data[1]
 
         times = benchmark(cov_reduce_sym, (w, D, edges_gpu), n_repeat=100)
