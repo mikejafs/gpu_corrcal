@@ -222,7 +222,7 @@ if __name__ == "__main__":
     #use warp reduction kernel to compute matrix product
     C3 = cov_reduce_sym_r3(w, D3, edges) #note that result has desired 3D block shape 
 
-    print_results_one_block = True
+    print_results_one_block = False
     if print_results_one_block:
         print(C3[0])
 
