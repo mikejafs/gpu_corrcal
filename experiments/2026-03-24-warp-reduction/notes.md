@@ -24,3 +24,7 @@
 
 ### May 12th
 - Jon seems to think that everything going on with register initialization of arrays may not be important and that shared memory initialization should work just fine. I can't remember the argument atm, but something to the effect of we're still bandwidth limited or something at some point in the memory hierarchy and so it won't matter. Something tells me this doesn't seem quite right, so the current tests are surrounding the difference between register memory allocation vs flexible shared mem allocation. The templated solution with strict reg mem initialition of arrays may be the best solution here, but I need to get some profiling done for each of these.
+
+#### Update: 
+
+Currently trying to impliment this above step under the gen_n_eig_warp folder. Specifically under the geneig_warp_red_kernel_run.py file

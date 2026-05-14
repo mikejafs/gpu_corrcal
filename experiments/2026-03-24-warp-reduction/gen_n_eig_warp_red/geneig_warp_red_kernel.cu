@@ -130,3 +130,34 @@ void two_level_warp_reduction(
         }
     }
 }
+
+
+// ================================================
+// Host-side launcher
+// ================================================
+
+extern "C"
+void launch_two_level_warp_reduction(
+    const float* diffuse,
+    const float* noise,
+    const int* edges,
+    float* out,
+    int nb,
+    int n_eig,
+){
+    int n_sym = n_eig * (n_eig + 1) / 2;
+    int ThreadsPerBlock = 128;
+
+    dim3 grid(nb);
+    dim3 block(ThreadsPerBlock);
+
+    launch_two_level_warp_reduction<<<grid, block>>>(
+        diffuse, noise, edges, out, nb, n_eig, n_sym
+    );
+}
+
+extern "C"
+void sync_device(){
+    cudaDeviceSynchronize();
+}
+

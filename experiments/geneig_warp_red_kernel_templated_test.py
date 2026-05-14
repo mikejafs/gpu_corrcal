@@ -7,6 +7,13 @@ Compile:
 
 Usage:
     python geneig_warp_red_kernel_test.py
+
+
+CAUTION:
+    NEED TO REWORK THE TESTS TO REPRESENT TRUE REDUNDANT ARRAY SHAPES
+    CURRENTLY NOT ASSUMING CORRECT REDUNDANT BLOCK SHAPES
+
+
 """
 
 import numpy as np
@@ -24,7 +31,7 @@ def load_kernel(so_path=None):
     if so_path is None:
         so_path = os.path.join(
             os.path.dirname(os.path.abspath(__file__)),
-            "geneig_warp_red_kernel.so"
+            "geneig_warp_red_kernel_templated.so"
         )
     lib = ctypes.CDLL(so_path)
 

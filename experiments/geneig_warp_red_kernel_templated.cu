@@ -1,4 +1,4 @@
-// nvcc -Xcompiler -fPIC -shared -o geneig_warp_red_kernel.so geneig_warp_red_kernel.cu
+// nvcc -Xcompiler -fPIC -shared -o geneig_warp_red_kernel_templated.so geneig_warp_red_kernel_templated.cu
 
 /*
 General number of eigenmodes warp reduction kernel.
