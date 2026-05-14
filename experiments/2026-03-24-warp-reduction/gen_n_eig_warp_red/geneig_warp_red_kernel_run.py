@@ -61,7 +61,7 @@ def test_gen_warp_kernel():
     n_ant = rows*cols
 
     #generate the simulate params object
-    smps = SimCorrcalParams(n_ant, n_eig, n_src=1, precision='float32', xp=cp)
+    spms = SimCorrcalParams(n_ant, n_eig, n_src=1, precision='float32', xp=cp)
 
     #create the noise and diffuse matrices
     sim_data = spms.sim_data()
