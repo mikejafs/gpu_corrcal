@@ -378,7 +378,7 @@ def test_against_numpy(n_eig, n_ant=400, rows=20, cols=20):
             continue
         Db = D_np[s:e]             # (seg_len, n_eig)
         wb = w_np[s:e]             # (seg_len,)
-        inv_w = (wb).astype(np.float64)  # higher precision for reference
+        inv_w = (1.0/wb).astype(np.float64)  # higher precision for reference
         Db64 = Db.astype(np.float64)
         C_ref[b] = (Db64.T * inv_w) @ Db64     # D^T @ diag(1/w) @ D
 
