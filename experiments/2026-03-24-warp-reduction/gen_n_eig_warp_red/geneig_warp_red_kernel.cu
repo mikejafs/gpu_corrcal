@@ -152,7 +152,7 @@ void launch_two_level_warp_reduction(
     dim3 grid(nb);
     dim3 block(threads_per_block);
 
-    launch_two_level_warp_reduction<<<grid, block>>>(
+    two_level_warp_reduction<<<grid, block>>>(
         diffuse, noise, edges, out, nb, n_eig, n_sym
     );
 }
