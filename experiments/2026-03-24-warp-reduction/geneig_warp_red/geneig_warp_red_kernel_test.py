@@ -38,6 +38,7 @@ import os
 
 from utils.gridding import *
 from utils.simulate_params import *
+from utils.zp_puregpu_funcs_py import *
 from cupyx.profiler import benchmark
 
 
@@ -337,6 +338,13 @@ def cov_reduce_sym(w, D, edges, threads=128):
 # TESTS & DEMO
 # ============================================================================
 
+#Adding extra Cupy comparison the way it's actually done for good measure
+def cupy_matmul(noise, diffuse):
+    temp = noise[..., None] * diffuse
+    out = cp.transpose(diffuse, [0, 2, 1]) @ temp
+    cp.cuda.Stream.null.synchronize()
+    return out
+
 def test_against_numpy(n_eig, n_ant=400, rows=20, cols=20):
     """
     Verify the generalized kernel against a naive NumPy implementation.
@@ -365,6 +373,13 @@ def test_against_numpy(n_eig, n_ant=400, rows=20, cols=20):
     C_gpu = cov_reduce_sym(w, D, edges_gpu)
     C_gpu_np = cp.asnumpy(C_gpu)
 
+    # --- CuPy Reference ---
+    zp_w_inv, nb, lb = zeroPad(w, edges_gpu, return_inv=True, dtype=cp.float32)
+    zp_D, nb, lb = zeroPad(D, edges_gpu, return_inv=True, dtype=cp.float32)
+
+    CuPy_ref = cupy_matmul(zp_w_inv, zp_D)
+    CuPy_ref_np = cp.asnumpy(CuPy_ref)
+
     # --- NumPy reference ---
     w_np = cp.asnumpy(w)
     D_np = cp.asnumpy(D)
@@ -391,6 +406,10 @@ def test_against_numpy(n_eig, n_ant=400, rows=20, cols=20):
     ok = rel_err < 1e-4  # float32 vs float64 reference
     status = "PASS" if ok else "FAIL"
     print(f"max_rel_err={rel_err:.2e}  [{status}]")
+    
+    cupy_ok = np.allclose(C_gpu_np, CuPy_ref_np)
+    status = "CuPy PASS" if cupy_ok else "CuPy FAIL"
+    print(f"Against CuPy: {status}")
     return ok
 
 
