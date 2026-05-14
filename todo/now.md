@@ -5,7 +5,9 @@
 - [2026-03-24](#2026-03-24)
 - [2026-03-04](#2026-03-04) $\rightarrow$ ***From backlog thesis project roughwork*** 
 - [2026-04-15](#2026-04-15)
-  
+- [2026-05-14](#2026-05-14)
+
+
 ## 2026-03-24
 
 ~~- Fill out the rest of this repo with relevant active files and begin using~~
@@ -58,3 +60,17 @@
 - ***GET CUPY SEFL-CONTAINED LIBRARY FINISHED AND DONE WITH SO CAN POST TO THE WEBSITE***
 - **Code up relevant tests for correctness and timing comparisons relative to the hardcoded, bobby's, and cupy version $\Rightarrow$ Then fully ready to begin coding other corrcal inversion functions**
 - *URGENT:* To the above point, essentially following the TODOs listed within the warp reduction experiment as the main priority so we can get moving to writing the next functions asap 
+
+
+## 2026-05-14
+
+### Soon (After main GPU work has good progress)
+- Double check sizings for bandpass cal cov as soon as we begin this to be sure it will work with current implementation
+- Get going on bandpass (as soon as remotely confortable if asked to explain the gpu kernel):
+  - Create dedicated bandpass repo and start committing code to and experiments folder
+    - likely just begin trying to get a covariance written down
+- ***GET CUPY SEFL-CONTAINED LIBRARY FINISHED AND DONE WITH SO CAN POST TO THE WEBSITE***
+
+### Urgent
+- **Code up relevant tests for correctness and timing comparisons relative to the hardcoded, bobby's, and cupy version $\Rightarrow$ Then fully ready to begin coding other corrcal inversion functions**
+- *URGENT:* To the above point, essentially following the TODOs listed within the warp reduction experiment as the main priority so we can get moving to writing the next functions asap $\Rightarrow$ No need to tie up every loose end, just clean things up so we had some idea of wtf was going on when we were working on that stuff
