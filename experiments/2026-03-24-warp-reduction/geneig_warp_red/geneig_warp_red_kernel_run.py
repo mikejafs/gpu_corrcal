@@ -13,6 +13,9 @@ WHAT WE'RE TRYING TO DO HERE...
     a. need to benchmark agains both cupy and hardcoded red kernel to try and understand what is going on
         - My hunch is that if somehow the compiler let's us do this, then the arrays will be dynamically initialized at the main memory level resulting in substantial loss of performance
 
+UPDATE:
+    THIS FILE WAS NOT EVEN NECESSARY -- The geneig CUDA file won't even compile as a result of trying to declar dynamic kernel variables. This simply isn't possible in CUDA C. 
+        
 """
 
 from utils.gridding import *
