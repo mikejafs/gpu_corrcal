@@ -69,11 +69,12 @@ def test_gen_warp_kernel():
     diffuse = sim_data[1]
     edges = spms.edges(rows, cols, use_random = False)
 
+    
 
 
 if __name__ == "__main__":
     test_gen_warp_kernel()
-    print("Everything is working")
+    # print("Everything is working")
 
 
 

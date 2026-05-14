@@ -144,12 +144,13 @@ void launch_two_level_warp_reduction(
     float* out,
     int nb,
     int n_eig,
+    int threads_per_block
 ){
     int n_sym = n_eig * (n_eig + 1) / 2;
     int ThreadsPerBlock = 128;
 
     dim3 grid(nb);
-    dim3 block(ThreadsPerBlock);
+    dim3 block(threads_per_block);
 
     launch_two_level_warp_reduction<<<grid, block>>>(
         diffuse, noise, edges, out, nb, n_eig, n_sym
