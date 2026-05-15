@@ -1,0 +1,47 @@
+
+Generalized Warp Reduction Kernel
+============================================================
+
+Test 1: Generalized n_eig=3 vs original r3 kernel
+------------------------------------------------------------
+  Checking generalized n_eig=3 vs original r3 kernel... PASS (within float32 tolerance, not bitwise)
+
+Test 2: Correctness vs NumPy reference and vs CuPy Reference
+------------------------------------------------------------
+  n_eig=1  n_ant=400  max_rel_err=1.12e-07  [PASS] ~~ Against CuPy: [CuPy PASS]
+
+  n_eig=2  n_ant=400  max_rel_err=9.64e-08  [PASS] ~~ Against CuPy: [CuPy PASS]
+
+  n_eig=3  n_ant=400  max_rel_err=1.55e-07  [PASS] ~~ Against CuPy: [CuPy PASS]
+
+  n_eig=4  n_ant=400  max_rel_err=7.90e-08  [PASS] ~~ Against CuPy: [CuPy PASS]
+
+  n_eig=5  n_ant=400  max_rel_err=6.15e-08  [PASS] ~~ Against CuPy: [CuPy PASS]
+
+  n_eig=8  n_ant=400  max_rel_err=1.52e-07  [PASS] ~~ Against CuPy: [CuPy PASS]
+
+
+Benchmark: varying n_eig
+------------------------------------------------------------
+For all tests, n_ant=1936
+  n_eig=1  n_sym=  1  gpu=    73.6 us  cpu=    14.4 us
+  n_eig=2  n_sym=  3  gpu=    98.4 us  cpu=    13.6 us
+  n_eig=3  n_sym=  6  gpu=   117.6 us  cpu=     7.0 us
+  n_eig=4  n_sym= 10  gpu=   143.8 us  cpu=     7.1 us
+  n_eig=5  n_sym= 15  gpu=   168.0 us  cpu=     6.9 us
+  n_eig=8  n_sym= 36  gpu=   249.9 us  cpu=     7.1 us
+  n_eig=9  n_sym= 45  gpu=   277.7 us  cpu=     7.2 us
+  n_eig=10  n_sym= 55  gpu=   305.3 us  cpu=     7.3 us
+  n_eig=11  n_sym= 66  gpu=   333.9 us  cpu=     7.1 us
+  n_eig=12  n_sym= 78  gpu=   363.3 us  cpu=     7.0 us
+  n_eig=13  n_sym= 91  gpu=   395.7 us  cpu=     7.0 us
+  n_eig=14  n_sym=105  gpu=   429.2 us  cpu=     7.2 us
+  n_eig=15  n_sym=120  gpu=   460.9 us  cpu=     7.0 us
+  n_eig=16  n_sym=136  gpu=   508.8 us  cpu=     7.0 us
+  n_eig=17  n_sym=153  gpu=   553.8 us  cpu=     7.0 us
+  n_eig=18  n_sym=171  gpu=   595.7 us  cpu=     7.0 us
+  n_eig=19  n_sym=190  gpu=   637.1 us  cpu=     7.0 us
+  n_eig=20  n_sym=210  gpu=   684.7 us  cpu=     7.1 us
+  n_eig=21  n_sym=231  gpu=   741.1 us  cpu=     7.1 us
+  n_eig=22  n_sym=253  gpu=  1479.5 us  cpu=     7.0 us
+
