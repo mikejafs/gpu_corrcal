@@ -116,6 +116,7 @@ def make_test_data(nb, n_per_block, n_eig, seed=42):
 
     return diffuse, noise, edges
 
+#test
 
 # ============================================================
 # Correctness test
