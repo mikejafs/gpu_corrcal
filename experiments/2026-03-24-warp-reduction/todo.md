@@ -72,6 +72,7 @@
         - IF NO ERROR, BENCHMARK THAT CODE AGAINST THE HARDCODED VERSIONS
         - ADD BACK IN PRAGMA UNROLL AND SEE IF THERE'S ANY DIFFERENCE
 
+
 ### Next
 - make tests for gen_eig kernel (Try to keep this under 2 hours max -- Otherwise move on and parallilize with other itemse)
   - 0.5. One plot bnenchmarking shared mem version vs templated version 

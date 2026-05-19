@@ -6,6 +6,15 @@ Templated on N_EIG so the compiler can allocate registers optimally.
 Host-side dispatch via extern "C" functions callable from ctypes.
 */
 
+
+/*
+TODO: 
+
+- Once done fixing python side tests, profile with #pragma unroll added back in
+
+
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include <cuda_runtime.h>
@@ -81,6 +90,13 @@ void two_level_warp_reduction(
 
     int start = edges[b];
     int stop = edges[b + 1];
+
+    /*
+    int b = (int)blockIdx.x
+
+    int start = edges[b]
+    int stop = edges[b + 1]
+    */
 
     float acc[N_SYM];
     accumulate_outer_prod<N_EIG>(diffuse, noise, start, stop, acc);
