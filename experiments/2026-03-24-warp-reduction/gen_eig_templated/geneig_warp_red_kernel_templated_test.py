@@ -189,37 +189,44 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 # Timing test
 # ============================================================
 
-# def timing_test(lib, n_eig=4, nb=512, n_per_block=1024,
-#                 threads_per_block=128, n_iter=500):
-#     """Time the GPU kernel."""
-#     diffuse, noise, edges = make_test_data(nb, n_per_block, n_eig)
+def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
+    """Time the GPU kernel."""
+    diffuse, noise, edges = make_test_data(n_eig, rows, cols, seed)
+    ref_cupy, nb = cupy_ref(noise, diffuse, edges)
 
-#     diffuse_gpu = cp.asarray(diffuse)
-#     noise_gpu = cp.asarray(noise)
-#     edges_gpu = cp.asarray(edges)
-#     out_gpu = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
+    # diffuse_gpu = cp.asarray(diffuse)
+    # noise_gpu = cp.asarray(noise)
+    # edges_gpu = cp.asarray(edges)
+    out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
 
-#     # Warmup
-#     for _ in range(5):
-#         call_kernel(lib, diffuse_gpu, noise_gpu, edges_gpu, out_gpu,
-#                     nb, n_eig, threads_per_block)
-#     sync(lib)
+    # Warmup
+    # for _ in range(5):
+    #     call_kernel(lib, diffuse, noise, edges, out_kernel,
+    #                 nb, n_eig, threads_per_block)
+    # sync(lib)
 
-#     # Timed
-#     sync(lib)
-#     t0 = time.perf_counter()
-#     for _ in range(n_iter):
-#         call_kernel(lib, diffuse_gpu, noise_gpu, edges_gpu, out_gpu,
-#                     nb, n_eig, threads_per_block)
-#     sync(lib)
-#     elapsed = time.perf_counter() - t0
+    # # Timed
+    # sync(lib)
+    # t0 = time.perf_counter()
+    # for _ in range(n_iter):
+    #     call_kernel(ç)
+    # sync(lib)
+    # elapsed = time.perf_counter() - t0
 
-#     per_call_ms = (elapsed / n_iter) * 1e6
-#     n_total = int(edges[-1])
-#     print(f"  n_eig={n_eig:2d}  |  nb={nb}  |  n_total={n_total:>8d}  |  "
-#           f"{per_call_ms:.8f} us/call  ({n_iter} iters)")
+    # per_call_ms = (elapsed / n_iter) * 1e6
+    # n_total = int(edges[-1])
+    # print(f"  n_eig={n_eig:2d}  |  nb={nb}  |  n_total={n_total:>8d}  |  "
+    #       f"{per_call_ms:.8f} us/call  ({n_iter} iters)")
 
-#     return per_call_ms
+    times = benchmark(call_kernel, (lib, diffuse, noise, edges, out_kernel,
+                    nb, n_eig, threads_per_block), n_repeat= 100)
+    avg_gpu = float(cp.mean(times.gpu_times)) * 1e6  # microseconds
+    avg_cpu = float(cp.mean(times.cpu_times)) * 1e6
+    n_sym = n_eig * (n_eig + 1) // 2
+    print(f"  n_eig={n_eig}  n_sym={n_sym:>3}  "
+            f"gpu={avg_gpu:>8.1f} us  cpu={avg_cpu:>8.1f} us")
+
+    # return per_call_ms
 
 
 # ============================================================
@@ -233,9 +240,10 @@ if __name__ == "__main__":
     print("CORRECTNESS TESTS")
     print("=" * 65)
 
-    rows = 24
-    cols = 32
+    rows = 10
+    cols = 8
     n_ant = rows*cols
+    random_seed=12
 
     all_pass = True
     for n_eig in [1, 2, 3, 4, 5, 6, 8, 10, 12, 13, 14, 15]:
@@ -249,12 +257,12 @@ if __name__ == "__main__":
     else:
         print("SOME TESTS FAILED")
 
-    # print()
-    # print("=" * 65)
-    # print("TIMING TESTS")
-    # print("=" * 65)
+    print()
+    print("=" * 65)
+    print("TIMING TESTS")
+    print("=" * 65)
 
-    # for n_eig in range(1, 21):
-    #     timing_test(lib, n_eig=n_eig)
+    for n_eig in range(1, 21):
+        timing_test(lib, n_eig=n_eig)
 
-    # print("=" * 65)
+    print("=" * 65)
