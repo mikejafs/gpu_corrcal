@@ -184,7 +184,11 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     #     print(f"    ref[{worst}]:\n{ref_cupy[worst]}")
     #     print(f"    gpu[{worst}]:\n{out_kernel[worst]}")
 
-    debug_match = True
+    check_zeros = True
+    if check_zeros:
+
+
+    debug_match = False
     if debug_match:
         if not match_cupy:
             with open(f"debug_n_eig.txt", "a") as f:
@@ -262,9 +266,8 @@ if __name__ == "__main__":
     rows = 16
     cols = 21
     n_ant = rows*cols
-    random_seed=12
+    random_seed=42
 
-    open("debug_output.txt", "w").close()
     all_pass = True
     for n_eig in range(1, 21):
         ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, threads_per_block=128)
