@@ -1,0 +1,25 @@
+
+=================================================================
+TIMING TESTS -> n_ant = 32 * 24 = 768
+=================================================================
+  n_eig=1  n_sym=  1  gpu=    11.3 us  cpu=     4.9 us
+  n_eig=2  n_sym=  3  gpu=    20.9 us  cpu=     4.8 us
+  n_eig=3  n_sym=  6  gpu=    26.6 us  cpu=     4.6 us
+  n_eig=4  n_sym= 10  gpu=    30.9 us  cpu=     4.6 us
+  n_eig=5  n_sym= 15  gpu=    34.8 us  cpu=     4.7 us
+  n_eig=6  n_sym= 21  gpu=    39.7 us  cpu=     4.8 us
+  n_eig=7  n_sym= 28  gpu=    44.0 us  cpu=     2.7 us
+  n_eig=8  n_sym= 36  gpu=    51.7 us  cpu=     2.7 us
+  n_eig=9  n_sym= 45  gpu=    58.1 us  cpu=     2.8 us
+  n_eig=10  n_sym= 55  gpu=    65.0 us  cpu=     2.7 us
+  n_eig=11  n_sym= 66  gpu=    72.2 us  cpu=     2.8 us
+  n_eig=12  n_sym= 78  gpu=    80.7 us  cpu=     2.6 us
+  n_eig=13  n_sym= 91  gpu=    89.5 us  cpu=     2.6 us
+  n_eig=14  n_sym=105  gpu=   101.1 us  cpu=     2.6 us
+  n_eig=15  n_sym=120  gpu=   111.7 us  cpu=     2.6 us
+  n_eig=16  n_sym=136  gpu=   134.5 us  cpu=     2.6 us
+  n_eig=17  n_sym=153  gpu=   151.6 us  cpu=     2.6 us
+  n_eig=18  n_sym=171  gpu=   167.2 us  cpu=     2.7 us
+  n_eig=19  n_sym=190  gpu=   183.6 us  cpu=     2.7 us
+  n_eig=20  n_sym=210  gpu=   203.1 us  cpu=     2.6 us
+=================================================================
