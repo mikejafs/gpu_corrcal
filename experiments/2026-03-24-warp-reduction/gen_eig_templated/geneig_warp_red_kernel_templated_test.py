@@ -246,7 +246,7 @@ if __name__ == "__main__":
     random_seed=12
 
     all_pass = True
-    for n_eig in [1, 2, 3, 4, 5, 6, 8, 10, 12, 13, 14, 15]:
+    for n_eig in range(1, 18):
         ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, threads_per_block=128)
         # ok_cupy = correctness_test(n_eig, rows, cols, threads_per_block=512)
         all_pass = all_pass and ok_cupy
@@ -262,7 +262,7 @@ if __name__ == "__main__":
     print("TIMING TESTS")
     print("=" * 65)
 
-    for n_eig in range(1, 16):
+    for n_eig in range(1, 18):
         timing_test(lib, n_eig, rows, cols, 128, random_seed)
 
     print("=" * 65)
