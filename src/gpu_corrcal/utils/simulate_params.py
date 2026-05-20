@@ -8,7 +8,7 @@ parameters.
 
 import numpy as np
 import cupy as cp
-from utils.gridding import *
+from gpu_corrcal.utils.gridding import *
 
 class SimCorrcalParams():
     def __init__(self, n_ant, n_eig, n_src, precision, xp):
