@@ -28,7 +28,7 @@ from cupyx.profiler import benchmark
 def load_kernel(so_path=None):
 
     # Wether or not to use pragma unroll
-    unroll = False
+    unroll = True
     """Load the shared library and set up function signatures."""
     if so_path is None:
         #if NO PRAGMA UNROLL
