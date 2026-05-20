@@ -233,12 +233,12 @@ if __name__ == "__main__":
     print("CORRECTNESS TESTS")
     print("=" * 65)
 
-    rows = 20
-    cols = 18
+    rows = 24
+    cols = 32
     n_ant = rows*cols
 
     all_pass = True
-    for n_eig in [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 18, 19, 20]:
+    for n_eig in [1, 2, 3, 4, 5, 6, 8, 10, 12, 13, 14, 15]:
         ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, threads_per_block=128)
         # ok_cupy = correctness_test(n_eig, rows, cols, threads_per_block=512)
         all_pass = all_pass and ok_cupy
