@@ -215,8 +215,8 @@ if __name__ == "__main__":
     lib = load_kernel()
 
     # Test params
-    rows = 16
-    cols = 21
+    rows = 32
+    cols = 24
     n_ant = rows*cols
     random_seed=42
 
