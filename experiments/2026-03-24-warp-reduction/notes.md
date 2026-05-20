@@ -35,6 +35,7 @@ Currently trying to impliment this above step under the gen_n_eig_warp folder. S
 
 - debugging templated neig since was not matching cupy after neig = 16
   - solution was to clean up zeropad kernels to fix z dimension 
+    - why was this an issue? -> make note of this
 - adding templated code to boiler plate stuff and moving reused code to scripts
 - needing to finalize templated neig before truly moving on to new kernels 
   - essentially cleaning up tests to be sure things are working properly
