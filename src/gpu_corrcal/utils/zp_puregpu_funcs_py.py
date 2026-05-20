@@ -8,12 +8,14 @@ current_dir = Path(__file__).resolve().parent
 
 # full_path = "/home/mike/corrcal_gpu_pipeline/pipeline/zp_puregpu_funcs.so"
 # fp32_path = "/home/mike/corrcal_gpu_pipeline/pipeline/zp_puregpu_funcs_f32.so"
-full_path = current_dir / "zp_puregpu_funcs.so"
-fp32_path = current_dir / "zp_puregpu_funcs_f32.so"
+# full_path = current_dir / "zp_puregpu_funcs.so"
+# fp32_path = current_dir / "zp_puregpu_funcs_f32.so"
 
+full_path_f32 = "/Users/mike/Documents/phdstuff/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/kernels/zp_puregpu_funcs_f32.so"
+full_path_f64 = "/Users/mike/Documents/phdstuff/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/kernels/zp_puregpu_funcs_f64.so"
 
-zp_cuda_lib = ctypes.cdll.LoadLibrary(full_path)
-zp_cuda_lib_fp32 = ctypes.cdll.LoadLibrary(fp32_path)
+zp_cuda_lib = ctypes.cdll.LoadLibrary(full_path_f64)
+zp_cuda_lib_fp32 = ctypes.cdll.LoadLibrary(full_path_f32)
 
 zp_cuda_lib.zeroPad1d.argtypes = [
     ctypes.POINTER(ctypes.c_double),
