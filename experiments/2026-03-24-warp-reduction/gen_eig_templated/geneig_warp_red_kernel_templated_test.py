@@ -144,14 +144,14 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 
     # CuPy reference
     ref_cupy, nb = cupy_ref(noise, diffuse, edges)
-    print(ref_cupy.shape)
+    # print(ref_cupy.shape)
 
     # GPU
     # diffuse_gpu = cp.asarray(diffuse)
     # noise_gpu = cp.asarray(noise)
     # edges_gpu = cp.asarray(edges)
     out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
-    print(out_kernel.shape)
+    # print(out_kernel.shape)
 
     call_kernel(lib, diffuse, noise, edges, out_kernel,
                 nb, n_eig, threads_per_block)
@@ -181,6 +181,23 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     #     print(f"    worst block: {worst}, max diff: {block_diffs[worst]:.2e}")
     #     print(f"    ref[{worst}]:\n{ref_cupy[worst]}")
     #     print(f"    gpu[{worst}]:\n{out_kernel[worst]}")
+
+    debug_match = True
+    if debug_match:
+        if not match_cupy:
+            with open(f"debug_n_eig_{n_eig}.txt", "w") as f:
+                f.write(f"n_eig={n_eig}\n")
+                f.write(f"ref_cupy sum: {cp.sum(ref_cupy):.6e}\n")
+                f.write(f"kernel  sum: {cp.sum(out_kernel):.6e}\n")
+                f.write(f"ref[0]:\n{cp.asnumpy(ref_cupy[0])}\n\n")
+                f.write(f"gpu[0]:\n{cp.asnumpy(out_kernel[0])}\n\n")
+                
+                # check if kernel output is all zeros
+                f.write(f"kernel all zeros: {cp.all(out_kernel == 0)}\n")
+                f.write(f"kernel max: {cp.max(cp.abs(out_kernel)):.6e}\n")
+                f.write(f"ref max: {cp.max(cp.abs(ref_cupy)):.6e}\n")
+
+        print(f"  n_eig={n_eig} CUDA error: {cp.cuda.runtime.getLastError()}")
 
     return match_cupy, match_cpu
 
