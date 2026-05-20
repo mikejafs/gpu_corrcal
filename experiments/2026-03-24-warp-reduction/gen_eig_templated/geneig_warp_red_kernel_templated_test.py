@@ -134,7 +134,7 @@ def make_test_data(n_eig, rows, cols, seed=42):
 # Correctness test
 # ============================================================
 
-def correctness_test(n_eig, rows, cols, threads_per_block=128):
+def correctness_test(n_eig, rows, cols, threads_per_block=256):
     """Compare GPU kernel output to CPU reference."""
     diffuse, noise, edges = make_test_data(n_eig, rows, cols, 42)
 
