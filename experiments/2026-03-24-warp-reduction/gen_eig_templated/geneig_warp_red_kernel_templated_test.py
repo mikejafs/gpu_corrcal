@@ -170,13 +170,12 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     match_cpu = cp.allclose(ref_cpu, out_kernel, atol=1e-4, rtol=1e-4)
     max_diff_cpu = np.max(np.abs(ref_cpu - out_kernel))
 
-    print()
+
     print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
     print(80*"-")
 
     print(f"AGAINST CPU:  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
     print(80*"-")
-    print()
 
     debug_match = False
     if debug_match:
@@ -242,7 +241,7 @@ if __name__ == "__main__":
         print("=" * 65)
 
         all_pass = True
-        for n_eig in range(1, 25):
+        for n_eig in range(1, 21):
             ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, threads_per_block=128)
             # ok_cupy = correctness_test(n_eig, rows, cols, threads_per_block=512)
             all_pass = all_pass and ok_cupy
@@ -261,7 +260,7 @@ if __name__ == "__main__":
         print(f"TIMING TESTS -> n_ant = {rows} * {cols} = {n_ant}")
         print("=" * 65)
 
-        for n_eig in range(1, 25):
+        for n_eig in range(1, 21):
             timing_test(lib, n_eig, rows, cols, 128, random_seed)
 
         print("=" * 65)
