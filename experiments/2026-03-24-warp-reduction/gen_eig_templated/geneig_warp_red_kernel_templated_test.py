@@ -188,7 +188,7 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     #     print(f"    ref[{worst}]:\n{ref_cupy[worst]}")
     #     print(f"    gpu[{worst}]:\n{out_kernel[worst]}")
 
-    check_zeros = True
+    check_zeros = False
     if check_zeros:
         if not match_cupy:
             print(diffuse[edges[0]:edges[1]])
@@ -275,7 +275,7 @@ if __name__ == "__main__":
     random_seed=42
 
     all_pass = True
-    for n_eig in range(13, 21):
+    for n_eig in range(8, 21):
         ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, threads_per_block=128)
         # ok_cupy = correctness_test(n_eig, rows, cols, threads_per_block=512)
         all_pass = all_pass and ok_cupy
