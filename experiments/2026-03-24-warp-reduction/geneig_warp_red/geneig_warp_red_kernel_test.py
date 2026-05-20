@@ -565,7 +565,7 @@ if __name__ == "__main__":
     print()
     print("Test 2: Correctness vs NumPy reference and vs CuPy Reference")
     print("-" * 60)
-    for n_eig in [1, 2, 3, 4, 5, 8]:
+    for n_eig in [1, 2, 3, 4, 5, 8, 15, 16, 17, 18]:
         test_against_numpy(n_eig)
 
     # ---- Benchmark across n_eig values ----
