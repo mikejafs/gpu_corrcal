@@ -21,9 +21,9 @@ import cupy as cp
 import ctypes
 import os
 import time
-from utils.gridding import *
-from utils.simulate_params import *
-from utils.zp_puregpu_funcs_py import *
+from gpu_corrcal.utils.gridding import *
+from gpu_corrcal.utils.simulate_params import *
+from gpu_corrcal.utils.zp_puregpu_funcs_py import *
 from cupyx.profiler import benchmark
 
 cudart = ctypes.CDLL("libcudart.so")
