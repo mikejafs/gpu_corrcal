@@ -19,15 +19,14 @@ from gpu_corrcal.utils.simulate_params import *
 from gpu_corrcal.utils.zp_puregpu_funcs_py import *
 from cupyx.profiler import benchmark
 
-cudart = ctypes.CDLL("libcudart.so")
-
+# cudart = ctypes.CDLL("libcudart.so")
 
 # ============================================================
 # ctypes wrapper
 # ============================================================
 
 def load_kernel(so_path=None):
-    
+
     # Wether or not to use pragma unroll
     unroll = False
     """Load the shared library and set up function signatures."""
@@ -38,6 +37,7 @@ def load_kernel(so_path=None):
                 os.path.dirname(os.path.abspath(__file__)),
                 "geneig_warp_red_kernel_templated.so"
             )
+            print(f"NO unroll")
 
         #if YES PRAGMA UNROLL
         elif unroll:
@@ -45,6 +45,8 @@ def load_kernel(so_path=None):
                 os.path.dirname(os.path.abspath(__file__)),
                 "geneig_warp_red_kernel_templated_pragma.so"
             )
+            print(f"WITH unroll")
+            
     lib = ctypes.CDLL(so_path)
 
     # void launch_two_level_warp_reduction(
