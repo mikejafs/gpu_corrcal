@@ -114,7 +114,7 @@ def cupy_ref(noise, diffuse, edges):
 # Test data generation
 # ============================================================
 
-def make_test_data(n_eig, rows, cols, seed=42):
+def make_test_data(n_eig, rows, cols, seed):
     """Generate random test data using the simulate params library"""
     cp.random.seed(seed)
 
