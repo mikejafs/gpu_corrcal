@@ -185,7 +185,7 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     debug_match = True
     if debug_match:
         if not match_cupy:
-            with open(f"debug_n_eig_{n_eig}.txt", "w") as f:
+            with open(f"debug_n_eig_{n_eig}.txt", "a") as f:
                 f.write(f"n_eig={n_eig}\n")
                 f.write(f"ref_cupy sum: {cp.sum(ref_cupy):.6e}\n")
                 f.write(f"kernel  sum: {cp.sum(out_kernel):.6e}\n")
@@ -197,7 +197,7 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
                 f.write(f"kernel max: {cp.max(cp.abs(out_kernel)):.6e}\n")
                 f.write(f"ref max: {cp.max(cp.abs(ref_cupy)):.6e}\n")
 
-        # print(f"  n_eig={n_eig} CUDA error: {cp.cuda.runtime.getLastError()}")
+        print(f"  n_eig={n_eig} CUDA error: {cp.cuda.runtime.getGetLastError()}")
 
     return match_cupy, match_cpu
 
