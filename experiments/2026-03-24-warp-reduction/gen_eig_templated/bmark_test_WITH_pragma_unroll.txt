@@ -1,25 +1,156 @@
+WITH unroll
 
 =================================================================
 TIMING TESTS -> n_ant = 32 * 24 = 768
 =================================================================
-  n_eig=1  n_sym=  1  gpu=     9.5 us  cpu=     3.1 us
-  n_eig=2  n_sym=  3  gpu=    18.7 us  cpu=     3.0 us
-  n_eig=3  n_sym=  6  gpu=    24.7 us  cpu=     2.9 us
+  n_eig=1  n_sym=  1  gpu=     9.1 us  cpu=     2.9 us
+  n_eig=2  n_sym=  3  gpu=    17.8 us  cpu=     2.8 us
+  n_eig=3  n_sym=  6  gpu=    24.8 us  cpu=     2.8 us
+  n_eig=4  n_sym= 10  gpu=    28.8 us  cpu=     2.8 us
+  n_eig=5  n_sym= 15  gpu=    32.7 us  cpu=     2.8 us
+  n_eig=6  n_sym= 21  gpu=    37.2 us  cpu=     2.6 us
+  n_eig=7  n_sym= 28  gpu=    43.8 us  cpu=     2.6 us
+  n_eig=8  n_sym= 36  gpu=    51.6 us  cpu=     2.7 us
+  n_eig=9  n_sym= 45  gpu=    57.9 us  cpu=     2.7 us
+  n_eig=10  n_sym= 55  gpu=    65.0 us  cpu=     2.7 us
+  n_eig=11  n_sym= 66  gpu=    72.1 us  cpu=     2.7 us
+  n_eig=12  n_sym= 78  gpu=    80.5 us  cpu=     2.7 us
+  n_eig=13  n_sym= 91  gpu=    89.3 us  cpu=     2.6 us
+  n_eig=14  n_sym=105  gpu=   101.1 us  cpu=     2.7 us
+  n_eig=15  n_sym=120  gpu=   111.7 us  cpu=     2.7 us
+  n_eig=16  n_sym=136  gpu=   134.8 us  cpu=     2.7 us
+  n_eig=17  n_sym=153  gpu=   151.2 us  cpu=     2.7 us
+  n_eig=18  n_sym=171  gpu=   167.2 us  cpu=     2.7 us
+  n_eig=19  n_sym=190  gpu=   183.6 us  cpu=     2.7 us
+  n_eig=20  n_sym=210  gpu=   203.0 us  cpu=     2.7 us
+=================================================================
+WITH unroll
+
+=================================================================
+TIMING TESTS -> n_ant = 32 * 24 = 768
+=================================================================
+  n_eig=1  n_sym=  1  gpu=     9.1 us  cpu=     2.9 us
+  n_eig=2  n_sym=  3  gpu=    18.1 us  cpu=     2.9 us
+  n_eig=3  n_sym=  6  gpu=    24.5 us  cpu=     2.8 us
+  n_eig=4  n_sym= 10  gpu=    29.1 us  cpu=     2.9 us
+  n_eig=5  n_sym= 15  gpu=    32.7 us  cpu=     2.8 us
+  n_eig=6  n_sym= 21  gpu=    37.4 us  cpu=     2.8 us
+  n_eig=7  n_sym= 28  gpu=    44.1 us  cpu=     2.8 us
+  n_eig=8  n_sym= 36  gpu=    51.9 us  cpu=     2.8 us
+  n_eig=9  n_sym= 45  gpu=    58.0 us  cpu=     2.9 us
+  n_eig=10  n_sym= 55  gpu=    65.1 us  cpu=     2.8 us
+  n_eig=11  n_sym= 66  gpu=    72.1 us  cpu=     2.9 us
+  n_eig=12  n_sym= 78  gpu=    80.8 us  cpu=     2.8 us
+  n_eig=13  n_sym= 91  gpu=    89.5 us  cpu=     2.8 us
+  n_eig=14  n_sym=105  gpu=   101.2 us  cpu=     2.8 us
+  n_eig=15  n_sym=120  gpu=   112.7 us  cpu=     3.4 us
+  n_eig=16  n_sym=136  gpu=   134.8 us  cpu=     2.8 us
+  n_eig=17  n_sym=153  gpu=   151.7 us  cpu=     2.9 us
+  n_eig=18  n_sym=171  gpu=   167.3 us  cpu=     2.8 us
+  n_eig=19  n_sym=190  gpu=   183.7 us  cpu=     2.9 us
+  n_eig=20  n_sym=210  gpu=   203.4 us  cpu=     2.9 us
+=================================================================
+WITH unroll
+
+=================================================================
+TIMING TESTS -> n_ant = 32 * 24 = 768
+=================================================================
+  n_eig=1  n_sym=  1  gpu=    12.2 us  cpu=     5.8 us
+  n_eig=2  n_sym=  3  gpu=    21.3 us  cpu=     5.7 us
+  n_eig=3  n_sym=  6  gpu=    27.6 us  cpu=     5.6 us
+  n_eig=4  n_sym= 10  gpu=    31.9 us  cpu=     5.7 us
+  n_eig=5  n_sym= 15  gpu=    35.7 us  cpu=     5.5 us
+  n_eig=6  n_sym= 21  gpu=    40.3 us  cpu=     5.5 us
+  n_eig=7  n_sym= 28  gpu=    47.0 us  cpu=     5.5 us
+  n_eig=8  n_sym= 36  gpu=    54.8 us  cpu=     5.5 us
+  n_eig=9  n_sym= 45  gpu=    60.9 us  cpu=     5.5 us
+  n_eig=10  n_sym= 55  gpu=    68.1 us  cpu=     5.5 us
+  n_eig=11  n_sym= 66  gpu=    75.1 us  cpu=     5.5 us
+  n_eig=12  n_sym= 78  gpu=    83.8 us  cpu=     5.5 us
+  n_eig=13  n_sym= 91  gpu=    90.2 us  cpu=     3.4 us
+  n_eig=14  n_sym=105  gpu=   101.2 us  cpu=     2.9 us
+  n_eig=15  n_sym=120  gpu=   111.7 us  cpu=     2.7 us
+  n_eig=16  n_sym=136  gpu=   134.7 us  cpu=     2.7 us
+  n_eig=17  n_sym=153  gpu=   151.3 us  cpu=     2.7 us
+  n_eig=18  n_sym=171  gpu=   167.3 us  cpu=     2.7 us
+  n_eig=19  n_sym=190  gpu=   183.8 us  cpu=     2.8 us
+  n_eig=20  n_sym=210  gpu=   203.3 us  cpu=     2.7 us
+=================================================================
+WITH unroll
+
+=================================================================
+TIMING TESTS -> n_ant = 32 * 24 = 768
+=================================================================
+  n_eig=1  n_sym=  1  gpu=     9.2 us  cpu=     3.0 us
+  n_eig=2  n_sym=  3  gpu=    18.3 us  cpu=     3.1 us
+  n_eig=3  n_sym=  6  gpu=    24.8 us  cpu=     2.9 us
   n_eig=4  n_sym= 10  gpu=    28.9 us  cpu=     2.9 us
+  n_eig=5  n_sym= 15  gpu=    32.7 us  cpu=     2.8 us
+  n_eig=6  n_sym= 21  gpu=    38.3 us  cpu=     3.5 us
+  n_eig=7  n_sym= 28  gpu=    44.0 us  cpu=     2.8 us
+  n_eig=8  n_sym= 36  gpu=    51.7 us  cpu=     2.8 us
+  n_eig=9  n_sym= 45  gpu=    57.9 us  cpu=     2.8 us
+  n_eig=10  n_sym= 55  gpu=    65.1 us  cpu=     2.8 us
+  n_eig=11  n_sym= 66  gpu=    72.3 us  cpu=     3.0 us
+  n_eig=12  n_sym= 78  gpu=    80.8 us  cpu=     2.8 us
+  n_eig=13  n_sym= 91  gpu=    89.3 us  cpu=     2.8 us
+  n_eig=14  n_sym=105  gpu=   101.4 us  cpu=     2.8 us
+  n_eig=15  n_sym=120  gpu=   111.9 us  cpu=     2.8 us
+  n_eig=16  n_sym=136  gpu=   135.1 us  cpu=     3.0 us
+  n_eig=17  n_sym=153  gpu=   151.7 us  cpu=     2.9 us
+  n_eig=18  n_sym=171  gpu=   167.3 us  cpu=     2.8 us
+  n_eig=19  n_sym=190  gpu=   183.7 us  cpu=     2.9 us
+  n_eig=20  n_sym=210  gpu=   203.7 us  cpu=     3.1 us
+=================================================================
+WITH unroll
+
+=================================================================
+TIMING TESTS -> n_ant = 32 * 24 = 768
+=================================================================
+  n_eig=1  n_sym=  1  gpu=    11.3 us  cpu=     4.9 us
+  n_eig=2  n_sym=  3  gpu=    20.2 us  cpu=     4.7 us
+  n_eig=3  n_sym=  6  gpu=    26.6 us  cpu=     4.7 us
+  n_eig=4  n_sym= 10  gpu=    30.7 us  cpu=     4.7 us
+  n_eig=5  n_sym= 15  gpu=    34.8 us  cpu=     4.6 us
+  n_eig=6  n_sym= 21  gpu=    39.7 us  cpu=     4.8 us
+  n_eig=7  n_sym= 28  gpu=    43.9 us  cpu=     2.7 us
+  n_eig=8  n_sym= 36  gpu=    51.9 us  cpu=     2.7 us
+  n_eig=9  n_sym= 45  gpu=    58.2 us  cpu=     2.8 us
+  n_eig=10  n_sym= 55  gpu=    65.2 us  cpu=     2.8 us
+  n_eig=11  n_sym= 66  gpu=    72.0 us  cpu=     2.7 us
+  n_eig=12  n_sym= 78  gpu=    80.6 us  cpu=     2.6 us
+  n_eig=13  n_sym= 91  gpu=    89.3 us  cpu=     2.6 us
+  n_eig=14  n_sym=105  gpu=   101.0 us  cpu=     2.6 us
+  n_eig=15  n_sym=120  gpu=   111.8 us  cpu=     2.7 us
+  n_eig=16  n_sym=136  gpu=   134.7 us  cpu=     2.7 us
+  n_eig=17  n_sym=153  gpu=   151.8 us  cpu=     2.6 us
+  n_eig=18  n_sym=171  gpu=   167.2 us  cpu=     2.7 us
+  n_eig=19  n_sym=190  gpu=   183.4 us  cpu=     2.6 us
+  n_eig=20  n_sym=210  gpu=   203.1 us  cpu=     2.7 us
+=================================================================
+WITH unroll
+
+=================================================================
+TIMING TESTS -> n_ant = 32 * 24 = 768
+=================================================================
+  n_eig=1  n_sym=  1  gpu=     9.3 us  cpu=     3.0 us
+  n_eig=2  n_sym=  3  gpu=    18.2 us  cpu=     3.1 us
+  n_eig=3  n_sym=  6  gpu=    24.6 us  cpu=     2.9 us
+  n_eig=4  n_sym= 10  gpu=    28.8 us  cpu=     2.9 us
   n_eig=5  n_sym= 15  gpu=    32.6 us  cpu=     2.8 us
-  n_eig=6  n_sym= 21  gpu=    37.5 us  cpu=     2.9 us
-  n_eig=7  n_sym= 28  gpu=    44.1 us  cpu=     2.9 us
+  n_eig=6  n_sym= 21  gpu=    37.5 us  cpu=     2.8 us
+  n_eig=7  n_sym= 28  gpu=    44.2 us  cpu=     2.9 us
   n_eig=8  n_sym= 36  gpu=    51.9 us  cpu=     2.9 us
-  n_eig=9  n_sym= 45  gpu=    58.2 us  cpu=     2.9 us
-  n_eig=10  n_sym= 55  gpu=    65.2 us  cpu=     2.9 us
-  n_eig=11  n_sym= 66  gpu=    72.2 us  cpu=     3.0 us
-  n_eig=12  n_sym= 78  gpu=    81.0 us  cpu=     2.9 us
-  n_eig=13  n_sym= 91  gpu=    89.5 us  cpu=     2.9 us
-  n_eig=14  n_sym=105  gpu=   101.3 us  cpu=     2.8 us
-  n_eig=15  n_sym=120  gpu=   112.0 us  cpu=     2.9 us
+  n_eig=9  n_sym= 45  gpu=    58.1 us  cpu=     2.8 us
+  n_eig=10  n_sym= 55  gpu=    65.1 us  cpu=     3.1 us
+  n_eig=11  n_sym= 66  gpu=    72.3 us  cpu=     2.9 us
+  n_eig=12  n_sym= 78  gpu=    80.8 us  cpu=     2.8 us
+  n_eig=13  n_sym= 91  gpu=    89.4 us  cpu=     2.8 us
+  n_eig=14  n_sym=105  gpu=   101.2 us  cpu=     2.8 us
+  n_eig=15  n_sym=120  gpu=   111.9 us  cpu=     2.8 us
   n_eig=16  n_sym=136  gpu=   134.9 us  cpu=     2.8 us
-  n_eig=17  n_sym=153  gpu=   151.9 us  cpu=     2.9 us
-  n_eig=18  n_sym=171  gpu=   167.4 us  cpu=     2.9 us
-  n_eig=19  n_sym=190  gpu=   183.9 us  cpu=     2.9 us
-  n_eig=20  n_sym=210  gpu=   203.8 us  cpu=     3.0 us
+  n_eig=17  n_sym=153  gpu=   151.7 us  cpu=     2.9 us
+  n_eig=18  n_sym=171  gpu=   167.4 us  cpu=     2.8 us
+  n_eig=19  n_sym=190  gpu=   183.8 us  cpu=     2.9 us
+  n_eig=20  n_sym=210  gpu=   203.9 us  cpu=     3.0 us
 =================================================================
