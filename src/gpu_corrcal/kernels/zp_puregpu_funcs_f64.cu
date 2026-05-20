@@ -1,4 +1,4 @@
-//nvcc -shared -o zp_puregpu_funcs.so zp_puregpu_funcs.cu -Xcompiler -fPIC
+//nvcc -shared -o zp_puregpu_funcs_f64.so zp_puregpu_funcs_f64.cu -Xcompiler -fPIC
 #include <stdio.h>
 
 extern "C"
@@ -151,7 +151,7 @@ extern "C"
         //TODO: Understand my gpu architecture and per considerations well enough
         //to be able to choose the correct values for threadsperblock in each
         //dim & to know if this layout of numBlocks is the best way to do things
-        dim3 threadsPerBlock(8, 8, in_array_cols);
+        dim3 threadsPerBlock(8, 8, 8);
         dim3 numBlocks((n_blocks + threadsPerBlock.x - 1) / threadsPerBlock.x, 
                         (largest_block + threadsPerBlock.y - 1) / threadsPerBlock.y,
                         (in_array_cols + threadsPerBlock.z - 1) / threadsPerBlock.z);
@@ -181,7 +181,7 @@ extern "C"
         //TODO: Understand my gpu architecture and per considerations well enough
         //to be able to choose the correct values for threadsperblock in each
         //dim & to know if this layout of numBlocks is the best way to do things
-        dim3 threadsPerBlock(8, 8, in_array_cols);
+        dim3 threadsPerBlock(8, 8, 8);
         dim3 numBlocks((n_blocks + threadsPerBlock.x - 1) / threadsPerBlock.x, 
                         (largest_block + threadsPerBlock.y - 1) / threadsPerBlock.y,
                         (in_array_cols + threadsPerBlock.z - 1) / threadsPerBlock.z);
