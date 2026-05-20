@@ -174,8 +174,8 @@ def correctness_test(n_eig, rows, cols, threads_per_block=256):
 
 
     if not match_cupy:
-        block_diffs = np.array([np.max(np.abs(ref_cupy[b] - out_kernel[b])) for b in range(nb)])
-        worst = np.argmax(block_diffs)
+        block_diffs = cp.array([cp.max(cp.abs(ref_cupy[b] - out_kernel[b])) for b in range(nb)])
+        worst = cp.argmax(block_diffs)
         print(f"    worst block: {worst}, max diff: {block_diffs[worst]:.2e}")
         print(f"    ref[{worst}]:\n{ref_cupy[worst]}")
         print(f"    gpu[{worst}]:\n{out_kernel[worst]}")
