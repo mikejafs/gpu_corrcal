@@ -214,16 +214,18 @@ def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
 if __name__ == "__main__":
     lib = load_kernel()
 
+    # Test params
+    rows = 16
+    cols = 21
+    n_ant = rows*cols
+    random_seed=42
+
+    # Test correctness
     correctness = False
     if correctness:
         print("=" * 65)
         print("CORRECTNESS TESTS")
         print("=" * 65)
-
-        rows = 16
-        cols = 21
-        n_ant = rows*cols
-        random_seed=42
 
         all_pass = True
         for n_eig in range(1, 21):
@@ -237,6 +239,7 @@ if __name__ == "__main__":
         else:
             print("SOME TESTS FAILED")
 
+    # Run benchmark tests
     bmark = True
     if bmark:
         print()
