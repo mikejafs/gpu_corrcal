@@ -163,11 +163,10 @@ def correctness_test(n_eig, rows, cols, threads_per_block=128):
     match_cpu = cp.allclose(ref_cpu, out_kernel, atol=1e-4, rtol=1e-4)
     max_diff_cpu = np.max(np.abs(ref_cpu - out_kernel))
 
+    print()
     print(f"AGAINST CUPY:")
     print(f"  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
     print(80*"-")
-
-    print()
 
     print("AGAINST CPU")
     print(f"  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
