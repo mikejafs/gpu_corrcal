@@ -172,8 +172,6 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 
 
     print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
-    print(80*"-")
-
     print(f"AGAINST CPU:  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
     print(80*"-")
 
