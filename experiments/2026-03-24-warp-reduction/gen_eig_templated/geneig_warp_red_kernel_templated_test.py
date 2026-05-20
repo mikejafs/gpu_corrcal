@@ -199,7 +199,7 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
                 f.write(f"kernel max: {cp.max(cp.abs(out_kernel)):.6e}\n")
                 f.write(f"ref max: {cp.max(cp.abs(ref_cupy)):.6e}\n")
 
-        print(f"  n_eig={n_eig} CUDA error: {cudart.getLastError()}")
+        print(f"  n_eig={n_eig} CUDA error: {cudart.cudaGetLastError()}")
 
     return match_cupy, match_cpu
 
