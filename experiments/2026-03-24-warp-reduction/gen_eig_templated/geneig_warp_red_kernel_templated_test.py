@@ -231,8 +231,8 @@ if __name__ == "__main__":
     print("CORRECTNESS TESTS")
     print("=" * 65)
 
-    rows = 4
-    cols = 4
+    rows = 30
+    cols = 40
     n_ant = rows*cols
 
     all_pass = True
