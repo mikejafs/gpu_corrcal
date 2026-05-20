@@ -186,7 +186,7 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 
     check_zeros = True
     if check_zeros:
-        return
+        pass
 
 
     debug_match = False
