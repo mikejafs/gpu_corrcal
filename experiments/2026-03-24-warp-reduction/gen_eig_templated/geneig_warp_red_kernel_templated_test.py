@@ -106,7 +106,7 @@ def cupy_ref(noise, diffuse, edges):
     temp = zp_inv_noise[..., None] * zp_diffuse
     out = cp.transpose(zp_diffuse, [0, 2, 1]) @ temp
     cp.cuda.Stream.null.synchronize()
-    return out
+    return out, nb
 
 # ============================================================
 # Test data generation
@@ -139,73 +139,77 @@ def correctness_test(n_eig, n_ant, rows, cols, threads_per_block=128):
 
     # CPU reference
     ref_cpu = cpu_ref(cp.asnumpy(diffuse), cp.asnumpy(noise), cp.asnumpy(edges), n_eig)
+    ref_cpu = cp.asarray(ref_cpu)
 
     # CuPy reference
-    ref_cupy = cupy_ref(noise, diffuse, edges)
+    ref_cupy, nb = cupy_ref(noise, diffuse, edges)
 
     # GPU
     # diffuse_gpu = cp.asarray(diffuse)
     # noise_gpu = cp.asarray(noise)
     # edges_gpu = cp.asarray(edges)
-    out_gpu = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
+    out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
 
-    call_kernel(lib, diffuse_gpu, noise_gpu, edges_gpu, out_gpu,
+    call_kernel(lib, diffuse, noise, edges, out_kernel,
                 nb, n_eig, threads_per_block)
     sync(lib)
 
-    out_host = cp.asnumpy(out_gpu)
+    # Check against cupy
+    match_cupy = cp.allclose(ref_cupy, out_kernel, atol=1e-4, rtol=1e-4)
+    max_diff_cupy = np.max(np.abs(ref_cupy - out_kernel))
 
-    # Check
-    match = np.allclose(ref, out_host, atol=1e-4, rtol=1e-4)
-    max_diff = np.max(np.abs(ref - out_host))
+    # Check against cpu ref
+    match_cpu = cp.allclose(ref_cpu, out_kernel, atol=1e-4, rtol=1e-4)
+    max_diff_cpu = np.max(np.abs(ref_cpu - out_kernel))
 
-    print(f"  n_eig={n_eig:2d}  |  allclose: {match}  |  max |diff|: {max_diff:.2e}")
+    print(f"  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
+    print(f"  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
 
-    if not match:
-        block_diffs = np.array([np.max(np.abs(ref[b] - out_host[b])) for b in range(nb)])
-        worst = np.argmax(block_diffs)
-        print(f"    worst block: {worst}, max diff: {block_diffs[worst]:.2e}")
-        print(f"    ref[{worst}]:\n{ref[worst]}")
-        print(f"    gpu[{worst}]:\n{out_host[worst]}")
+    # if not match_cupy:
+    #     block_diffs = np.array([np.max(np.abs(ref[b] - out_host[b])) for b in range(nb)])
+    #     worst = np.argmax(block_diffs)
+    #     print(f"    worst block: {worst}, max diff: {block_diffs[worst]:.2e}")
+    #     print(f"    ref[{worst}]:\n{ref[worst]}")
+    #     print(f"    gpu[{worst}]:\n{out_host[worst]}")
 
-    return match
+    return match_cupy, match_cpu
 
 
 # ============================================================
 # Timing test
 # ============================================================
 
-def timing_test(lib, n_eig=4, nb=512, n_per_block=1024,
-                threads_per_block=128, n_iter=500):
-    """Time the GPU kernel."""
-    diffuse, noise, edges = make_test_data(nb, n_per_block, n_eig)
+# def timing_test(lib, n_eig=4, nb=512, n_per_block=1024,
+#                 threads_per_block=128, n_iter=500):
+#     """Time the GPU kernel."""
+#     diffuse, noise, edges = make_test_data(nb, n_per_block, n_eig)
 
-    diffuse_gpu = cp.asarray(diffuse)
-    noise_gpu = cp.asarray(noise)
-    edges_gpu = cp.asarray(edges)
-    out_gpu = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
+#     diffuse_gpu = cp.asarray(diffuse)
+#     noise_gpu = cp.asarray(noise)
+#     edges_gpu = cp.asarray(edges)
+#     out_gpu = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
 
-    # Warmup
-    for _ in range(5):
-        call_kernel(lib, diffuse_gpu, noise_gpu, edges_gpu, out_gpu,
-                    nb, n_eig, threads_per_block)
-    sync(lib)
+#     # Warmup
+#     for _ in range(5):
+#         call_kernel(lib, diffuse_gpu, noise_gpu, edges_gpu, out_gpu,
+#                     nb, n_eig, threads_per_block)
+#     sync(lib)
 
-    # Timed
-    sync(lib)
-    t0 = time.perf_counter()
-    for _ in range(n_iter):
-        call_kernel(lib, diffuse_gpu, noise_gpu, edges_gpu, out_gpu,
-                    nb, n_eig, threads_per_block)
-    sync(lib)
-    elapsed = time.perf_counter() - t0
+#     # Timed
+#     sync(lib)
+#     t0 = time.perf_counter()
+#     for _ in range(n_iter):
+#         call_kernel(lib, diffuse_gpu, noise_gpu, edges_gpu, out_gpu,
+#                     nb, n_eig, threads_per_block)
+#     sync(lib)
+#     elapsed = time.perf_counter() - t0
 
-    per_call_ms = (elapsed / n_iter) * 1e6
-    n_total = int(edges[-1])
-    print(f"  n_eig={n_eig:2d}  |  nb={nb}  |  n_total={n_total:>8d}  |  "
-          f"{per_call_ms:.8f} us/call  ({n_iter} iters)")
+#     per_call_ms = (elapsed / n_iter) * 1e6
+#     n_total = int(edges[-1])
+#     print(f"  n_eig={n_eig:2d}  |  nb={nb}  |  n_total={n_total:>8d}  |  "
+#           f"{per_call_ms:.8f} us/call  ({n_iter} iters)")
 
-    return per_call_ms
+#     return per_call_ms
 
 
 # ============================================================
@@ -221,8 +225,8 @@ if __name__ == "__main__":
 
     all_pass = True
     for n_eig in [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 18, 19, 20]:
-        ok = correctness_test(lib, n_eig=n_eig, nb=32, n_per_block=512)
-        all_pass = all_pass and ok
+        ok_cupy, ok_cpu = correctness_test(lib, n_eig=n_eig, nb=32, n_per_block=512)
+        all_pass = all_pass and ok_cupy and ok_cpu
 
     print("-" * 65)
     if all_pass:
@@ -230,12 +234,12 @@ if __name__ == "__main__":
     else:
         print("SOME TESTS FAILED")
 
-    print()
-    print("=" * 65)
-    print("TIMING TESTS")
-    print("=" * 65)
+    # print()
+    # print("=" * 65)
+    # print("TIMING TESTS")
+    # print("=" * 65)
 
-    for n_eig in range(1, 21):
-        timing_test(lib, n_eig=n_eig)
+    # for n_eig in range(1, 21):
+    #     timing_test(lib, n_eig=n_eig)
 
-    print("=" * 65)
+    # print("=" * 65)
