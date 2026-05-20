@@ -102,6 +102,13 @@ def cpu_ref(diffuse, noise, edges, n_eig):
             out[b] += np.outer(d, d) / noise[i]
     return out
 
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+# ==============================================================
+# CUPY ref -- error at zeroPad level for diffuse after n_eig=16
+# ==============================================================
+# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
 def cupy_ref(noise, diffuse, edges):
     zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
     print(f"inv noise: {cp.sum(cp.abs(zp_inv_noise))}")
