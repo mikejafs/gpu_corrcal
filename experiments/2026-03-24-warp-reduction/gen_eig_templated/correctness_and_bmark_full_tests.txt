@@ -1,0 +1,91 @@
+WITH unroll
+=================================================================
+CORRECTNESS TESTS
+=================================================================
+AGAINST CUPY:  n_eig= 1  |  allclose: True  |  max |diff|: 6.25e-02
+AGAINST CPU:  n_eig= 1  |  allclose: True  |  max |diff|: 1.56e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig= 2  |  allclose: True  |  max |diff|: 2.81e-01
+AGAINST CPU:  n_eig= 2  |  allclose: True  |  max |diff|: 3.44e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig= 3  |  allclose: True  |  max |diff|: 2.50e-01
+AGAINST CPU:  n_eig= 3  |  allclose: True  |  max |diff|: 2.50e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig= 4  |  allclose: True  |  max |diff|: 3.12e-01
+AGAINST CPU:  n_eig= 4  |  allclose: True  |  max |diff|: 6.25e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig= 5  |  allclose: True  |  max |diff|: 1.41e-01
+AGAINST CPU:  n_eig= 5  |  allclose: True  |  max |diff|: 1.56e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig= 6  |  allclose: True  |  max |diff|: 3.44e-01
+AGAINST CPU:  n_eig= 6  |  allclose: True  |  max |diff|: 3.12e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig= 7  |  allclose: True  |  max |diff|: 3.12e-01
+AGAINST CPU:  n_eig= 7  |  allclose: True  |  max |diff|: 3.44e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig= 8  |  allclose: True  |  max |diff|: 9.38e-02
+AGAINST CPU:  n_eig= 8  |  allclose: True  |  max |diff|: 1.56e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig= 9  |  allclose: True  |  max |diff|: 3.75e-01
+AGAINST CPU:  n_eig= 9  |  allclose: True  |  max |diff|: 4.38e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=10  |  allclose: True  |  max |diff|: 5.00e-01
+AGAINST CPU:  n_eig=10  |  allclose: True  |  max |diff|: 7.50e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=11  |  allclose: True  |  max |diff|: 1.56e-01
+AGAINST CPU:  n_eig=11  |  allclose: True  |  max |diff|: 2.03e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=12  |  allclose: True  |  max |diff|: 2.50e-01
+AGAINST CPU:  n_eig=12  |  allclose: True  |  max |diff|: 3.75e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=13  |  allclose: True  |  max |diff|: 2.81e-01
+AGAINST CPU:  n_eig=13  |  allclose: True  |  max |diff|: 2.81e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=14  |  allclose: True  |  max |diff|: 1.88e-01
+AGAINST CPU:  n_eig=14  |  allclose: True  |  max |diff|: 2.81e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=15  |  allclose: True  |  max |diff|: 3.12e-01
+AGAINST CPU:  n_eig=15  |  allclose: True  |  max |diff|: 3.12e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=16  |  allclose: True  |  max |diff|: 2.50e-01
+AGAINST CPU:  n_eig=16  |  allclose: True  |  max |diff|: 3.12e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=17  |  allclose: True  |  max |diff|: 5.62e-01
+AGAINST CPU:  n_eig=17  |  allclose: True  |  max |diff|: 5.62e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=18  |  allclose: True  |  max |diff|: 4.06e-01
+AGAINST CPU:  n_eig=18  |  allclose: True  |  max |diff|: 4.06e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=19  |  allclose: True  |  max |diff|: 3.75e-01
+AGAINST CPU:  n_eig=19  |  allclose: True  |  max |diff|: 3.75e-01
+--------------------------------------------------------------------------------
+AGAINST CUPY:  n_eig=20  |  allclose: True  |  max |diff|: 5.62e-01
+AGAINST CPU:  n_eig=20  |  allclose: True  |  max |diff|: 5.00e-01
+--------------------------------------------------------------------------------
+-----------------------------------------------------------------
+ALL PASSED
+
+=================================================================
+TIMING TESTS -> n_ant = 32 * 24 = 768
+=================================================================
+  n_eig=1  n_sym=  1  gpu=     9.2 us  cpu=     3.0 us
+  n_eig=2  n_sym=  3  gpu=    17.9 us  cpu=     2.9 us
+  n_eig=3  n_sym=  6  gpu=    24.8 us  cpu=     2.9 us
+  n_eig=4  n_sym= 10  gpu=    28.6 us  cpu=     2.9 us
+  n_eig=5  n_sym= 15  gpu=    32.6 us  cpu=     2.9 us
+  n_eig=6  n_sym= 21  gpu=    37.4 us  cpu=     2.9 us
+  n_eig=7  n_sym= 28  gpu=    44.2 us  cpu=     2.9 us
+  n_eig=8  n_sym= 36  gpu=    52.0 us  cpu=     2.9 us
+  n_eig=9  n_sym= 45  gpu=    57.9 us  cpu=     2.9 us
+  n_eig=10  n_sym= 55  gpu=    65.1 us  cpu=     2.9 us
+  n_eig=11  n_sym= 66  gpu=    72.2 us  cpu=     3.0 us
+  n_eig=12  n_sym= 78  gpu=    80.8 us  cpu=     3.0 us
+  n_eig=13  n_sym= 91  gpu=    89.6 us  cpu=     2.9 us
+  n_eig=14  n_sym=105  gpu=   101.2 us  cpu=     2.9 us
+  n_eig=15  n_sym=120  gpu=   111.9 us  cpu=     2.9 us
+  n_eig=16  n_sym=136  gpu=   134.9 us  cpu=     3.0 us
+  n_eig=17  n_sym=153  gpu=   151.9 us  cpu=     3.0 us
+  n_eig=18  n_sym=171  gpu=   167.2 us  cpu=     3.0 us
+  n_eig=19  n_sym=190  gpu=   183.7 us  cpu=     3.0 us
+  n_eig=20  n_sym=210  gpu=   203.7 us  cpu=     3.0 us
+=================================================================
