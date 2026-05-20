@@ -136,7 +136,7 @@ def make_test_data(n_eig, rows, cols, seed=42):
 
 def correctness_test(n_eig, rows, cols, threads_per_block):
     """Compare GPU kernel output to CPU reference."""
-    diffuse, noise, edges = make_test_data(n_eig, rows, cols, 42)
+    diffuse, noise, edges = make_test_data(n_eig, rows, cols, 12)
 
     # CPU reference
     ref_cpu = cpu_ref(cp.asnumpy(diffuse), cp.asnumpy(noise), cp.asnumpy(edges), n_eig)
