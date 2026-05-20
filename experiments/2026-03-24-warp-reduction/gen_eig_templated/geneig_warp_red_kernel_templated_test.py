@@ -184,7 +184,7 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     #     print(f"    ref[{worst}]:\n{ref_cupy[worst]}")
     #     print(f"    gpu[{worst}]:\n{out_kernel[worst]}")
 
-    debug_match = False
+    debug_match = True
     if debug_match:
         if not match_cupy:
             with open(f"debug_n_eig_{n_eig}.txt", "a") as f:
