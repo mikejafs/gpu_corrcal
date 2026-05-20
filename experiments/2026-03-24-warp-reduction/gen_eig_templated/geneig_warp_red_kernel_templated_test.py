@@ -104,9 +104,13 @@ def cpu_ref(diffuse, noise, edges, n_eig):
 
 def cupy_ref(noise, diffuse, edges):
     zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
+    print(f"inv noise: {cp.sum(cp.abs(zp_inv_noise))}")
     zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
+    print(f"diffuse: {cp.sum(cp.abs(zp_diffuse))}")
     temp = zp_inv_noise[..., None] * zp_diffuse
+    print(f" temp: {cp.sum(cp.abs(temp))}")
     out = cp.transpose(zp_diffuse, [0, 2, 1]) @ temp
+    print(F" out: {cp.abs(cp.sum(out))}")
     cp.cuda.Stream.null.synchronize()
     return out, nb
 
@@ -271,7 +275,7 @@ if __name__ == "__main__":
     random_seed=42
 
     all_pass = True
-    for n_eig in range(1, 21):
+    for n_eig in range(13, 21):
         ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, threads_per_block=128)
         # ok_cupy = correctness_test(n_eig, rows, cols, threads_per_block=512)
         all_pass = all_pass and ok_cupy
@@ -282,12 +286,14 @@ if __name__ == "__main__":
     else:
         print("SOME TESTS FAILED")
 
-    print()
-    print("=" * 65)
-    print("TIMING TESTS")
-    print("=" * 65)
+    bmark = False
+    if bmark:
+        print()
+        print("=" * 65)
+        print("TIMING TESTS")
+        print("=" * 65)
 
-    for n_eig in range(1, 21):
-        timing_test(lib, n_eig, rows, cols, 128, random_seed)
+        for n_eig in range(1, 21):
+            timing_test(lib, n_eig, rows, cols, 128, random_seed)
 
-    print("=" * 65)
+        print("=" * 65)
