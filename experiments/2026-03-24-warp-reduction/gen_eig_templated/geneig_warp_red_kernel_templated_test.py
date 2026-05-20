@@ -240,8 +240,8 @@ if __name__ == "__main__":
     print("CORRECTNESS TESTS")
     print("=" * 65)
 
-    rows = 10
-    cols = 8
+    rows = 27
+    cols = 27
     n_ant = rows*cols
     random_seed=12
 
