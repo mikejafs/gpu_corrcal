@@ -263,6 +263,6 @@ if __name__ == "__main__":
     print("=" * 65)
 
     for n_eig in range(1, 21):
-        timing_test(lib, n_eig=n_eig)
+        timing_test(lib, n_eig, rows, cols, 128, random_seed)
 
     print("=" * 65)
