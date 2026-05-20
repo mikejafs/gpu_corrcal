@@ -231,7 +231,7 @@ if __name__ == "__main__":
     print("CORRECTNESS TESTS")
     print("=" * 65)
 
-    rows = 30
+    rows = 32
     cols = 30
     n_ant = rows*cols
 
