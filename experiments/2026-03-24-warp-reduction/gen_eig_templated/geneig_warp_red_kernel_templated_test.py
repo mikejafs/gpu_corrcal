@@ -27,12 +27,24 @@ cudart = ctypes.CDLL("libcudart.so")
 # ============================================================
 
 def load_kernel(so_path=None):
+    
+    # Wether or not to use pragma unroll
+    unroll = False
     """Load the shared library and set up function signatures."""
     if so_path is None:
-        so_path = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "geneig_warp_red_kernel_templated.so"
-        )
+        #if NO PRAGMA UNROLL
+        if not unroll:
+            so_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "geneig_warp_red_kernel_templated.so"
+            )
+
+        #if YES PRAGMA UNROLL
+        elif unroll:
+            so_path = os.path.join(
+                os.path.dirname(os.path.abspath(__file__)),
+                "geneig_warp_red_kernel_templated_pragma.so"
+            )
     lib = ctypes.CDLL(so_path)
 
     # void launch_two_level_warp_reduction(

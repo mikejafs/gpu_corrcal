@@ -1,4 +1,4 @@
-// nvcc -Xcompiler -fPIC -shared -o geneig_warp_red_kernel_templated.so geneig_warp_red_kernel_templated.cu
+// nvcc -Xcompiler -fPIC -shared -o geneig_warp_red_kernel_templated_pragma.so geneig_warp_red_kernel_templated_pragma.cu
 
 /*
 General number of eigenmodes warp reduction kernel.
@@ -45,6 +45,7 @@ __device__ __forceinline__ void accumulate_outer_prod(
 ){
     constexpr int N_SYM = N_EIG * (N_EIG + 1) / 2;
 
+    #pragma unroll
     for (int t = 0; t < N_SYM; ++t) acc[t] = 0.0f;
 
     int tid = (int)threadIdx.x;
@@ -54,13 +55,16 @@ __device__ __forceinline__ void accumulate_outer_prod(
         float ni_inv = 1.0f / noise[i];
 
         float d[N_EIG];
+        #pragma unroll
         for (int j = 0; j < N_EIG; ++j) {
             d[j] = diffuse[i * N_EIG + j];
         }
 
         int idx = 0;
+        #pragma unroll
         for (int j = 0; j < N_EIG; ++j) {
             float d_ni_inv = ni_inv * d[j];
+            #pragma unroll
             for (int row = 0; row <= j; ++row) {
                 acc[idx] += d[row] * d_ni_inv;
                 idx++;
@@ -101,6 +105,7 @@ void two_level_warp_reduction(
     float acc[N_SYM];
     accumulate_outer_prod<N_EIG>(diffuse, noise, start, stop, acc);
 
+    #pragma unroll
     for (int i = 0; i < N_SYM; ++i){
         acc[i] = warp_sum(acc[i]);
     }
@@ -112,6 +117,7 @@ void two_level_warp_reduction(
     int num_warps = (int)blockDim.x >> 5;
 
     if (lane == 0){
+        #pragma unroll
         for (int i = 0; i < N_SYM; ++i){
             sh[i * num_warps + warp] = acc[i];
         }
@@ -121,15 +127,18 @@ void two_level_warp_reduction(
     if (warp == 0){
         float warp0_red[N_SYM];
         if (lane < num_warps){
+            #pragma unroll
             for (int i = 0; i < N_SYM; ++i){
                 warp0_red[i] = sh[i * num_warps + lane];
             } 
         } else {
+            #pragma unroll
             for (int i = 0; i < N_SYM; ++i){
                 warp0_red[i] = 0.0f;
             }
         }
 
+        #pragma unroll
         for (int j = 0; j < N_SYM; ++j){
             warp0_red[j] = warp_sum(warp0_red[j]);
         }
@@ -138,7 +147,9 @@ void two_level_warp_reduction(
             float* res = out + (size_t)b * N_EIG * N_EIG;
 
             int idx = 0;
+            #pragma unroll
             for (int col = 0; col < N_EIG; ++col){
+                #pragma unroll
                 for (int row = 0; row <= col; ++row){
                     res[row * N_EIG + col] = warp0_red[idx];
                     res[col * N_EIG + row] = warp0_red[idx];
