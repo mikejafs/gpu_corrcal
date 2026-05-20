@@ -7,13 +7,6 @@ Compile:
 
 Usage:
     python geneig_warp_red_kernel_test.py
-
-
-CAUTION:
-    NEED TO REWORK THE TESTS TO REPRESENT TRUE REDUNDANT ARRAY SHAPES
-    CURRENTLY NOT ASSUMING CORRECT REDUNDANT BLOCK SHAPES
-
-    THEN DO THE SAME FOR THE SHAREDMEM FILE
 """
 
 import numpy as np
@@ -83,7 +76,7 @@ def sync(lib):
 
 
 # ============================================================
-# CPU reference
+# CPU & CUPY References
 # ============================================================
 
 def cpu_ref(diffuse, noise, edges, n_eig):
@@ -102,12 +95,6 @@ def cpu_ref(diffuse, noise, edges, n_eig):
             out[b] += np.outer(d, d) / noise[i]
     return out
 
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-# ==============================================================
-# CUPY ref -- error at zeroPad level for diffuse after n_eig=16
-# ==============================================================
-# !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
 def cupy_ref(noise, diffuse, edges):
     zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
@@ -116,6 +103,7 @@ def cupy_ref(noise, diffuse, edges):
     out = cp.transpose(zp_diffuse, [0, 2, 1]) @ temp
     cp.cuda.Stream.null.synchronize()
     return out, nb
+
 
 # ============================================================
 # Test data generation
@@ -152,14 +140,9 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 
     # CuPy reference
     ref_cupy, nb = cupy_ref(noise, diffuse, edges)
-    # print(ref_cupy.shape)
 
     # GPU
-    # diffuse_gpu = cp.asarray(diffuse)
-    # noise_gpu = cp.asarray(noise)
-    # edges_gpu = cp.asarray(edges)
     out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
-    # print(out_kernel.shape)
 
     call_kernel(lib, diffuse, noise, edges, out_kernel,
                 nb, n_eig, threads_per_block)
@@ -173,23 +156,13 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     match_cpu = cp.allclose(ref_cpu, out_kernel, atol=1e-4, rtol=1e-4)
     max_diff_cpu = np.max(np.abs(ref_cpu - out_kernel))
 
-    # print()
+    print()
     print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
-    # print(80*"-")
+    print(80*"-")
 
-    # print(f"AGAINST CPU:  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
-    # print(80*"-")
-    # print()
-
-
-
-    # if not match_cupy:
-    #     block_diffs = cp.array([cp.max(cp.abs(ref_cupy[b] - out_kernel[b])) for b in range(nb)])
-    #     worst = cp.argmax(block_diffs)
-    #     print(f"    worst block: {worst}, max diff: {block_diffs[worst]:.2e}")
-    #     print(f"    ref[{worst}]:\n{ref_cupy[worst]}")
-    #     print(f"    gpu[{worst}]:\n{out_kernel[worst]}")
-
+    print(f"AGAINST CPU:  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
+    print(80*"-")
+    print()
 
     debug_match = False
     if debug_match:
@@ -217,33 +190,14 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 
 def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
     """Time the GPU kernel."""
+    # Generate the test data
     diffuse, noise, edges = make_test_data(n_eig, rows, cols, seed)
-    ref_cupy, nb = cupy_ref(noise, diffuse, edges)
+    ref_cupy, nb = cupy_ref(noise, diffuse, edges) # we need nb for the kernel
 
-    # diffuse_gpu = cp.asarray(diffuse)
-    # noise_gpu = cp.asarray(noise)
-    # edges_gpu = cp.asarray(edges)
+    # Initialize the output matrix
     out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
 
-    # Warmup
-    # for _ in range(5):
-    #     call_kernel(lib, diffuse, noise, edges, out_kernel,
-    #                 nb, n_eig, threads_per_block)
-    # sync(lib)
-
-    # # Timed
-    # sync(lib)
-    # t0 = time.perf_counter()
-    # for _ in range(n_iter):
-    #     call_kernel(ç)
-    # sync(lib)
-    # elapsed = time.perf_counter() - t0
-
-    # per_call_ms = (elapsed / n_iter) * 1e6
-    # n_total = int(edges[-1])
-    # print(f"  n_eig={n_eig:2d}  |  nb={nb}  |  n_total={n_total:>8d}  |  "
-    #       f"{per_call_ms:.8f} us/call  ({n_iter} iters)")
-
+    # Benchmark using CuPy
     times = benchmark(call_kernel, (lib, diffuse, noise, edges, out_kernel,
                     nb, n_eig, threads_per_block), n_repeat= 100)
     avg_gpu = float(cp.mean(times.gpu_times)) * 1e6  # microseconds
@@ -251,8 +205,6 @@ def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
     n_sym = n_eig * (n_eig + 1) // 2
     print(f"  n_eig={n_eig}  n_sym={n_sym:>3}  "
             f"gpu={avg_gpu:>8.1f} us  cpu={avg_cpu:>8.1f} us")
-
-    # return per_call_ms
 
 
 # ============================================================
@@ -262,26 +214,28 @@ def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
 if __name__ == "__main__":
     lib = load_kernel()
 
-    print("=" * 65)
-    print("CORRECTNESS TESTS")
-    print("=" * 65)
+    correctness = False
+    if correctness:
+        print("=" * 65)
+        print("CORRECTNESS TESTS")
+        print("=" * 65)
 
-    rows = 16
-    cols = 21
-    n_ant = rows*cols
-    random_seed=42
+        rows = 16
+        cols = 21
+        n_ant = rows*cols
+        random_seed=42
 
-    all_pass = True
-    for n_eig in range(1, 21):
-        ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, threads_per_block=128)
-        # ok_cupy = correctness_test(n_eig, rows, cols, threads_per_block=512)
-        all_pass = all_pass and ok_cupy
+        all_pass = True
+        for n_eig in range(1, 21):
+            ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, threads_per_block=128)
+            # ok_cupy = correctness_test(n_eig, rows, cols, threads_per_block=512)
+            all_pass = all_pass and ok_cupy
 
-    print("-" * 65)
-    if all_pass:
-        print("ALL PASSED")
-    else:
-        print("SOME TESTS FAILED")
+        print("-" * 65)
+        if all_pass:
+            print("ALL PASSED")
+        else:
+            print("SOME TESTS FAILED")
 
     bmark = True
     if bmark:
