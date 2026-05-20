@@ -186,7 +186,8 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 
     check_zeros = True
     if check_zeros:
-        pass
+        if not match_cupy:
+            print(diffuse.shape)
 
 
     debug_match = False
