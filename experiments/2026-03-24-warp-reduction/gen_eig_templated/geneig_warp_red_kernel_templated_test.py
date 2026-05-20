@@ -232,7 +232,7 @@ if __name__ == "__main__":
     print("=" * 65)
 
     rows = 30
-    cols = 40
+    cols = 30
     n_ant = rows*cols
 
     all_pass = True
