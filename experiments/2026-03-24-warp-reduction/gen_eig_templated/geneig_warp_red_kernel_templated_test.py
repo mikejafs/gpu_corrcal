@@ -112,10 +112,11 @@ def cupy_ref(noise, diffuse, edges):
 # Test data generation
 # ============================================================
 
-def make_test_data(n_eig, n_ant, rows, cols, seed=42):
+def make_test_data(n_eig, rows, cols, seed=42):
     """Generate random test data using the simulate params library"""
     cp.random.seed(seed)
 
+    n_ant = rows*cols
     print(f" n_eig={n_eig}  n_ant={n_ant}", end="", flush=True)
 
     spms = SimCorrcalParams(n_ant, n_eig, n_src=1, precision='float32', xp=cp)
@@ -133,9 +134,9 @@ def make_test_data(n_eig, n_ant, rows, cols, seed=42):
 # Correctness test
 # ============================================================
 
-def correctness_test(n_eig, n_ant, rows, cols, threads_per_block=128):
+def correctness_test(n_eig, rows, cols, threads_per_block=128):
     """Compare GPU kernel output to CPU reference."""
-    diffuse, noise, edges = make_test_data(n_eig, n_ant, rows, cols, 42)
+    diffuse, noise, edges = make_test_data(n_eig, rows, cols, 42)
 
     # CPU reference
     ref_cpu = cpu_ref(cp.asnumpy(diffuse), cp.asnumpy(noise), cp.asnumpy(edges), n_eig)
@@ -223,9 +224,13 @@ if __name__ == "__main__":
     print("CORRECTNESS TESTS")
     print("=" * 65)
 
+    rows = 20
+    cols = 20
+    n_ant = rows*cols
+
     all_pass = True
     for n_eig in [1, 2, 3, 4, 5, 6, 8, 10, 12, 16, 18, 19, 20]:
-        ok_cupy, ok_cpu = correctness_test(lib, n_eig=n_eig, nb=32, n_per_block=512)
+        ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, n_per_block=512)
         all_pass = all_pass and ok_cupy and ok_cpu
 
     print("-" * 65)
