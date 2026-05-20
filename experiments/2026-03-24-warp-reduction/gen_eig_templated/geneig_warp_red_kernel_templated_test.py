@@ -14,8 +14,6 @@ CAUTION:
     CURRENTLY NOT ASSUMING CORRECT REDUNDANT BLOCK SHAPES
 
     THEN DO THE SAME FOR THE SHAREDMEM FILE
-
-
 """
 
 import numpy as np
@@ -23,6 +21,11 @@ import cupy as cp
 import ctypes
 import os
 import time
+from utils.gridding import *
+from utils.simulate_params import *
+from utils.zp_puregpu_funcs_py import *
+from cupyx.profiler import benchmark
+
 
 # ============================================================
 # ctypes wrapper
@@ -81,7 +84,7 @@ def sync(lib):
 # CPU reference
 # ============================================================
 
-def ref_cpu(diffuse, noise, edges, n_eig):
+def cpu_ref(diffuse, noise, edges, n_eig):
     """
     CPU reference: for each block b, compute
         out[b] = sum_i (1/noise[i]) * diffuse[i,:] @ diffuse[i,:].T
@@ -97,43 +100,53 @@ def ref_cpu(diffuse, noise, edges, n_eig):
             out[b] += np.outer(d, d) / noise[i]
     return out
 
+def cupy_ref(noise, diffuse, edges):
+    zp_inv_noise, nb, lb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
+    zp_diffuse, nb, lb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
+    temp = zp_inv_noise[..., None] * zp_diffuse
+    out = cp.transpose(zp_diffuse, [0, 2, 1]) @ temp
+    cp.cuda.Stream.null.synchronize()
+    return out
 
 # ============================================================
 # Test data generation
 # ============================================================
 
-def make_test_data(nb, n_per_block, n_eig, seed=42):
-    """Generate random test data."""
-    rng = np.random.default_rng(seed)
+def make_test_data(n_eig, n_ant, rows, cols, seed=42):
+    """Generate random test data using the simulate params library"""
+    cp.random.seed(seed)
 
-    edges = np.zeros(nb + 1, dtype=np.int32)
-    for b in range(nb):
-        edges[b + 1] = edges[b] + n_per_block
+    print(f" n_eig={n_eig}  n_ant={n_ant}", end="", flush=True)
 
-    n_total = int(edges[-1])
-    diffuse = rng.standard_normal((n_total, n_eig)).astype(np.float32)
-    noise = rng.uniform(0.1, 10.0, size=n_total).astype(np.float32)
+    spms = SimCorrcalParams(n_ant, n_eig, n_src=1, precision='float32', xp=cp)
+    edges = spms.edges(rows, cols, use_random=False)
+    edges_gpu = cp.asarray(edges)
 
-    return diffuse, noise, edges
+    sim_data = spms.sim_data()
+    noise = sim_data[0]
+    diffuse = sim_data[1]
 
-#test
-x = 3
+    return diffuse, noise, edges_gpu
+
 
 # ============================================================
 # Correctness test
 # ============================================================
 
-def correctness_test(lib, n_eig=4, nb=32, n_per_block=512, threads_per_block=128):
+def correctness_test(n_eig, n_ant, rows, cols, threads_per_block=128):
     """Compare GPU kernel output to CPU reference."""
-    diffuse, noise, edges = make_test_data(nb, n_per_block, n_eig)
+    diffuse, noise, edges = make_test_data(n_eig, n_ant, rows, cols, 42)
 
     # CPU reference
-    ref = ref_cpu(diffuse, noise, edges, n_eig)
+    ref_cpu = cpu_ref(cp.asnumpy(diffuse), cp.asnumpy(noise), cp.asnumpy(edges), n_eig)
+
+    # CuPy reference
+    ref_cupy = cupy_ref(noise, diffuse, edges)
 
     # GPU
-    diffuse_gpu = cp.asarray(diffuse)
-    noise_gpu = cp.asarray(noise)
-    edges_gpu = cp.asarray(edges)
+    # diffuse_gpu = cp.asarray(diffuse)
+    # noise_gpu = cp.asarray(noise)
+    # edges_gpu = cp.asarray(edges)
     out_gpu = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
 
     call_kernel(lib, diffuse_gpu, noise_gpu, edges_gpu, out_gpu,
