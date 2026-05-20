@@ -144,12 +144,14 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 
     # CuPy reference
     ref_cupy, nb = cupy_ref(noise, diffuse, edges)
+    print(ref_cupy.shape())
 
     # GPU
     # diffuse_gpu = cp.asarray(diffuse)
     # noise_gpu = cp.asarray(noise)
     # edges_gpu = cp.asarray(edges)
     out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
+    print(out_kernel.shape())
 
     call_kernel(lib, diffuse, noise, edges, out_kernel,
                 nb, n_eig, threads_per_block)
