@@ -39,3 +39,4 @@ Currently trying to impliment this above step under the gen_n_eig_warp folder. S
 - adding templated code to boiler plate stuff and moving reused code to scripts
 - needing to finalize templated neig before truly moving on to new kernels 
   - essentially cleaning up tests to be sure things are working properly
+- also note how with pragma unroll we don't get the crazy register spillover blowup we get at large n_eig
