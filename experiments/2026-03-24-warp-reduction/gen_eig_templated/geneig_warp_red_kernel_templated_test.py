@@ -187,7 +187,7 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     debug_match = True
     if debug_match:
         if not match_cupy:
-            with open(f"debug_n_eig_{n_eig}.txt", "a") as f:
+            with open(f"debug_n_eig.txt", "a") as f:
                 f.write(f"n_eig={n_eig}\n")
                 f.write(f"ref_cupy sum: {cp.sum(ref_cupy):.6e}\n")
                 f.write(f"kernel  sum: {cp.sum(out_kernel):.6e}\n")
@@ -264,6 +264,7 @@ if __name__ == "__main__":
     n_ant = rows*cols
     random_seed=12
 
+    open("debug_output.txt", "w").close()
     all_pass = True
     for n_eig in range(1, 21):
         ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, threads_per_block=128)
