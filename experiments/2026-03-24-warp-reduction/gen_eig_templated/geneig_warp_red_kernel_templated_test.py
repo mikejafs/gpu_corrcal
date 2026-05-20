@@ -117,7 +117,7 @@ def make_test_data(n_eig, rows, cols, seed=42):
     cp.random.seed(seed)
 
     n_ant = rows*cols
-    print(f" n_eig={n_eig}", end="", flush=True)
+    # print(f" n_eig={n_eig}", end="", flush=True)
 
     spms = SimCorrcalParams(n_ant, n_eig, n_src=1, precision='float32', xp=cp)
     edges = spms.edges(rows, cols, use_random=False)
@@ -164,13 +164,13 @@ def correctness_test(n_eig, rows, cols, threads_per_block=128):
     max_diff_cpu = np.max(np.abs(ref_cpu - out_kernel))
 
     print()
-    print(f"AGAINST CUPY:")
-    print(f"  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
+    print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
     print(80*"-")
 
-    print("AGAINST CPU")
-    print(f"  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
+    print(f"AGAINST CPU:  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
     print(80*"-")
+    print()
+
 
 
     # if not match_cupy:
