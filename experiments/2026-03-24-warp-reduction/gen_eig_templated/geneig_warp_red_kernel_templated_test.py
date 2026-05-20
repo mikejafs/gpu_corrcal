@@ -244,7 +244,7 @@ if __name__ == "__main__":
     if bmark:
         print()
         print("=" * 65)
-        print(f"TIMING TESTS -> n_ant = 16 * 21 = {n_ant}")
+        print(f"TIMING TESTS -> n_ant = {rows} * {cols} = {n_ant}")
         print("=" * 65)
 
         for n_eig in range(1, 21):
