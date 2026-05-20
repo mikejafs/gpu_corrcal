@@ -110,7 +110,7 @@ def cupy_ref(noise, diffuse, edges):
     temp = zp_inv_noise[..., None] * zp_diffuse
     print(f" temp: {cp.sum(cp.abs(temp))}")
     out = cp.transpose(zp_diffuse, [0, 2, 1]) @ temp
-    print(F" out: {cp.abs(cp.sum(out))}")
+    print(F" out: {cp.sum(cp.abs(out))}")
     cp.cuda.Stream.null.synchronize()
     return out, nb
 
@@ -128,11 +128,14 @@ def make_test_data(n_eig, rows, cols, seed):
     spms = SimCorrcalParams(n_ant, n_eig, n_src=1, precision='float32', xp=cp)
     edges = spms.edges(rows, cols, use_random=False)
     edges_gpu = cp.asarray(edges)
+    print("PRINTING TEST DATA")
+    print(f"edges: {cp.sum(cp.abs(edges_gpu))}")
 
     sim_data = spms.sim_data()
     noise = sim_data[0]
+    print(f"noise: {cp.sum(cp.abs(noise))}")
     diffuse = sim_data[1]
-
+    print(f"diffuse: {cp.sum(cp.abs(diffuse))}")
     return diffuse, noise, edges_gpu
 
 
