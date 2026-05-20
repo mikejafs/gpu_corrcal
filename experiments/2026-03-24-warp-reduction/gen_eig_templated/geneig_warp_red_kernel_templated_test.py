@@ -101,8 +101,8 @@ def cpu_ref(diffuse, noise, edges, n_eig):
     return out
 
 def cupy_ref(noise, diffuse, edges):
-    zp_inv_noise, nb, lb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
-    zp_diffuse, nb, lb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
+    zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
+    zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
     temp = zp_inv_noise[..., None] * zp_diffuse
     out = cp.transpose(zp_diffuse, [0, 2, 1]) @ temp
     cp.cuda.Stream.null.synchronize()
