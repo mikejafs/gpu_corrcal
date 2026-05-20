@@ -117,7 +117,7 @@ def make_test_data(n_eig, rows, cols, seed=42):
     cp.random.seed(seed)
 
     n_ant = rows*cols
-    print(f" n_eig={n_eig}  n_ant={n_ant}", end="", flush=True)
+    print(f" n_eig={n_eig}", end="", flush=True)
 
     spms = SimCorrcalParams(n_ant, n_eig, n_src=1, precision='float32', xp=cp)
     edges = spms.edges(rows, cols, use_random=False)
@@ -163,8 +163,16 @@ def correctness_test(n_eig, rows, cols, threads_per_block=128):
     match_cpu = cp.allclose(ref_cpu, out_kernel, atol=1e-4, rtol=1e-4)
     max_diff_cpu = np.max(np.abs(ref_cpu - out_kernel))
 
+    print(f"AGAINST CUPY:")
     print(f"  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
+    print(80*"-")
+
+    print()
+
+    print("AGAINST CPU")
     print(f"  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
+    print(80*"-")
+
 
     # if not match_cupy:
     #     block_diffs = np.array([np.max(np.abs(ref[b] - out_host[b])) for b in range(nb)])
