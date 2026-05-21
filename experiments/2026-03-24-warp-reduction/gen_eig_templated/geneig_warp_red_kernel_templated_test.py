@@ -246,7 +246,7 @@ def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
     avg_cpu = float(cp.mean(times.cpu_times)) * 1e6
     
     # Benchmark [INSERT REF FUNCTION]
-    ref_times = benchmark(cov_reduce_sym_r3, (noise, diffuse, edges, threads_per_block), n_repeat= 100)
+    ref_times = benchmark(cov_reduce_sym_r3, (noise, diffuse, edges, threads_per_block), n_repeat= 1000)
     ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) * 1e6  # microseconds
     ref_avg_cpu = float(cp.mean(ref_times.cpu_times)) * 1e6
     
