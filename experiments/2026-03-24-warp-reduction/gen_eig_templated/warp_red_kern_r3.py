@@ -15,8 +15,8 @@ import os
 # base_dir = os.path.abspath(os.path.join(current_path, "..", "gemm_grouped_batched"))
 # sys.path.insert(0, base_dir)
 
-from utils.gridding import *
-from utils.simulate_params import *
+from gpu_corrcal.utils.gridding import *
+from gpu_corrcal.utils.simulate_params import *
 from cupyx.profiler import benchmark
 
 
