@@ -7,6 +7,14 @@ Compile:
 
 Usage:
     python geneig_warp_red_kernel_test.py
+
+TODO:
+- Add benchmark tests comparing gen eig to hardcoded red kernel for neig = 3 (NOT TO BE ADDED TO BOILERPLATE STUFF) -> do by inspection per nant in the terminal
+
+ADD TO BOILERPLATE:
+- Add option to produce benchmark plot comparing to reference script (ie. cupy)
+- Modify current benchmark to terminal output so that it compares times directly to reference script for same inputs
+- Add full cupy reference to scripts to then 'pull parts from' when it comes time to building new kernels
 """
 
 import numpy as np
@@ -14,6 +22,7 @@ import cupy as cp
 import ctypes
 import os
 import time
+from warp_red_kern_r3 import *
 from gpu_corrcal.utils.gridding import *
 from gpu_corrcal.utils.simulate_params import *
 from gpu_corrcal.utils.zp_puregpu_funcs_py import *
@@ -155,6 +164,12 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     # CuPy reference
     ref_cupy, nb = cupy_ref(noise, diffuse, edges)
 
+    # ---------------------------------------------------------------
+    # REMOVE FROM BOILERPLATE
+    # Hardcoded reference (REMEMBER ONLY WORKS FOR NEIG = 3)
+    out_3neig = cov_reduce_sym_r3(noise, diffuse, edges, 128)
+    # ---------------------------------------------------------------
+
     # GPU
     out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
 
@@ -170,10 +185,19 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     match_cpu = cp.allclose(ref_cpu, out_kernel, atol=1e-4, rtol=1e-4)
     max_diff_cpu = np.max(np.abs(ref_cpu - out_kernel))
 
+    # ---------------------------------------------------------------
+    # REMOVE FROM BOILERPLATE
+    # Check against hardcoded version
+    match_hardcode = cp.allclose(out_3neig, out_kernel, atol=1e-4, rtol=1e-4)
+    max_diff_hardcode = np.max(np.abs(out_3neig - out_kernel))
+    # ---------------------------------------------------------------
 
-    print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
-    print(f"AGAINST CPU:  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
-    print(80*"-")
+
+    # print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
+    print(f"AGAINST HARDCODED VERSION:  n_eig={n_eig:2d}  |  allclose: {match_hardcode}  |  max |diff|: {max_diff_hardcode:.2e}")
+    
+    # print(f"AGAINST CPU:  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
+    # print(80*"-")
 
     debug_match = False
     if debug_match:
@@ -198,6 +222,13 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 # ============================================================
 # Timing test
 # ============================================================
+
+def bmark_times():
+    pass
+
+def bmark_plot():
+    pass
+
 
 def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
     """Time the GPU kernel."""
@@ -240,7 +271,7 @@ if __name__ == "__main__":
 
         all_pass = True
         for n_eig in range(1, 21):
-            ok_cupy, ok_cpu = correctness_test(n_eig, rows, cols, threads_per_block=128)
+            ok = correctness_test(n_eig, rows, cols, threads_per_block=128)
             # ok_cupy = correctness_test(n_eig, rows, cols, threads_per_block=512)
             all_pass = all_pass and ok_cupy
 
@@ -251,7 +282,7 @@ if __name__ == "__main__":
             print("SOME TESTS FAILED")
 
     # Run benchmark tests
-    bmark = True
+    bmark = False 
     if bmark:
         print()
         print("=" * 65)
