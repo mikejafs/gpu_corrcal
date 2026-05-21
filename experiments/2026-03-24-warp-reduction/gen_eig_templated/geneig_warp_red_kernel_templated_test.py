@@ -239,14 +239,23 @@ def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
     # Initialize the output matrix
     out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
 
-    # Benchmark using CuPy
+    # Benchmark gen_eig kernel
     times = benchmark(call_kernel, (lib, diffuse, noise, edges, out_kernel,
                     nb, n_eig, threads_per_block), n_repeat= 100)
     avg_gpu = float(cp.mean(times.gpu_times)) * 1e6  # microseconds
     avg_cpu = float(cp.mean(times.cpu_times)) * 1e6
+    
+    # Benchmark [INSERT REF FUNCTION]
+    ref_times = benchmark(cov_reduce_sym_r3, (noise, diffuse, edges, threads_per_block), n_repeat= 100)
+    ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) * 1e6  # microseconds
+    ref_avg_cpu = float(cp.mean(ref_times.cpu_times)) * 1e6
+    
     n_sym = n_eig * (n_eig + 1) // 2
+
+    # Print out the results
     print(f"  n_eig={n_eig}  n_sym={n_sym:>3}  "
-            f"gpu={avg_gpu:>8.1f} us  cpu={avg_cpu:>8.1f} us")
+            f"KERNEL: gpu={avg_gpu:>8.1f} us  cpu={avg_cpu:>8.1f} us |"
+            f"HARDCODE: gpu={ref_avg_gpu:>8.1f} us  cpu={ref_avg_cpu:>8.1f} us")
 
 
 # ============================================================
@@ -263,7 +272,7 @@ if __name__ == "__main__":
     random_seed=42
 
     # Test correctness
-    correctness = True
+    correctness = False
     if correctness:
         print("=" * 65)
         print("CORRECTNESS TESTS")
@@ -282,14 +291,14 @@ if __name__ == "__main__":
             print("SOME TESTS FAILED")
 
     # Run benchmark tests
-    bmark = False 
+    bmark = True
     if bmark:
         print()
         print("=" * 65)
         print(f"TIMING TESTS -> n_ant = {rows} * {cols} = {n_ant}")
         print("=" * 65)
 
-        for n_eig in range(1, 21):
+        for n_eig in range(3, 4):
             timing_test(lib, n_eig, rows, cols, 128, random_seed)
 
         print("=" * 65)
