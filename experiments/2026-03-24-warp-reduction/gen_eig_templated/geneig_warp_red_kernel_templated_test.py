@@ -192,12 +192,11 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
     max_diff_hardcode = np.max(np.abs(out_3neig - out_kernel))
     # ---------------------------------------------------------------
 
+    # print(f"AGAINST HARDCODED VERSION:  n_eig={n_eig:2d}  |  allclose: {match_hardcode}  |  max |diff|: {max_diff_hardcode:.2e}")
 
-    # print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")
-    print(f"AGAINST HARDCODED VERSION:  n_eig={n_eig:2d}  |  allclose: {match_hardcode}  |  max |diff|: {max_diff_hardcode:.2e}")
-    
-    # print(f"AGAINST CPU:  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
-    # print(80*"-")
+    print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")    
+    print(f"AGAINST CPU:  n_eig={n_eig:2d}  |  allclose: {match_cpu}  |  max |diff|: {max_diff_cpu:.2e}")
+    print(80*"-")
 
     debug_match = False
     if debug_match:
@@ -245,8 +244,8 @@ def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
     avg_gpu = float(cp.mean(times.gpu_times)) * 1e6  # microseconds
     avg_cpu = float(cp.mean(times.cpu_times)) * 1e6
     
-    # Benchmark [INSERT REF FUNCTION]
-    ref_times = benchmark(cov_reduce_sym_r3, (noise, diffuse, edges, threads_per_block), n_repeat= 1000)
+    # Benchmark [INSERT REF FUNCTION] -> CuPy ref right now
+    ref_times = benchmark(cupy_ref, (noise, diffuse, edges), n_repeat= 1000)
     ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) * 1e6  # microseconds
     ref_avg_cpu = float(cp.mean(ref_times.cpu_times)) * 1e6
     
@@ -298,7 +297,7 @@ if __name__ == "__main__":
         print(f"TIMING TESTS -> n_ant = {rows} * {cols} = {n_ant}")
         print("=" * 65)
 
-        for n_eig in range(3, 4):
+        for n_eig in range(1, 21):
             timing_test(lib, n_eig, rows, cols, 128, random_seed)
 
         print("=" * 65)
