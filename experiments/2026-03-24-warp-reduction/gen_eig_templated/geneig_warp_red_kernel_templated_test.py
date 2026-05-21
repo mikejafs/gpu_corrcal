@@ -9,7 +9,7 @@ Usage:
     python geneig_warp_red_kernel_test.py
 
 TODO:
-- Add benchmark tests comparing gen eig to hardcoded red kernel for neig = 3 (NOT TO BE ADDED TO BOILERPLATE STUFF) -> do by inspection per nant in the terminal
+- [DONE] Add benchmark tests comparing gen eig to hardcoded red kernel for neig = 3 (NOT TO BE ADDED TO BOILERPLATE STUFF) -> do by inspection per nant in the terminal
 
 ADD TO BOILERPLATE:
 - Add option to produce benchmark plot comparing to reference script (ie. cupy)
@@ -44,7 +44,7 @@ def load_kernel(so_path=None):
         if not unroll:
             so_path = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "geneig_warp_red_kernel_templated.so"
+                "geneig_warp_red_kernel_templated_NOpragma.so"
             )
             print(f"NO unroll")
 
@@ -52,7 +52,7 @@ def load_kernel(so_path=None):
         elif unroll:
             so_path = os.path.join(
                 os.path.dirname(os.path.abspath(__file__)),
-                "geneig_warp_red_kernel_templated_pragma.so"
+                "geneig_warp_red_kernel_templated.so"
             )
             print(f"WITH unroll")
 
