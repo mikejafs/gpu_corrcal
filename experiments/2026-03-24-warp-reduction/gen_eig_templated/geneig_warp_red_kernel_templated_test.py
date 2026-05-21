@@ -253,8 +253,8 @@ def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
 
     # Print out the results
     print(f"  [n_eig={n_eig}  n_sym={n_sym:>3}]   "
-            f"KERNEL: gpu={avg_gpu:>8.1f} us  cpu={avg_cpu:>4.1f} us | "
-            f"CUPY: gpu={ref_avg_gpu:>8.1f} us  cpu={ref_avg_cpu:>8.1f} us")
+            f"KERNEL: gpu={avg_gpu:>5.1f} us  cpu={avg_cpu:>4.1f} us | "
+            f"CUPY: gpu={ref_avg_gpu:>6.1f} us  cpu={ref_avg_cpu:>4.1f} us")
 
 
 # ============================================================
