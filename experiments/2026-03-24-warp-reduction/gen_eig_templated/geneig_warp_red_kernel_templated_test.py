@@ -164,9 +164,9 @@ def make_test_data(n_eig, rc_list, seed):
 # Correctness test
 # ============================================================
 
-def correctness_test(n_eig, rows, cols, threads_per_block):
+def correctness_test(n_eig, rc_tuple, threads_per_block):
     """Compare GPU kernel output to CPU reference."""
-    diffuse, noise, edges = make_test_data(n_eig, rows, cols, 12)
+    diffuse, noise, edges = make_test_data(n_eig, rc_tuple, 12)
 
     # CPU reference
     ref_cpu = cpu_ref(cp.asnumpy(diffuse), cp.asnumpy(noise), cp.asnumpy(edges), n_eig)
@@ -227,6 +227,10 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
         print(f"  n_eig={n_eig} CUDA error: {cudart.cudaGetLastError()}")
 
     return match_cupy, match_cpu
+
+
+def test_multiple_correct():
+    pass
 
 
 # ============================================================
@@ -301,7 +305,7 @@ def pop_row_col_input(end_iter_num):
     return row_col_list
 
 
-def timing_plot_nant_varies(n_eig, random_seed, n_trials, save_plot=True):
+def timing_plot_nant_varies(n_eig, n_trials, save_plot=True):
 
     n_iter = n_trials + 2
     row_col_inputs = pop_row_col_input(n_iter)
@@ -359,7 +363,7 @@ def timing_plot_nant_varies(n_eig, random_seed, n_trials, save_plot=True):
     
     if save_plot:
         plt.savefig(f'{dir_name}/{file_name}.png', format = 'png', dpi = 300, bbox_inches = 'tight')
-
+ 
     plt.show()
 
 
@@ -390,8 +394,7 @@ if __name__ == "__main__":
 
         all_pass = True
         for n_eig in range(3, 4):
-            ok = correctness_test(n_eig, rows, cols, threads_per_block=128)
-            # ok_cupy = correctness_test(n_eig, rows, cols, threads_per_block=512)
+            ok = correctness_test(n_eig, rc, threads_per_block=128)
             all_pass = all_pass and ok
 
         print("-" * 65)
@@ -403,7 +406,7 @@ if __name__ == "__main__":
     # Run benchmark tests
 
     one_timing_test = False
-    many_timing_tests = True
+    many_timing_tests = False
 
     if one_timing_test:
         timing_test(lib, n_eig, rc, 128, random_seed)
@@ -412,13 +415,7 @@ if __name__ == "__main__":
         eig_range = (1, 6)
         time_multiple(lib, rc, 128, eig_range, random_seed)
     
-    # if bmark:
-    #     print()
-    #     print("=" * 65)
-    #     print(f"TIMING TESTS -> n_ant = {rows} * {cols} = {n_ant}")
-    #     print("=" * 65)
-
-    #     for n_eig in range(1, 11):
-    #         timing_test(lib, n_eig, rows, cols, 128, random_seed)
-
-    #     print("=" * 65)
+    plot_benchmark = True
+    
+    if plot_benchmark:
+        timing_plot_nant_varies(n_eig, random_seed, save_plot=True)
