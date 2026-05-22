@@ -237,7 +237,10 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
     """Time the GPU kernel."""
     # Generate the test data
-    test_data = make_test_data(n_eig, rows, cols, seed)
+
+    rc_tup = (rows, cols)
+
+    test_data = make_test_data(n_eig, rc_tup, seed)
     ref_cupy, nb = cupy_ref(
         test_data["noise"], 
         test_data["diffuse"], 
