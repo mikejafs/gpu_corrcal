@@ -405,7 +405,7 @@ if __name__ == "__main__":
         timing_test(lib, n_eig, rows, cols, 128, random_seed)
     
     if many_timing_tests:
-        eig_range = (1, 6)
+        eig_range = 1, 6
         time_multiple(eig_range)
     
     # if bmark:
