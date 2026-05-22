@@ -306,7 +306,7 @@ def pop_row_col_input(end_iter_num):
 
 
 def timing_plot_nant_varies(
-        lib, n_eig, rc_tuple, n_trials, tpb, random_seed, save_plot=True
+        lib, n_eig, n_trials, tpb, random_seed, save_plot=True
         ):
 
     n_iter = n_trials + 2
@@ -323,7 +323,7 @@ def timing_plot_nant_varies(
     for i, rc in enumerate(row_col_inputs):
         print(f"on iteration {i}")
         # test_data = make_test_data(n_eig, rc, random_seed)
-        gpu_t, ref_gpu_t = timing_test(lib, n_eig, rc_tuple, tpb, random_seed)
+        gpu_t, ref_gpu_t = timing_test(lib, n_eig, row_col_inputs, tpb, random_seed)
         test_times[i] = gpu_t
         reference_times[i] = ref_gpu_t
 
@@ -345,8 +345,8 @@ def timing_plot_nant_varies(
         })
 
     fig, ax = plt.subplots()
-    ax.loglog(n_ants, test_times, '-x', ms = 7,  label = 'cupy')
-    ax.loglog(n_ants, reference_times, '-p', ms = 7, label = 'corrcal')
+    ax.loglog(n_ants, test_times, '-x', ms = 7,  label = 'Reduction Kernel')
+    ax.loglog(n_ants, reference_times, '-p', ms = 7, label = 'CuPy')
     
     ax.xaxis.set_major_locator(FixedLocator(n_ants))
     ax.xaxis.set_major_formatter(
