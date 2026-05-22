@@ -323,7 +323,7 @@ def timing_plot_nant_varies(
     for i, rc in enumerate(row_col_inputs):
         print(f"on iteration {i}")
         # test_data = make_test_data(n_eig, rc, random_seed)
-        gpu_t, ref_gpu_t = timing_test(lib, n_eig, row_col_inputs, tpb, random_seed)
+        gpu_t, ref_gpu_t = timing_test(lib, n_eig, rc, tpb, random_seed)
         test_times[i] = gpu_t
         reference_times[i] = ref_gpu_t
 
