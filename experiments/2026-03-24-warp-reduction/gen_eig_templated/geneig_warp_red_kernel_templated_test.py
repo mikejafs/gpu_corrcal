@@ -305,7 +305,9 @@ def pop_row_col_input(end_iter_num):
     return row_col_list
 
 
-def timing_plot_nant_varies(n_eig, n_trials, save_plot=True):
+def timing_plot_nant_varies(
+        lib, n_eig, rc_tuple, n_trials, tpb, random_seed, save_plot=True
+        ):
 
     n_iter = n_trials + 2
     row_col_inputs = pop_row_col_input(n_iter)
@@ -320,8 +322,8 @@ def timing_plot_nant_varies(n_eig, n_trials, save_plot=True):
 
     for i, rc in enumerate(row_col_inputs):
         print(f"on iteration {i}")
-        test_data = make_test_data(n_eig, rc, random_seed)
-        gpu_t, ref_gpu_t = timing_test(test_data)
+        # test_data = make_test_data(n_eig, rc, random_seed)
+        gpu_t, ref_gpu_t = timing_test(lib, n_eig, rc_tuple, tpb, random_seed)
         test_times[i] = gpu_t
         reference_times[i] = ref_gpu_t
 
@@ -384,6 +386,7 @@ if __name__ == "__main__":
     rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
+    n_trials = 5
 
     # Test correctness
     correctness = False
@@ -416,6 +419,6 @@ if __name__ == "__main__":
         time_multiple(lib, rc, 128, eig_range, random_seed)
     
     plot_benchmark = True
-    
+
     if plot_benchmark:
-        timing_plot_nant_varies(n_eig, random_seed, save_plot=True)
+        timing_plot_nant_varies(lib, n_eig, rc, n_trials, 128, random_seed, save_plot=True)
