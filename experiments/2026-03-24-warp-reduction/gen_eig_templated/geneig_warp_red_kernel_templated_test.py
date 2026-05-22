@@ -402,8 +402,8 @@ if __name__ == "__main__":
 
     # Run benchmark tests
 
-    one_timing_test = True
-    many_timing_tests = False
+    one_timing_test = False
+    many_timing_tests = True
 
     if one_timing_test:
         timing_test(lib, n_eig, rc, 128, random_seed)
