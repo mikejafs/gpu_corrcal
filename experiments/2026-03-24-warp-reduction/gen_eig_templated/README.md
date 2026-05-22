@@ -16,9 +16,11 @@ CORRECTNESS TESTS
 AGAINST HARDCODED VERSION:  n_eig= 3  |  allclose: True  |  max |diff|: 1.56e-02
 -----------------------------------------------------------------
 ALL PASSED
+'''
 
 - Benchmarking the hardcoded version vs the templated version also reveals that the templated code runs slightly faster for the same parameters, and although the speedup is small, it is reliably ~7 us faster. This could simply be the result of python bloating using the f-string approach, but I'm not completely sure.
 
+'''
 WITH unroll
 =================================================================
 TIMING TESTS -> n_ant = 32 * 24 = 768
