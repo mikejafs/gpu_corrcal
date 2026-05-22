@@ -13,7 +13,7 @@ TODO:
 
 ADD TO BOILERPLATE:
 - Add option to produce benchmark plot comparing to reference script (ie. cupy)
-- Modify current benchmark to terminal output so that it compares times directly to reference script for same inputs
+- [DONE] Modify current benchmark to terminal output so that it compares times directly to reference script for same inputs
 - Add full cupy reference to scripts to then 'pull parts from' when it comes time to building new kernels
 """
 
