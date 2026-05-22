@@ -376,6 +376,7 @@ if __name__ == "__main__":
     # Test params
     rows = 32
     cols = 24
+    n_eig = 3
     rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
