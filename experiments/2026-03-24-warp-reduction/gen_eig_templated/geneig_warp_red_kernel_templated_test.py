@@ -421,4 +421,4 @@ if __name__ == "__main__":
     plot_benchmark = True
 
     if plot_benchmark:
-        timing_plot_nant_varies(lib, n_eig, rc, n_trials, 128, random_seed, save_plot=True)
+        timing_plot_nant_varies(lib, n_eig, n_trials, 128, random_seed, save_plot=True)
