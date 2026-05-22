@@ -397,14 +397,24 @@ if __name__ == "__main__":
             print("SOME TESTS FAILED")
 
     # Run benchmark tests
-    bmark = True
-    if bmark:
-        print()
-        print("=" * 65)
-        print(f"TIMING TESTS -> n_ant = {rows} * {cols} = {n_ant}")
-        print("=" * 65)
 
-        for n_eig in range(1, 11):
-            timing_test(lib, n_eig, rows, cols, 128, random_seed)
+    one_timing_test = False
+    many_timing_tests = True
 
-        print("=" * 65)
+    if one_timing_test:
+        timing_test(lib, n_eig, rows, cols, 128, random_seed)
+    
+    if many_timing_tests:
+        eig_range = (1, 6)
+        time_multiple(eig_range)
+    
+    # if bmark:
+    #     print()
+    #     print("=" * 65)
+    #     print(f"TIMING TESTS -> n_ant = {rows} * {cols} = {n_ant}")
+    #     print("=" * 65)
+
+    #     for n_eig in range(1, 11):
+    #         timing_test(lib, n_eig, rows, cols, 128, random_seed)
+
+    #     print("=" * 65)
