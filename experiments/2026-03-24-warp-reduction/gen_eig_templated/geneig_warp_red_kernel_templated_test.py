@@ -386,7 +386,7 @@ if __name__ == "__main__":
     rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
-    n_trials = 5
+    n_trials = 10
 
     # Test correctness
     correctness = False
