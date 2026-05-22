@@ -8,6 +8,7 @@
 
 - The result of testing the hardcoded version (O.G. version - warp_red_kernel-r3) against the templated version at of course just 3 eigenmodes returns the correct result - a.k.a. the results are the same to within machine precision. Specifically:
 
+'''
 WITH unroll
 =================================================================
 CORRECTNESS TESTS
@@ -24,3 +25,4 @@ TIMING TESTS -> n_ant = 32 * 24 = 768
 =================================================================
   [n_eig=3  n_sym=  6]   KERNEL: gpu=    27.1 us  cpu=     5.0 us | HARDCODE: gpu=    34.2 us  cpu=    12.6 us
 =================================================================
+'''
