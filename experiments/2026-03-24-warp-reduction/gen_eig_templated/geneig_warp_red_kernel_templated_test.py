@@ -234,13 +234,11 @@ def correctness_test(n_eig, rows, cols, threads_per_block):
 # ============================================================
 
 
-def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
+def timing_test(lib, n_eig, rc_tuple, threads_per_block, seed):
     """Time the GPU kernel."""
     # Generate the test data
 
-    rc_tup = (rows, cols)
-
-    test_data = make_test_data(n_eig, rc_tup, seed)
+    test_data = make_test_data(n_eig, rc_tuple, seed)
     ref_cupy, nb = cupy_ref(
         test_data["noise"], 
         test_data["diffuse"], 
@@ -279,7 +277,7 @@ def timing_test(lib, n_eig, rows, cols, threads_per_block, seed):
     return avg_gpu, ref_avg_gpu
     
 
-def time_multiple(eig_range):
+def time_multiple(lib, rc_tuple, tpb, eig_range, random_seed):
     eig_start, eig_stop = eig_range[0], eig_range[1]
     print()
     print("=" * 65)
@@ -287,7 +285,7 @@ def time_multiple(eig_range):
     print("=" * 65)
 
     for n_eig in range(eig_start, eig_stop):
-        timing_test(lib, n_eig, rows, cols, 128, random_seed)
+        timing_test(lib, n_eig, rc_tuple, 128, random_seed)
 
     print("=" * 65)
 
@@ -378,6 +376,7 @@ if __name__ == "__main__":
     # Test params
     rows = 32
     cols = 24
+    rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
 
@@ -402,15 +401,15 @@ if __name__ == "__main__":
 
     # Run benchmark tests
 
-    one_timing_test = False
-    many_timing_tests = True
+    one_timing_test = True
+    many_timing_tests = False
 
     if one_timing_test:
-        timing_test(lib, n_eig, rows, cols, 128, random_seed)
+        timing_test(lib, n_eig, rc, 128, random_seed)
     
     if many_timing_tests:
         eig_range = (1, 6)
-        time_multiple(eig_range)
+        time_multiple(lib, rc, 128, eig_range, random_seed)
     
     # if bmark:
     #     print()
