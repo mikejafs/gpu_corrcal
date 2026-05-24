@@ -381,12 +381,13 @@ if __name__ == "__main__":
 
     # Test params
     rows = 32
-    cols = 24
+    cols = 18
     n_eig = 3
     rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
-    n_trials = 10
+    T = True
+    F = False
 
     # Test correctness
     correctness = False
@@ -408,8 +409,8 @@ if __name__ == "__main__":
 
     # Run benchmark tests
 
-    one_timing_test = False
-    many_timing_tests = False
+    one_timing_test = F
+    many_timing_tests = F
 
     if one_timing_test:
         timing_test(lib, n_eig, rc, 128, random_seed)
@@ -418,7 +419,9 @@ if __name__ == "__main__":
         eig_range = (1, 6)
         time_multiple(lib, rc, 128, eig_range, random_seed)
     
-    plot_benchmark = True
+    plot_benchmark = T
 
     if plot_benchmark:
-        timing_plot_nant_varies(lib, n_eig, n_trials, 128, random_seed, save_plot=True)
+        n_trials = 10
+        timing_plot_nant_varies(lib, n_eig, n_trials, 128, random_seed, save_plot=False)
+
