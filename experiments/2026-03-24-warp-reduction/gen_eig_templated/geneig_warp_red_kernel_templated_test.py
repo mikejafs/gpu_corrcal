@@ -166,7 +166,11 @@ def make_test_data(n_eig, rc_list, seed):
 
 def correctness_test(n_eig, rc_tuple, threads_per_block):
     """Compare GPU kernel output to CPU reference."""
-    diffuse, noise, edges = make_test_data(n_eig, rc_tuple, 12)
+
+    test_data = make_test_data(n_eig, rc_tuple, 12)
+    diffuse = test_data["diffuse"]
+    noise = test_data["noise"]
+    edges = test_data["edges"]
 
     # CPU reference
     ref_cpu = cpu_ref(cp.asnumpy(diffuse), cp.asnumpy(noise), cp.asnumpy(edges), n_eig)
@@ -229,8 +233,20 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     return match_cupy, match_cpu
 
 
-def test_multiple_correct():
-    pass
+def test_multiple_correct(lib, rc_tuple, eig_range, threads_per_block=128):
+    eig_start, eig_stop = eig_range
+    print("=" * 65)
+    print("CORRECTNESS TESTS")
+    print("=" * 65)
+
+    all_pass = True
+    for n_eig in range(eig_start, eig_stop):
+        match_cupy, match_cpu = correctness_test(n_eig, rc_tuple, threads_per_block)
+        all_pass = all_pass and match_cupy and match_cpu
+
+    print("-" * 65)
+    print("ALL PASSED" if all_pass else "SOME TESTS FAILED")
+    return all_pass
 
 
 # ============================================================
@@ -369,8 +385,59 @@ def timing_plot_nant_varies(
     plt.show()
 
 
-def timing_plot_neig_varies():
-    pass
+def timing_plot_neig_varies(
+        lib, rc_tuple, eig_range, tpb, random_seed, save_plot=True
+        ):
+
+    eig_start, eig_stop = eig_range
+    neigs = np.arange(eig_start, eig_stop)
+
+    test_times = np.zeros(len(neigs))
+    reference_times = np.zeros(len(neigs))
+
+    n_ant = rc_tuple[0] * rc_tuple[1]
+    print(f"n_ant fixed at {n_ant}")
+
+    for i, n_eig in enumerate(neigs):
+        gpu_t, ref_gpu_t = timing_test(lib, n_eig, rc_tuple, tpb, random_seed)
+        test_times[i] = gpu_t
+        reference_times[i] = ref_gpu_t
+
+    # ------------------------------------------------------
+    dir_name = 'varying_neig_plots'
+    title = r"$\mathbf{On\ Cluster\ \rightarrow\ A40\ GPU}$"
+    # ------------------------------------------------------
+
+    file_name = f'nant={n_ant}_neig={eig_start}-{eig_stop-1}'
+
+    plt.rcParams["text.usetex"] = False
+    plt.rcParams['axes.labelsize'] = 13 
+    plt.rcParams['figure.figsize'] = (8, 5)
+    plt.rcParams.update({
+        "mathtext.fontset": "cm",
+        "font.family": "serif",
+    })
+
+    fig, ax = plt.subplots()
+    ax.semilogy(neigs, test_times, '-x', ms=7, label='Reduction Kernel')
+    ax.semilogy(neigs, reference_times, '-p', ms=7, label='CuPy')
+
+    ax.xaxis.set_major_locator(FixedLocator(neigs))
+    ax.xaxis.set_major_formatter(FixedFormatter([str(int(n)) for n in neigs]))
+    ax.tick_params(axis='both', which='major',
+                   labelsize=13, length=6, width=1.5)
+
+    ax.set_xlabel(r"$\mathbf{Number\ of\ Eigenmodes}$")
+    ax.set_ylabel(r"$\mathbf{Time\ (\mu s)}$")
+    ax.set_title(title, fontsize='14')
+    ax.grid(axis='y', alpha=0.3)
+    ax.legend()
+
+    if save_plot:
+        os.makedirs(dir_name, exist_ok=True)
+        plt.savefig(f'{dir_name}/{file_name}.png', format='png', dpi=300, bbox_inches='tight')
+
+    plt.show()
 
 # ============================================================
 # Main
@@ -380,6 +447,7 @@ if __name__ == "__main__":
     lib = load_kernel()
 
     # Test params
+    # -------------------------------
     rows = 32
     cols = 18
     n_eig = 3
@@ -388,29 +456,19 @@ if __name__ == "__main__":
     random_seed=42
     T = True
     F = False
+    # -------------------------------
 
-    # Test correctness
-    correctness = False
-    if correctness:
-        print("=" * 65)
-        print("CORRECTNESS TESTS")
-        print("=" * 65)
 
-        all_pass = True
-        for n_eig in range(3, 4):
-            ok = correctness_test(n_eig, rc, threads_per_block=128)
-            all_pass = all_pass and ok
-
-        print("-" * 65)
-        if all_pass:
-            print("ALL PASSED")
-        else:
-            print("SOME TESTS FAILED")
-
-    # Run benchmark tests
-
+    # Switch board for running tests
+    # -------------------------------
+    correctness = T
     one_timing_test = F
     many_timing_tests = F
+    plot_benchmark = F
+    plot_benchmark_neig = F
+
+    if correctness:
+        test_multiple_correct(lib, rc, (3, 4), threads_per_block=128)
 
     if one_timing_test:
         timing_test(lib, n_eig, rc, 128, random_seed)
@@ -419,9 +477,9 @@ if __name__ == "__main__":
         eig_range = (1, 6)
         time_multiple(lib, rc, 128, eig_range, random_seed)
     
-    plot_benchmark = T
-
     if plot_benchmark:
         n_trials = 10
         timing_plot_nant_varies(lib, n_eig, n_trials, 128, random_seed, save_plot=False)
 
+    if plot_benchmark_neig:
+        timing_plot_neig_varies(lib, rc, (8, 20), 128, random_seed, save_plot=False)
