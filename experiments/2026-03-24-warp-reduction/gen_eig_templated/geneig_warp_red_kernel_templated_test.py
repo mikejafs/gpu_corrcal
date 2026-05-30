@@ -22,6 +22,7 @@ import cupy as cp
 import ctypes
 import os
 import time
+import re
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 from matplotlib.ticker import FixedLocator, FixedFormatter
@@ -101,6 +102,14 @@ def sync(lib):
     lib.sync_device()
 
 
+def get_machine_label():
+    gpu_name = cp.cuda.Device(0).attributes  # not ideal, better to use:
+    gpu_name = cp.cuda.runtime.getDeviceProperties(0)['name'].decode()
+    plot_label = gpu_name.replace(' ', r'\ ')
+    file_label = re.search(r'[A-Z]\d+|\d+', gpu_name).group()
+    return plot_label, file_label
+
+
 # ============================================================
 # CPU & CUPY References
 # ============================================================
@@ -164,7 +173,7 @@ def make_test_data(n_eig, rc_list, seed):
 # Correctness test
 # ============================================================
 
-def correctness_test(n_eig, rc_tuple, threads_per_block):
+def correctness_test(lib, n_eig, rc_tuple, threads_per_block):
     """Compare GPU kernel output to CPU reference."""
 
     test_data = make_test_data(n_eig, rc_tuple, 12)
@@ -182,7 +191,7 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     # ---------------------------------------------------------------
     # REMOVE FROM BOILERPLATE
     # Hardcoded reference (REMEMBER ONLY WORKS FOR NEIG = 3)
-    out_3neig = cov_reduce_sym_r3(noise, diffuse, edges, 128)
+    # out_3neig = cov_reduce_sym_r3(noise, diffuse, edges, 128)
     # ---------------------------------------------------------------
 
     # GPU
@@ -203,8 +212,8 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     # ---------------------------------------------------------------
     # REMOVE FROM BOILERPLATE
     # Check against hardcoded version
-    match_hardcode = cp.allclose(out_3neig, out_kernel, atol=1e-4, rtol=1e-4)
-    max_diff_hardcode = np.max(np.abs(out_3neig - out_kernel))
+    # match_hardcode = cp.allclose(out_3neig, out_kernel, atol=1e-4, rtol=1e-4)
+    # max_diff_hardcode = np.max(np.abs(out_3neig - out_kernel))
     # ---------------------------------------------------------------
 
     # print(f"AGAINST HARDCODED VERSION:  n_eig={n_eig:2d}  |  allclose: {match_hardcode}  |  max |diff|: {max_diff_hardcode:.2e}")
@@ -241,7 +250,7 @@ def test_multiple_correct(lib, rc_tuple, eig_range, threads_per_block=128):
 
     all_pass = True
     for n_eig in range(eig_start, eig_stop):
-        match_cupy, match_cpu = correctness_test(n_eig, rc_tuple, threads_per_block)
+        match_cupy, match_cpu = correctness_test(lib, n_eig, rc_tuple, threads_per_block)
         all_pass = all_pass and match_cupy and match_cpu
 
     print("-" * 65)
@@ -299,13 +308,14 @@ def timing_test(lib, n_eig, rc_tuple, threads_per_block, seed):
 
 def time_multiple(lib, rc_tuple, tpb, eig_range, random_seed):
     eig_start, eig_stop = eig_range[0], eig_range[1]
+
     print()
     print("=" * 65)
-    print(f"TIMING TESTS -> n_ant = {rows} * {cols} = {n_ant}")
+    print(f"TIMING TESTS -> n_ant = {rc_tuple[0]} * {rc_tuple[1]} = {rc_tuple[0]*rc_tuple[1]}")
     print("=" * 65)
 
     for n_eig in range(eig_start, eig_stop):
-        timing_test(lib, n_eig, rc_tuple, 128, random_seed)
+        timing_test(lib, n_eig, rc_tuple, tpb, random_seed)
 
     print("=" * 65)
 
@@ -343,14 +353,13 @@ def timing_plot_nant_varies(
         test_times[i] = gpu_t
         reference_times[i] = ref_gpu_t
 
-    # ------------------------------------------------------
-    # CHANGE TO DESIRED OUTPUT FOLDER AND TITLE NAME
+    # ---------------------------------------------------------------------
+    # Returning the correct file name and title (cluster vs Device)
+    title_label, file_label = get_machine_label()
     dir_name = 'varying_nant_plots'
-    title = r"$\mathbf{On\ Cluster\ \rightarrow\ A40\ GPU}$"
-    # ------------------------------------------------------
-
-    file_name = f'n_trials={n_iter-2}'
-
+    file_name = f'n_trials={n_iter-2}_device={file_label}'
+    title = r"$\mathbf{{{}\ ({}\ Eigenmodes)}}$".format(title_label, n_eig)
+    
     #plotting
     plt.rcParams["text.usetex"] = False
     plt.rcParams['axes.labelsize'] = 13
@@ -374,7 +383,7 @@ def timing_plot_nant_varies(
     # ax.tick_params(axis='x', labelrotation=-20)
     
     ax.set_xlabel(r"$\mathbf{Number\ of\ Antennas}$")
-    ax.set_ylabel(r"$\mathbf{Time\ (s)}$")
+    ax.set_ylabel(r"$\mathbf{Time\ (\mu s)}$")
     ax.set_title(title, fontsize='14')
     ax.grid(axis='y', alpha=0.3)
     ax.legend()
@@ -403,12 +412,20 @@ def timing_plot_neig_varies(
         test_times[i] = gpu_t
         reference_times[i] = ref_gpu_t
 
-    # ------------------------------------------------------
-    dir_name = 'varying_neig_plots'
-    title = r"$\mathbf{On\ Cluster\ \rightarrow\ A40\ GPU}$"
-    # ------------------------------------------------------
+    # # ------------------------------------------------------
+    # dir_name = 'varying_neig_plots'
+    # title = r"$\mathbf{On\ Cluster\ \rightarrow\ A40\ GPU}$"
+    # # ------------------------------------------------------
 
-    file_name = f'nant={n_ant}_neig={eig_start}-{eig_stop-1}'
+    # file_name = f'nant={n_ant}_neig={eig_start}-{eig_stop-1}'
+
+    # ---------------------------------------------------------------------
+    # Returning the correct file name and title (cluster vs Device)
+    title_label, file_label = get_machine_label()
+    dir_name = 'varying_neig_plots'
+    file_name = f'nant={n_ant}_neig={eig_start}-{eig_stop}_device={file_label}'
+    title = r"$\mathbf{{{}\ ({}\ Antennas)}}$".format(title_label, n_ant)
+
 
     plt.rcParams["text.usetex"] = False
     plt.rcParams['axes.labelsize'] = 13 
@@ -461,25 +478,28 @@ if __name__ == "__main__":
 
     # Switch board for running tests
     # -------------------------------
-    correctness = T
+    correctness = F
     one_timing_test = F
     many_timing_tests = F
-    plot_benchmark = F
-    plot_benchmark_neig = F
+    plot_benchmark_nant = F
+    plot_benchmark_neig = T
+    save_plot=False
 
     if correctness:
-        test_multiple_correct(lib, rc, (3, 4), threads_per_block=128)
+        eig_range = (1, 7)   
+        test_multiple_correct(lib, rc, eig_range, threads_per_block=128)
 
     if one_timing_test:
         timing_test(lib, n_eig, rc, 128, random_seed)
     
     if many_timing_tests:
-        eig_range = (1, 6)
+        eig_range = (1, 7)
         time_multiple(lib, rc, 128, eig_range, random_seed)
     
-    if plot_benchmark:
-        n_trials = 10
-        timing_plot_nant_varies(lib, n_eig, n_trials, 128, random_seed, save_plot=False)
+    if plot_benchmark_nant:
+        n_trials = 6
+        timing_plot_nant_varies(lib, n_eig, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
-        timing_plot_neig_varies(lib, rc, (8, 20), 128, random_seed, save_plot=False)
+        eig_range = (1, 7)
+        timing_plot_neig_varies(lib, rc, eig_range, 128, random_seed, save_plot=save_plot)

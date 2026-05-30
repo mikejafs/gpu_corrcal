@@ -69,6 +69,10 @@ For genereating ssh key (specifically useful for having to generate a new ssh ke
 
 -  `ssh-keygen -t ed25519 -C "cluster"`
 
+For actually viewing the keys currently on the device:
+
+- `cat ~/.ssh/id_ed25519.pub`
+
 For testing what CPU hardware is being used
 
 - `lscpu`
