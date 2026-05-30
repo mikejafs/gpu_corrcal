@@ -31,7 +31,6 @@
 Currently trying to impliment this above step under the gen_n_eig_warp folder. Specifically under the geneig_warp_red_kernel_run.py file
 
 ### May 20th
-*Fill in with a bit more detail later*
 
 - debugging templated neig since was not matching cupy after neig = 16
   - solution was to clean up zeropad kernels to fix z dimension 
@@ -40,3 +39,8 @@ Currently trying to impliment this above step under the gen_n_eig_warp folder. S
 - needing to finalize templated neig before truly moving on to new kernels 
   - essentially cleaning up tests to be sure things are working properly
 - also note how with pragma unroll we don't get the crazy register spillover blowup we get at large n_eig
+
+- quick update: things work now -- templated geneig code is promising. #pragma unroll is necessary for keeping register spillover to a minimum.
+  - now moving on to new kernels
+
+  

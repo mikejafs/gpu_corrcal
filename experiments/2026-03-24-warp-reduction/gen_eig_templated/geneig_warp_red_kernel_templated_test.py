@@ -8,12 +8,7 @@ Compile:
 Usage:
     python geneig_warp_red_kernel_test.py
 
-TODO:
-- [DONE] Add benchmark tests comparing gen eig to hardcoded red kernel for neig = 3 (NOT TO BE ADDED TO BOILERPLATE STUFF) -> do by inspection per nant in the terminal
-
 ADD TO BOILERPLATE:
-- Add option to produce benchmark plot comparing to reference script (ie. cupy)
-- [DONE] Modify current benchmark to terminal output so that it compares times directly to reference script for same inputs
 - Add full cupy reference to scripts to then 'pull parts from' when it comes time to building new kernels
 """
 
@@ -31,8 +26,7 @@ from gpu_corrcal.utils.gridding import *
 from gpu_corrcal.utils.simulate_params import *
 from gpu_corrcal.utils.zp_puregpu_funcs_py import *
 from cupyx.profiler import benchmark
-
-# cudart = ctypes.CDLL("libcudart.so")
+cudart = ctypes.CDLL("libcudart.so")
 
 # ============================================================
 # ctypes wrapper
