@@ -181,6 +181,10 @@ def correctness_test(lib, n_eig, rc_tuple, threads_per_block):
 
     # CuPy reference
     ref_cupy, nb = cupy_ref(noise, diffuse, edges)
+    print(f"nb is from cupy: {nb}")
+    print(f"len of edges -1 is {len(edges)-1}")
+    print(f"result of diffuse shape [1] is {diffuse.shape}")
+    print(f"shape of cupy is {ref_cupy.shape}")
 
     # ---------------------------------------------------------------
     # REMOVE FROM BOILERPLATE
@@ -472,11 +476,11 @@ if __name__ == "__main__":
 
     # Switch board for running tests
     # -------------------------------
-    correctness = F
+    correctness = T
     one_timing_test = F
     many_timing_tests = F
     plot_benchmark_nant = F
-    plot_benchmark_neig = T
+    plot_benchmark_neig = F
     save_plot=False
 
     if correctness:
