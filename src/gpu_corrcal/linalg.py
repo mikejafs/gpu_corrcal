@@ -14,7 +14,7 @@ def make_small_blocks(
     nb = len(edges_gpu) - 1
     threads_per_block = 128
     inv_noise = 1.0 / noise_gpu
-    out = cp.zeros((nb, n_eig, n_eig))
+    out = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
 
     warp_reduction(
         diffuse_gpu.data.ptr,

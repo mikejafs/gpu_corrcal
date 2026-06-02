@@ -25,8 +25,6 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     ref_cupy, nb = cupy_ref(noise, diffuse, edges)
 
     # GPU
-    # out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
-
     inv_noise, out_warp_red = inv_cov(noise, diffuse, 1, edges)
 
     sync()
@@ -38,27 +36,8 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     match_cupy = cp.allclose(ref_cupy, out_warp_red, atol=1e-4, rtol=1e-4)
     max_diff_cupy = np.max(np.abs(ref_cupy - out_warp_red))
 
-    # print(f"AGAINST HARDCODED VERSION:  n_eig={n_eig:2d}  |  allclose: {match_hardcode}  |  max |diff|: {max_diff_hardcode:.2e}")
-
     print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")    
     print(80*"-")
-
-    # debug_match = False
-    # if debug_match:
-    #     if not match_cupy:
-    #         with open(f"debug_n_eig.txt", "a") as f:
-    #             f.write(f"n_eig={n_eig}\n")
-    #             f.write(f"ref_cupy sum: {cp.sum(ref_cupy):.6e}\n")
-    #             f.write(f"kernel  sum: {cp.sum(out_kernel):.6e}\n")
-    #             f.write(f"ref[0]:\n{cp.asnumpy(ref_cupy[0])}\n\n")
-    #             f.write(f"gpu[0]:\n{cp.asnumpy(out_kernel[0])}\n\n")
-                
-    #             # check if kernel output is all zeros
-    #             f.write(f"kernel all zeros: {cp.all(out_kernel == 0)}\n")
-    #             f.write(f"kernel max: {cp.max(cp.abs(out_kernel)):.6e}\n")
-    #             f.write(f"ref max: {cp.max(cp.abs(ref_cupy)):.6e}\n")
-
-    #     print(f"  n_eig={n_eig} CUDA error: {cudart.cudaGetLastError()}")
 
     return match_cupy
 
@@ -97,5 +76,5 @@ if __name__ == "__main__":
     correctness = T
 
     if correctness:
-        eig_range = (1, 7)   
+        eig_range = (1, 20)   
         test_multiple_correct(rc, eig_range, threads_per_block=128)

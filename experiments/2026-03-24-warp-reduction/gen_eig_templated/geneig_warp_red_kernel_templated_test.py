@@ -476,9 +476,9 @@ if __name__ == "__main__":
 
     # Switch board for running tests
     # -------------------------------
-    correctness = T
+    correctness = F
     one_timing_test = F
-    many_timing_tests = F
+    many_timing_tests = T
     plot_benchmark_nant = F
     plot_benchmark_neig = F
     save_plot=False
@@ -491,7 +491,7 @@ if __name__ == "__main__":
         timing_test(lib, n_eig, rc, 128, random_seed)
     
     if many_timing_tests:
-        eig_range = (1, 7)
+        eig_range = (1, 10)
         time_multiple(lib, rc, 128, eig_range, random_seed)
     
     if plot_benchmark_nant:
