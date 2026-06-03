@@ -46,7 +46,7 @@ class SimCorrcalParams():
         return edges
     
     def sim_data(self):
-        noise_mat = self.xp.random.rand(self.n_bl(), dtype=self.precision)
+        noise_mat = self.xp.random.rand(self.n_bl(), dtype=self.precision) + 1e-6
         diff_mat = self.xp.random.rand(self.n_bl(), self.n_eig, dtype=self.precision)
         src_mat = self.xp.random.rand(self.n_bl(), self.n_src, dtype=self.precision)
         gains = self.xp.random.rand(self.n_gains, dtype=self.precision)

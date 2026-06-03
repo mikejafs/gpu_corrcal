@@ -18,7 +18,10 @@ cudart = ctypes.CDLL("libcudart.so")
 # Timing test
 # ============================================================
 
-def timing_test(n_eig, rc_tuple, threads_per_block, seed):
+def timing_test(
+        n_eig, rc_tuple, threads_per_block, seed,
+        kernel_fun=None, kernel_params=None
+        ):
     """Time the GPU kernel."""
     # Generate the test data
 
@@ -27,6 +30,7 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
     noise = test_data["noise"]
     edges = test_data["edges"]
     source = test_data["source"]
+    
     ref_cupy, nb = cupy_ref(
         test_data["noise"], 
         test_data["diffuse"], 
@@ -36,12 +40,14 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
     # Initialize the output matrix
     # out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
 
-
-    # Benchmark gen_eig kernel
-    ws = InvCovWorkspace(nb, diffuse.shape[1], source.shape[1])
-    times = benchmark(inv_cov, 
-                      (noise, diffuse, source, edges, ws), 
+    # ------------------------------------------------------
+    # Benchmark [WHICHEVER KERNEL WE'RE TESTING]
+    # ws = InvCovWorkspace(nb, diffuse.shape[1], source.shape[1])
+    times = benchmark(kernel_fun, 
+                      (kernel_params), 
                       n_repeat= 1000)
+    
+    # -------------------------------------------------------
     
     avg_gpu = float(cp.mean(times.gpu_times)) * 1e6  # microseconds
     avg_cpu = float(cp.mean(times.cpu_times)) * 1e6
@@ -66,7 +72,9 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
 # =========================================================================================================
 
 # =========================================================================================================
-def time_multiple(rc_tuple, tpb, eig_range, random_seed):
+def time_multiple(rc_tuple, tpb, eig_range, random_seed,
+                  kenel_fun=None, kernel_params=None
+                  ):
     eig_start, eig_stop = eig_range[0], eig_range[1]
 
     print()
@@ -94,7 +102,9 @@ def pop_row_col_input(end_iter_num):
 
 # =========================================================================================================
 def timing_plot_nant_varies(
-        n_eig, n_trials, tpb, random_seed, save_plot=True
+        n_eig, n_trials, tpb, random_seed, dir_name,
+        kenel_fun=None, kernel_params=None,
+        save_plot=True
         ):
 
     n_iter = n_trials + 2
@@ -118,7 +128,7 @@ def timing_plot_nant_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'bmark_plots'
+    # dir_name = 'bmark_plots'
     file_name = f'var_nant: n_trials={n_iter-2}_device={file_label}'
     title = r"$\mathbf{{{}\ ({}\ Eigenmodes)}}$".format(title_label, n_eig)
     
@@ -158,7 +168,9 @@ def timing_plot_nant_varies(
 
 # =========================================================================================================
 def timing_plot_neig_varies(
-        rc_tuple, eig_range, tpb, random_seed, save_plot=True
+        rc_tuple, eig_range, tpb, random_seed, dir_name, 
+        kenel_fun=None, kernel_params=None,
+        save_plot=True
         ):
 
     eig_start, eig_stop = eig_range
@@ -178,7 +190,7 @@ def timing_plot_neig_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'bmark_plots'
+    # dir_name = 'bmark_plots'
     file_name = f'var_neig: nant={n_ant}_neig={eig_start}-{eig_stop}_device={file_label}'
     title = r"$\mathbf{{{}\ ({}\ Antennas)}}$".format(title_label, n_ant)
 

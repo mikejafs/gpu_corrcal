@@ -1,24 +1,52 @@
-import numpy as np
 import cupy as cp
 import ctypes
-import matplotlib.pyplot as plt
-from matplotlib.ticker import ScalarFormatter
-from matplotlib.ticker import FixedLocator, FixedFormatter
+from pathlib import Path
+from gpu_corrcal.inverse_covariance import *
 from gpu_corrcal.utils.gridding import *
 from gpu_corrcal.utils.simulate_params import *
 from gpu_corrcal.utils.zp_puregpu_funcs_py import *
-from gpu_corrcal.inverse_covariance import *
 from gpu_corrcal.utils.tools import *
 from gpu_corrcal.cupy_reference.cupy_inverse_covariance import *
+import matplotlib.pyplot as plt
+from matplotlib.ticker import ScalarFormatter
+from matplotlib.ticker import FixedLocator, FixedFormatter
 from cupyx.profiler import benchmark
-cudart = ctypes.CDLL("libcudart.so")
 
+
+lib_dir = Path(__file__).resolve().parent
+
+#change this if more than one .so file in this parent directory
+file_path = list(lib_dir.glob("*.so"))[0]
+
+lib = ctypes.cdll.LoadLibrary(file_path)
+
+fused_chol_inv = lib.launch_batched_cholesky_inv
+fused_chol_inv.argtypes = [
+    ctypes.c_void_p,   #temp2 input
+    ctypes.c_void_p,   #output mat
+    ctypes.c_int,      #num blocks
+    ctypes.c_int       #n_eig
+]
+
+
+def fused_cholesky_inverse(temp2, edges, out):
+    n_eig = temp2.shape[1]
+    num_blocks = len(edges) - 1
+    fused_chol_inv(
+        temp2.data.ptr,
+        out.data.ptr,
+        num_blocks,
+        n_eig
+    )
+    return out
 
 # ============================================================
 # Timing test
 # ============================================================
 
-def timing_test(n_eig, rc_tuple, threads_per_block, seed):
+def timing_test(
+        n_eig, rc_tuple, threads_per_block, seed,
+        ):
     """Time the GPU kernel."""
     # Generate the test data
 
@@ -27,29 +55,25 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
     noise = test_data["noise"]
     edges = test_data["edges"]
     source = test_data["source"]
-    ref_cupy, nb = cupy_ref(
-        test_data["noise"], 
-        test_data["diffuse"], 
-        test_data["edges"]
-        ) # we need nb for the kernel
 
-    # Initialize the output matrix
-    # out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
-
-
-    # Benchmark gen_eig kernel
-    ws = InvCovWorkspace(nb, diffuse.shape[1], source.shape[1])
-    times = benchmark(inv_cov, 
-                      (noise, diffuse, source, edges, ws), 
+    # ------------------------------------------------------
+    # Benchmark [fused cholesky inverse kernel]
+    ws = InvCovWorkspace(len(edges)-1, diffuse.shape[1], source.shape[1])
+    temp2 = inv_cov(noise, diffuse, source, edges, ws)
+    times = benchmark(fused_cholesky_inverse, 
+                      (temp2, edges, ws.L_del), 
                       n_repeat= 1000)
-    
+    # -------------------------------------------------------
+
     avg_gpu = float(cp.mean(times.gpu_times)) * 1e6  # microseconds
     avg_cpu = float(cp.mean(times.cpu_times)) * 1e6
     
 
     # Benchmark [INSERT REF FUNCTION] -> CuPy ref right now
+    temp2, nb = setup_cupy_ref(noise, diffuse, edges)
+
     ref_times = benchmark(cupy_ref, 
-                          (test_data["noise"], test_data["diffuse"], test_data["edges"]), 
+                          (temp2,), 
                           n_repeat= 1000)
     
     ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) * 1e6  # microseconds
@@ -66,7 +90,9 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
 # =========================================================================================================
 
 # =========================================================================================================
-def time_multiple(rc_tuple, tpb, eig_range, random_seed):
+def time_multiple(rc_tuple, tpb, eig_range, random_seed,
+                  kenel_fun=None, kernel_params=None
+                  ):
     eig_start, eig_stop = eig_range[0], eig_range[1]
 
     print()
@@ -94,7 +120,9 @@ def pop_row_col_input(end_iter_num):
 
 # =========================================================================================================
 def timing_plot_nant_varies(
-        n_eig, n_trials, tpb, random_seed, save_plot=True
+        n_eig, n_trials, tpb, random_seed,
+        kenel_fun=None, kernel_params=None,
+        save_plot=True
         ):
 
     n_iter = n_trials + 2
@@ -158,7 +186,9 @@ def timing_plot_nant_varies(
 
 # =========================================================================================================
 def timing_plot_neig_varies(
-        rc_tuple, eig_range, tpb, random_seed, save_plot=True
+        rc_tuple, eig_range, tpb, random_seed, 
+        kenel_fun=None, kernel_params=None,
+        save_plot=True
         ):
 
     eig_start, eig_stop = eig_range
@@ -235,7 +265,7 @@ if __name__ == "__main__":
     many_timing_tests = F
     plot_benchmark_nant = F
     plot_benchmark_neig = F
-    save_plot=True
+    save_plot=False
 
     if one_timing_test:
         timing_test(n_eig, rc, 128, random_seed)
@@ -245,7 +275,7 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, random_seed)
     
     if plot_benchmark_nant:
-        n_trials = 9
+        n_trials = 12
         timing_plot_nant_varies(n_eig, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:

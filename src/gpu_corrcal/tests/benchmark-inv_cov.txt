@@ -1,0 +1,48 @@
+
+=================================================================
+TIMING TESTS -> n_ant = 32 * 18 = 576
+=================================================================
+  [n_eig=1  n_sym=  1]   KERNEL: gpu= 46.8 us  cpu= 34.3 us | CUPY: gpu=  765.6 us  cpu=754.9 us
+  [n_eig=2  n_sym=  3]   KERNEL: gpu= 33.5 us  cpu= 20.5 us | CUPY: gpu=  894.6 us  cpu=881.3 us
+  [n_eig=3  n_sym=  6]   KERNEL: gpu= 46.1 us  cpu= 25.9 us | CUPY: gpu= 1059.3 us  cpu=1033.5 us
+  [n_eig=4  n_sym= 10]   KERNEL: gpu= 51.9 us  cpu= 27.6 us | CUPY: gpu= 1162.4 us  cpu=1153.0 us
+  [n_eig=5  n_sym= 15]   KERNEL: gpu= 31.8 us  cpu= 19.2 us | CUPY: gpu= 1316.6 us  cpu=1309.0 us
+  [n_eig=6  n_sym= 21]   KERNEL: gpu= 38.2 us  cpu= 17.0 us | CUPY: gpu= 1628.2 us  cpu=1618.3 us
+  [n_eig=7  n_sym= 28]   KERNEL: gpu= 47.4 us  cpu= 22.6 us | CUPY: gpu= 1818.4 us  cpu=1808.9 us
+  [n_eig=8  n_sym= 36]   KERNEL: gpu= 67.9 us  cpu= 33.8 us | CUPY: gpu= 2046.8 us  cpu=2030.7 us
+  [n_eig=9  n_sym= 45]   KERNEL: gpu= 62.6 us  cpu= 28.0 us | CUPY: gpu= 2215.8 us  cpu=2187.5 us
+  [n_eig=10  n_sym= 55]   KERNEL: gpu= 68.1 us  cpu= 21.3 us | CUPY: gpu= 2328.1 us  cpu=2315.5 us
+  [n_eig=11  n_sym= 66]   KERNEL: gpu= 76.2 us  cpu= 19.3 us | CUPY: gpu= 2484.9 us  cpu=2474.3 us
+  [n_eig=12  n_sym= 78]   KERNEL: gpu=105.5 us  cpu= 35.3 us | CUPY: gpu= 3001.9 us  cpu=2965.1 us
+  [n_eig=13  n_sym= 91]   KERNEL: gpu=129.7 us  cpu= 43.8 us | CUPY: gpu= 2846.0 us  cpu=2825.3 us
+  [n_eig=14  n_sym=105]   KERNEL: gpu=108.1 us  cpu= 16.6 us | CUPY: gpu= 3161.4 us  cpu=3133.9 us
+  [n_eig=15  n_sym=120]   KERNEL: gpu=151.7 us  cpu= 30.2 us | CUPY: gpu= 3561.1 us  cpu=3539.5 us
+  [n_eig=16  n_sym=136]   KERNEL: gpu=181.7 us  cpu= 40.6 us | CUPY: gpu= 3450.6 us  cpu=3414.7 us
+  [n_eig=17  n_sym=153]   KERNEL: gpu=193.3 us  cpu= 29.9 us | CUPY: gpu= 4845.5 us  cpu=4818.3 us
+  [n_eig=18  n_sym=171]   KERNEL: gpu=217.9 us  cpu= 28.1 us | CUPY: gpu= 5029.2 us  cpu=4984.0 us
+  [n_eig=19  n_sym=190]   KERNEL: gpu=248.8 us  cpu= 68.9 us | CUPY: gpu= 4939.7 us  cpu=4900.7 us
+=================================================================
+
+=================================================================
+TIMING TESTS -> n_ant = 32 * 18 = 576
+=================================================================
+  [n_eig=1  n_sym=  1]   KERNEL: gpu= 27.8 us  cpu= 14.3 us | CUPY: gpu=  721.6 us  cpu=712.7 us
+  [n_eig=2  n_sym=  3]   KERNEL: gpu= 28.5 us  cpu= 13.0 us | CUPY: gpu=  791.4 us  cpu=781.8 us
+  [n_eig=3  n_sym=  6]   KERNEL: gpu= 26.2 us  cpu= 13.2 us | CUPY: gpu=  973.7 us  cpu=959.7 us
+  [n_eig=4  n_sym= 10]   KERNEL: gpu= 18.5 us  cpu=  5.2 us | CUPY: gpu= 1217.6 us  cpu=1204.0 us
+  [n_eig=5  n_sym= 15]   KERNEL: gpu= 24.5 us  cpu=  7.6 us | CUPY: gpu= 1450.6 us  cpu=1429.1 us
+  [n_eig=6  n_sym= 21]   KERNEL: gpu= 39.7 us  cpu= 12.5 us | CUPY: gpu= 1687.4 us  cpu=1657.4 us
+  [n_eig=7  n_sym= 28]   KERNEL: gpu= 41.8 us  cpu= 11.1 us | CUPY: gpu= 1990.4 us  cpu=1962.4 us
+  [n_eig=8  n_sym= 36]   KERNEL: gpu= 53.1 us  cpu= 13.6 us | CUPY: gpu= 2214.4 us  cpu=2177.7 us
+  [n_eig=9  n_sym= 45]   KERNEL: gpu= 57.0 us  cpu= 13.1 us | CUPY: gpu= 2357.6 us  cpu=2332.8 us
+  [n_eig=10  n_sym= 55]   KERNEL: gpu= 61.7 us  cpu= 10.7 us | CUPY: gpu= 2507.1 us  cpu=2479.5 us
+  [n_eig=11  n_sym= 66]   KERNEL: gpu= 85.2 us  cpu= 12.3 us | CUPY: gpu= 2683.4 us  cpu=2664.7 us
+  [n_eig=12  n_sym= 78]   KERNEL: gpu= 93.3 us  cpu= 12.2 us | CUPY: gpu= 3037.9 us  cpu=3006.1 us
+  [n_eig=13  n_sym= 91]   KERNEL: gpu= 91.2 us  cpu= 16.6 us | CUPY: gpu= 3044.7 us  cpu=3016.4 us
+  [n_eig=14  n_sym=105]   KERNEL: gpu=100.1 us  cpu= 12.9 us | CUPY: gpu= 3116.3 us  cpu=3104.0 us
+  [n_eig=15  n_sym=120]   KERNEL: gpu=124.8 us  cpu=  9.5 us | CUPY: gpu= 3950.6 us  cpu=3912.2 us
+  [n_eig=16  n_sym=136]   KERNEL: gpu=155.4 us  cpu= 22.8 us | CUPY: gpu= 3796.6 us  cpu=3759.9 us
+  [n_eig=17  n_sym=153]   KERNEL: gpu=175.9 us  cpu= 20.9 us | CUPY: gpu= 4924.4 us  cpu=4878.1 us
+  [n_eig=18  n_sym=171]   KERNEL: gpu=203.8 us  cpu= 12.2 us | CUPY: gpu= 4994.5 us  cpu=4961.2 us
+  [n_eig=19  n_sym=190]   KERNEL: gpu=216.5 us  cpu= 14.2 us | CUPY: gpu= 5130.3 us  cpu=5094.2 us
+=================================================================

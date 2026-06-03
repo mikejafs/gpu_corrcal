@@ -12,3 +12,8 @@ Most useful for scientific computing
         ldd
         objdump
         strace
+
+
+For closing the bash instance and reopening (CAUTION: not actually restarting WSL itself)
+
+        exec bash -l

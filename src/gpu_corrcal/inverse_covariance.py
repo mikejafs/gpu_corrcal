@@ -1,7 +1,16 @@
 from gpu_corrcal.linalg import *
 
-def inv_cov(noise, diffuse, source, edges):
+class InvCovWorkspace:
+    def __init__(self, nb, n_eig, n_src):
+        self.temp2 = cp.empty((nb, n_eig, n_eig), dtype=cp.float32)
+        self.L_del = cp.empty((nb, n_eig, n_eig), dtype=cp.float32)
+        self.Del_prime = cp.empty((nb, n_eig, n_eig), dtype=cp.float32)
+        # ... etc, one buffer per intermediate the chain needs
 
-    inv_noise, temp2 = make_small_blocks(noise, diffuse, edges)
+def inv_cov(noise, diffuse, source, edges, init_workspace):
 
-    return inv_noise, temp2
+    temp2 = make_small_blocks(
+        noise, diffuse, edges, out = init_workspace.temp2
+        )
+    
+    return temp2

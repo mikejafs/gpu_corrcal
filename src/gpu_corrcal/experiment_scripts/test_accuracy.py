@@ -13,7 +13,8 @@ cudart = ctypes.CDLL("libcudart.so")
 # Correctness test
 # ============================================================
 
-def correctness_test(n_eig, rc_tuple, threads_per_block):
+def correctness_test(n_eig, rc_tuple, threads_per_block,
+                     kernel_fun, kernel_params):
     """Compare GPU kernel output to CPU reference."""
 
     test_data = make_test_data(n_eig, rc_tuple, 12)
@@ -22,22 +23,24 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     edges = test_data["edges"]
     source = test_data["source"]
 
+    # print(diffuse.shape[2])
     # CuPy reference --------------------------------
-    ref_cupy, nb = cupy_ref(noise, diffuse, edges)
+    temp2, nb = setup_cupy_ref(noise, diffuse, edges)
+    # print(temp2)
+    ref_cupy = cupy_ref(temp2, diffuse)
 
     # GPU --------------------------------------------
     # Initialize the workspace:
     ws = InvCovWorkspace(nb, diffuse.shape[1], source.shape[1])
-    out_warp_red = inv_cov(noise, diffuse, 1, edges, ws)
+    temp2 = inv_cov(noise, diffuse, source, edges, ws)
+
+    out_kernel = kernel_fun(temp2, edges, ws.L_del)
 
     sync()
 
-    print(f" red kernel out {out_warp_red.shape}")
-    print(f"cupy out {ref_cupy.shape}")
-
     # Check against cupy
-    match_cupy = cp.allclose(ref_cupy, out_warp_red, atol=1e-4, rtol=1e-4)
-    max_diff_cupy = np.max(np.abs(ref_cupy - out_warp_red))
+    match_cupy = cp.allclose(ref_cupy, out_kernel, atol=1e-4, rtol=1e-4)
+    max_diff_cupy = np.max(np.abs(ref_cupy - out_kernel))
 
     print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")    
     print(80*"-")
@@ -45,7 +48,8 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     return match_cupy
 
 
-def test_multiple_correct(rc_tuple, eig_range, threads_per_block=128):
+def test_multiple_correct(rc_tuple, eig_range, threads_per_block,
+                          kernel_fun, kernel_params):
     eig_start, eig_stop = eig_range
     print("=" * 65)
     print("CORRECTNESS TESTS")
@@ -53,7 +57,8 @@ def test_multiple_correct(rc_tuple, eig_range, threads_per_block=128):
 
     all_pass = True
     for n_eig in range(eig_start, eig_stop):
-        match_cupy = correctness_test(n_eig, rc_tuple, threads_per_block)
+        match_cupy = correctness_test(n_eig, rc_tuple, threads_per_block,
+                                      kernel_fun, kernel_params)
         all_pass = all_pass and match_cupy
 
     print("-" * 65)

@@ -42,6 +42,10 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     return temp2
 
     L_del = xp.linalg.cholesky(xp.eye(Del.shape[2])[None, ...] + temp2)   
+    t3 = xp.linalg.inv(L_del)
+
+    # return t3
+
     Del_prime = temp @ xp.transpose(xp.linalg.inv(L_del).conj(), [0, 2, 1]) 
           
     A = N_inv[..., None] * Sig
@@ -69,8 +73,7 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     # cp.cuda.Stream.null.synchronize()
     return N_inv, Del_prime, Sig_prime
 
-
-def cupy_ref(noise, diffuse, edges):
+def setup_cupy_ref(noise, diffuse, edges):
     zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
     zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
     # temp = zp_inv_noise[..., None] * zp_diffuse
@@ -78,3 +81,9 @@ def cupy_ref(noise, diffuse, edges):
     out = inverse_covariance(zp_inv_noise, zp_diffuse, 1, cp, ret_det=False, N_is_inv=True)
     cp.cuda.Stream.null.synchronize()
     return out, nb
+
+
+def cupy_ref(temp2):
+    L_del = cp.linalg.cholesky(cp.eye(temp2.shape[1])[None, ...] + temp2)   
+    t3 = cp.linalg.inv(L_del)
+    return t3

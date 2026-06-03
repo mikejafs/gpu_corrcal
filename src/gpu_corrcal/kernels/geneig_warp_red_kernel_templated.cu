@@ -52,8 +52,7 @@ __device__ __forceinline__ void accumulate_outer_prod(
     int bdim = (int)blockDim.x;
     
     for (int i = start + tid; i < stop; i += bdim) {
-        float ni_inv = noise[i];
-        // float noise[i] = 1.0f / noise[i];
+        float ni_inv = 1.0 / noise[i];
 
         float d[N_EIG];
         #pragma unroll
@@ -65,11 +64,9 @@ __device__ __forceinline__ void accumulate_outer_prod(
         #pragma unroll
         for (int j = 0; j < N_EIG; ++j) {
             float d_ni_inv = ni_inv * d[j];
-            // float d_ni_inv = noise[i] * d[j];
             #pragma unroll
             for (int row = 0; row <= j; ++row) {
                 acc[idx] += d[row] * d_ni_inv;
-                // acc[idx] += d[row] * noise[i];
                 idx++;
             }
         }
