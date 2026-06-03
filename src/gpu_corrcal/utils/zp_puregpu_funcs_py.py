@@ -11,8 +11,8 @@ print(current_dir)
 # full_path = current_dir / "zp_puregpu_funcs.so"
 # fp32_path = current_dir / "zp_puregpu_funcs_f32.so"
 
-full_path_f32 = "zp_puregpu_funcs_f32.so"
-full_path_f64 = "zp_puregpu_funcs_f64.so"
+full_path_f32 = current_dir / "zp_puregpu_funcs_f32.so"
+full_path_f64 = current_dir / "zp_puregpu_funcs_f64.so"
 
 zp_cuda_lib = ctypes.cdll.LoadLibrary(full_path_f64)
 zp_cuda_lib_fp32 = ctypes.cdll.LoadLibrary(full_path_f32)
