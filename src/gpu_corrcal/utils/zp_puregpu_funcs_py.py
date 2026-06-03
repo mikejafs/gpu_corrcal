@@ -3,7 +3,8 @@ import cupy as cp
 import matplotlib.pyplot as plt
 
 from pathlib import Path
-current_dir = Path(__file__).resolve().parent / "kernels"
+current_dir = Path(__file__).resolve().parent.parent / "kernels"
+print(current_dir)
 
 # full_path = "/home/mike/corrcal_gpu_pipeline/pipeline/zp_puregpu_funcs.so"
 # fp32_path = "/home/mike/corrcal_gpu_pipeline/pipeline/zp_puregpu_funcs_f32.so"
