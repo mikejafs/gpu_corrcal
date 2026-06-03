@@ -3,15 +3,15 @@ import cupy as cp
 import matplotlib.pyplot as plt
 
 from pathlib import Path
-current_dir = Path(__file__).resolve().parent
+current_dir = Path(__file__).resolve().parent / "kernels"
 
 # full_path = "/home/mike/corrcal_gpu_pipeline/pipeline/zp_puregpu_funcs.so"
 # fp32_path = "/home/mike/corrcal_gpu_pipeline/pipeline/zp_puregpu_funcs_f32.so"
 # full_path = current_dir / "zp_puregpu_funcs.so"
 # fp32_path = current_dir / "zp_puregpu_funcs_f32.so"
 
-full_path_f32 = "/home/mikej/phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/kernels/zp_puregpu_funcs_f32.so"
-full_path_f64 = "/home/mikej/phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/kernels/zp_puregpu_funcs_f64.so"
+full_path_f32 = "zp_puregpu_funcs_f32.so"
+full_path_f64 = "zp_puregpu_funcs_f64.so"
 
 zp_cuda_lib = ctypes.cdll.LoadLibrary(full_path_f64)
 zp_cuda_lib_fp32 = ctypes.cdll.LoadLibrary(full_path_f32)
