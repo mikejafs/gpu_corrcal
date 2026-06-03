@@ -39,15 +39,18 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     temp2 = xp.transpose(Del, [0, 2, 1]) @ temp
 
     #the current red kernel does up to this
-    return temp2
+    # return temp2
 
     L_del = xp.linalg.cholesky(xp.eye(Del.shape[2])[None, ...] + temp2)   
     t3 = xp.linalg.inv(L_del)
 
-    # return t3
+    return t3
 
-    Del_prime = temp @ xp.transpose(xp.linalg.inv(L_del).conj(), [0, 2, 1]) 
+    # Del_prime = temp @ xp.transpose(xp.linalg.inv(L_del).conj(), [0, 2, 1]) 
+    Del_prime = temp @ xp.transpose((t3), [0, 2, 1]) 
           
+
+    return Del_prime
     A = N_inv[..., None] * Sig
     B = xp.transpose(Sig.conj(), [0, 2, 1]) @ Del_prime
     W = A - Del_prime @ xp.transpose(B.conj(), [0, 2, 1])
@@ -72,6 +75,7 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
         pass
     # cp.cuda.Stream.null.synchronize()
     return N_inv, Del_prime, Sig_prime
+
 
 def setup_cupy_ref(noise, diffuse, edges):
     zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)

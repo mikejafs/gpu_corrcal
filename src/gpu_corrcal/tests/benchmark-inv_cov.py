@@ -27,18 +27,13 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
     noise = test_data["noise"]
     edges = test_data["edges"]
     source = test_data["source"]
-    ref_cupy, nb = cupy_ref(
-        test_data["noise"], 
-        test_data["diffuse"], 
-        test_data["edges"]
-        ) # we need nb for the kernel
 
     # Initialize the output matrix
     # out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
 
 
     # Benchmark gen_eig kernel
-    ws = InvCovWorkspace(nb, diffuse.shape[1], source.shape[1])
+    ws = InvCovWorkspace(len(edges)-1, diffuse.shape[1], source.shape[1])
     times = benchmark(inv_cov, 
                       (noise, diffuse, source, edges, ws), 
                       n_repeat= 1000)
@@ -48,7 +43,7 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
     
 
     # Benchmark [INSERT REF FUNCTION] -> CuPy ref right now
-    ref_times = benchmark(cupy_ref, 
+    ref_times = benchmark(setup_cupy_ref, 
                           (test_data["noise"], test_data["diffuse"], test_data["edges"]), 
                           n_repeat= 1000)
     
@@ -118,7 +113,7 @@ def timing_plot_nant_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'bmark_plots'
+    dir_name = 'bmark_plots_fused_chol_inv'
     file_name = f'var_nant: n_trials={n_iter-2}_device={file_label}'
     title = r"$\mathbf{{{}\ ({}\ Eigenmodes)}}$".format(title_label, n_eig)
     
@@ -132,8 +127,8 @@ def timing_plot_nant_varies(
         })
 
     fig, ax = plt.subplots()
-    ax.loglog(n_ants, test_times, '-x', ms = 7,  label = 'Reduction Kernel')
-    ax.loglog(n_ants, reference_times, '-p', ms = 7, label = 'CuPy')
+    ax.loglog(n_ants, test_times, '-P', ms = 9,  label = 'Custom Inverse Cov')
+    ax.loglog(n_ants, reference_times, '-p', ms = 9, label = 'CuPy Inverse Cov')
     
     ax.xaxis.set_major_locator(FixedLocator(n_ants))
     ax.xaxis.set_major_formatter(
@@ -178,7 +173,7 @@ def timing_plot_neig_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'bmark_plots'
+    dir_name = 'bmark_plots_fused_chol_inv'
     file_name = f'var_neig: nant={n_ant}_neig={eig_start}-{eig_stop}_device={file_label}'
     title = r"$\mathbf{{{}\ ({}\ Antennas)}}$".format(title_label, n_ant)
 
@@ -192,8 +187,8 @@ def timing_plot_neig_varies(
     })
 
     fig, ax = plt.subplots()
-    ax.semilogy(neigs, test_times, '-x', ms=7, label='Reduction Kernel')
-    ax.semilogy(neigs, reference_times, '-p', ms=7, label='CuPy')
+    ax.semilogy(neigs, test_times, '-P', ms=9, label='Custom Inverse Cov')
+    ax.semilogy(neigs, reference_times, '-p', ms=9, label='CuPy Inverse Cov')
 
     ax.xaxis.set_major_locator(FixedLocator(neigs))
     ax.xaxis.set_major_formatter(FixedFormatter([str(int(n)) for n in neigs]))
@@ -232,10 +227,10 @@ if __name__ == "__main__":
     # -------------------------------
 
     one_timing_test = F
-    many_timing_tests = F
+    many_timing_tests = T
     plot_benchmark_nant = F
     plot_benchmark_neig = F
-    save_plot=True
+    save_plot=False
 
     if one_timing_test:
         timing_test(n_eig, rc, 128, random_seed)
@@ -245,9 +240,11 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, random_seed)
     
     if plot_benchmark_nant:
-        n_trials = 9
+        n_trials = 10
         timing_plot_nant_varies(n_eig, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
         eig_range = (1, 20)
         timing_plot_neig_varies(rc, eig_range, 128, random_seed, save_plot=save_plot)
+
+

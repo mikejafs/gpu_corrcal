@@ -25,3 +25,15 @@ def make_small_blocks(
     )
 
     return out
+
+
+def fused_cholesky_inverse(temp2, edges, out):
+    n_eig = temp2.shape[1]
+    num_blocks = len(edges) - 1
+    fused_chol_inv(
+        temp2.data.ptr,
+        out.data.ptr,
+        num_blocks,
+        n_eig
+    )
+    return out

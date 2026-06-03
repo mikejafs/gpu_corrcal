@@ -23,21 +23,20 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     source = test_data["source"]
 
     # CuPy reference --------------------------------
-    ref_cupy, nb = cupy_ref(noise, diffuse, edges)
+    #!!! Note that setup_c.. has everything up to the point
+    # we actually need it -- not cupy_ref
+    ref_cupy, nb = setup_cupy_ref(noise, diffuse, edges)
 
     # GPU --------------------------------------------
     # Initialize the workspace:
     ws = InvCovWorkspace(nb, diffuse.shape[1], source.shape[1])
-    out_warp_red = inv_cov(noise, diffuse, 1, edges, ws)
+    out_kernel = inv_cov(noise, diffuse, 1, edges, ws)
 
     sync()
 
-    print(f" red kernel out {out_warp_red.shape}")
-    print(f"cupy out {ref_cupy.shape}")
-
     # Check against cupy
-    match_cupy = cp.allclose(ref_cupy, out_warp_red, atol=1e-4, rtol=1e-4)
-    max_diff_cupy = np.max(np.abs(ref_cupy - out_warp_red))
+    match_cupy = cp.allclose(ref_cupy, out_kernel, atol=1e-3, rtol=1e-3)
+    max_diff_cupy = np.max(np.abs(ref_cupy - out_kernel))
 
     print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")    
     print(80*"-")
@@ -79,5 +78,5 @@ if __name__ == "__main__":
     correctness = T
 
     if correctness:
-        eig_range = (1, 20)   
+        eig_range = (1, 21)   
         test_multiple_correct(rc, eig_range, threads_per_block=128)

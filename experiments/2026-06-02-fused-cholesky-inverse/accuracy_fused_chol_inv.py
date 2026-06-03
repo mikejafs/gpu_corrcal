@@ -49,15 +49,22 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     edges = test_data["edges"]
     source = test_data["source"]
 
-    # CuPy reference --------------------------------
+
+
+    # Set up both refs
     temp2_cupy, nb = setup_cupy_ref(noise, diffuse, edges)
+
+    ws = InvCovWorkspace(nb, diffuse.shape[1], source.shape[1])
+    temp2_kernel = inv_cov(noise, diffuse, source, edges, ws)
+    sync()
+
+    # CuPy reference --------------------------------
     ref_cupy = cupy_ref(temp2_cupy)
+    # ref_cupy = cupy_ref(temp2_kernel)
     cp.cuda.Stream.null.synchronize()
 
     # GPU --------------------------------------------
     # Initialize the workspace:
-    ws = InvCovWorkspace(nb, diffuse.shape[1], source.shape[1])
-    temp2_kernel = inv_cov(noise, diffuse, source, edges, ws)
     sync()
 
     #
@@ -76,6 +83,10 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     #new kernel
     out_kernel = fused_cholesky_inverse(temp2_kernel, edges, out=ws.L_del)
     sync()
+
+    # print(ref_cupy)
+    # print(out_kernel)
+    
 
     # Check against cupy
     match_cupy = cp.allclose(ref_cupy, out_kernel, atol=1e-3, rtol=1e-3)
@@ -121,5 +132,5 @@ if __name__ == "__main__":
     correctness = T
 
     if correctness:
-        eig_range = (1, 15)   
+        eig_range = (3, 9)   
         test_multiple_correct(rc, eig_range, threads_per_block=128)

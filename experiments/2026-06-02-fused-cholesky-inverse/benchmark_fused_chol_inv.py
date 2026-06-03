@@ -160,8 +160,8 @@ def timing_plot_nant_varies(
         })
 
     fig, ax = plt.subplots()
-    ax.loglog(n_ants, test_times, '-x', ms = 7,  label = 'Reduction Kernel')
-    ax.loglog(n_ants, reference_times, '-p', ms = 7, label = 'CuPy')
+    ax.loglog(n_ants, test_times, '-P', ms = 9,  label = 'fused cholesky inv')
+    ax.loglog(n_ants, reference_times, '-p', ms = 9, label = 'CuPy')
     
     ax.xaxis.set_major_locator(FixedLocator(n_ants))
     ax.xaxis.set_major_formatter(
@@ -263,7 +263,7 @@ if __name__ == "__main__":
 
     one_timing_test = F
     many_timing_tests = F
-    plot_benchmark_nant = F
+    plot_benchmark_nant = T
     plot_benchmark_neig = F
     save_plot=False
 
@@ -275,7 +275,7 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, random_seed)
     
     if plot_benchmark_nant:
-        n_trials = 12
+        n_trials = 6
         timing_plot_nant_varies(n_eig, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
