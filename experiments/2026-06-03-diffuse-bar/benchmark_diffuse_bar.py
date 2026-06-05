@@ -152,7 +152,7 @@ def timing_plot_nant_varies(
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
     dir_name = 'bmark_plots'
-    file_name = f'cluster_var_nant: n_trials={n_iter-2}_device={file_label}'
+    file_name = f'var_nant: n_trials={n_iter-2}_device={file_label}'
     title = r"$\mathbf{{{}\ ({}\ Eigenmodes)}}$".format(title_label, n_eig)
     
     #plotting
@@ -268,9 +268,9 @@ if __name__ == "__main__":
 
     one_timing_test = F
     many_timing_tests = F
-    plot_benchmark_nant = T
+    plot_benchmark_nant = F
     plot_benchmark_neig = F
-    save_plot=True
+    save_plot=False
 
     if one_timing_test:
         timing_test(n_eig, rc, 128, random_seed)
