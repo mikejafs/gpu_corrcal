@@ -76,7 +76,7 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     cp.cuda.Stream.null.synchronize()
 
     #--------------------------------------------
-    # New GPU kernel 
+    # New GPU kernel
     
     out_kernel = mul_temp_by_diffuse_chol(
         noise, diffuse, L_del_inv_T, ws.diffuse_bar, edges

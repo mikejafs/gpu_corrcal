@@ -6,6 +6,8 @@ from gpu_corrcal.utils.zp_puregpu_funcs_py import *
 
 def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     """
+    CuPy inverse covariance.
+
     Given the components of the 2-level sparse covariance object, computes 
     the components of the inverse covariance object. Currectly does not 
     support the option to return the determinant of the covariance.
@@ -44,7 +46,7 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     L_del = xp.linalg.cholesky(xp.eye(Del.shape[2])[None, ...] + temp2)   
     t3 = xp.transpose(xp.linalg.inv(L_del), [0, 2, 1])
 
-    return temp, t3
+    # return temp, t3
 
     # Del_prime = temp @ xp.transpose(xp.linalg.inv(L_del).conj(), [0, 2, 1]) 
     Del_prime = temp @ t3
@@ -82,10 +84,10 @@ def setup_cupy_ref(noise, diffuse, edges):
     zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
     # temp = zp_inv_noise[..., None] * zp_diffuse
     # out = cp.transpose(zp_diffuse, [0, 2, 1]) @ temp
-    temp, out_t3 = inverse_covariance(zp_inv_noise, zp_diffuse, 1, cp, ret_det=False, N_is_inv=True)
+    diffuse_bar = inverse_covariance(zp_inv_noise, zp_diffuse, 1, cp, ret_det=False, N_is_inv=True)
 
     cp.cuda.Stream.null.synchronize()
-    return temp, out_t3
+    return diffuse_bar
 
 
 def cupy_ref(temp, edges, t3):

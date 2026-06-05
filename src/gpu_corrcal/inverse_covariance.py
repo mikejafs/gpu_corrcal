@@ -9,18 +9,25 @@ class InvCovWorkspace:
         # ... etc, one buffer per intermediate the chain needs
 
 def inv_cov(noise, diffuse, source, edges, init_workspace):
+    """
+    Custom kernel inverse covariance.
+    
+    Function description and params
+    fill later ...
+    """
 
     temp2 = make_small_blocks(
         noise, diffuse, edges, out = init_workspace.temp2
     )
     # print(f"temp2: max={float(cp.max(cp.abs(temp2))):.2e}, nan={int(cp.sum(cp.isnan(temp2)))}, inf={int(cp.sum(cp.isinf(temp2)))}")
 
-    # return temp2
-
-    sync()
     L_del_inv_T = fused_cholesky_inverse(
         temp2, edges, out=init_workspace.L_del
     )
     # print(f"L_inv: max={float(cp.max(cp.abs(L_del_inv_T))):.2e}, nan={int(cp.sum(cp.isnan(L_del_inv_T)))}, inf={int(cp.sum(cp.isinf(L_del_inv_T)))}")
 
-    return L_del_inv_T
+    diffuse_bar = mul_temp_by_diffuse_chol(
+        noise, diffuse, L_del_inv_T, init_workspace.diffuse_bar, edges
+    )
+
+    return diffuse_bar

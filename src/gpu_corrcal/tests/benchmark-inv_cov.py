@@ -33,7 +33,7 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
 
 
     # Benchmark gen_eig kernel
-    ws = InvCovWorkspace(len(edges)-1, diffuse.shape[1], source.shape[1])
+    ws = InvCovWorkspace(diffuse, source, edges)
     times = benchmark(inv_cov, 
                       (noise, diffuse, source, edges, ws), 
                       n_repeat= 1000)
@@ -43,8 +43,10 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
     
 
     # Benchmark [INSERT REF FUNCTION] -> CuPy ref right now
-    ref_times = benchmark(setup_cupy_ref, 
-                          (noise, diffuse, edges), 
+    zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
+    zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
+    ref_times = benchmark(inverse_covariance, 
+                          (zp_inv_noise, zp_diffuse, source, cp, False, True), 
                           n_repeat= 1000)
 
 
@@ -90,7 +92,7 @@ def pop_row_col_input(end_iter_num):
 
 # =========================================================================================================
 def timing_plot_nant_varies(
-        n_eig, n_trials, tpb, random_seed, save_plot=True
+        n_eig, n_trials, tpb, random_seed, save_plot=True, cluster=False
         ):
 
     n_iter = n_trials + 2
@@ -114,8 +116,12 @@ def timing_plot_nant_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'bmark_plots_fused_chol_inv'
-    file_name = f'var_nant: n_trials={n_iter-2}_device={file_label}'
+    dir_name = 'bmark_plots_upto_diffuse_bar'
+    if "5070" in file_label:
+        file_name = f'device_var_nant: n_trials={n_iter-2}_device={file_label}'
+    elif "A40" in file_label:
+        file_name = f'cluster_var_nant: n_trials={n_iter-2}_device={file_label}'
+    
     title = r"$\mathbf{{{}\ ({}\ Eigenmodes)}}$".format(title_label, n_eig)
     
     #plotting
@@ -231,7 +237,7 @@ if __name__ == "__main__":
     many_timing_tests = F
     plot_benchmark_nant = T
     plot_benchmark_neig = F
-    save_plot=False
+    save_plot=True
 
     if one_timing_test:
         timing_test(n_eig, rc, 128, random_seed)
@@ -241,11 +247,11 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, random_seed)
     
     if plot_benchmark_nant:
-        n_trials = 8
+        n_trials = 12
         timing_plot_nant_varies(n_eig, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
-        eig_range = (1, 20)
+        eig_range = (1, 21)
         timing_plot_neig_varies(rc, eig_range, 128, random_seed, save_plot=save_plot)
 
 

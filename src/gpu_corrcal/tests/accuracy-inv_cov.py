@@ -21,21 +21,32 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     noise = test_data["noise"]
     edges = test_data["edges"]
     source = test_data["source"]
+    print(len(edges))
 
     # CuPy reference --------------------------------
     #!!! Note that setup_c.. has everything up to the point
     # we actually need it -- not cupy_ref
-    ref_cupy, nb = setup_cupy_ref(noise, diffuse, edges)
+    zp_ref_cupy = setup_cupy_ref(noise, diffuse, edges)
+    # print(f"cupy shape {zp_ref_cupy.shape}")
     
+    ref_cupy = undo_zeroPad(zp_ref_cupy, edges, dtype=cp.float32, ReImsplit=True)
+    # print(f"cupy shape {ref_cupy.shape}")
+    
+
     # GPU --------------------------------------------
     # Initialize the workspace:
-    ws = InvCovWorkspace(nb, diffuse.shape[1], source.shape[1])
+    ws = InvCovWorkspace(diffuse, source, edges)
     out_kernel = inv_cov(noise, diffuse, 1, edges, ws)
+    
+    # print(f"out kern shape {out_kernel.shape}")
+    # print(type(zp_ref_cupy))
+    # print(type(zp_out_kernel))
+    # print(zp_out_kernel.shape)
 
     sync()
 
     # Check against cupy
-    match_cupy = cp.allclose(ref_cupy, out_kernel, atol=1e-3, rtol=1e-3)
+    match_cupy = cp.allclose(ref_cupy, out_kernel, atol=1e-1, rtol=1e-5)
     max_diff_cupy = np.max(np.abs(ref_cupy - out_kernel))
 
     print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")    

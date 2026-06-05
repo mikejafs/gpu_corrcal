@@ -23,9 +23,8 @@ def make_small_blocks(
         ctypes.c_int(n_eig),
         ctypes.c_int(threads_per_block),
     )
-
+    # cp.cuda.Stream.null.synchronize()
     return out
-
 
 def fused_cholesky_inverse(temp2, edges, out):
     n_eig = temp2.shape[1]
@@ -36,4 +35,20 @@ def fused_cholesky_inverse(temp2, edges, out):
         num_blocks,
         n_eig
     )
+    # cp.cuda.Stream.null.synchronize()
+    return out
+
+def mul_temp_by_diffuse_chol(noise, diffuse, L_inv_T, out, edges):
+    n_eig = diffuse.shape[1]
+    nb = len(edges) - 1
+    mul_temp_by_diffuse_chol_inv(
+        noise.data.ptr,
+        diffuse.data.ptr,
+        L_inv_T.data.ptr,
+        out.data.ptr,
+        edges.data.ptr,
+        nb,
+        n_eig
+    )
+    # cp.cuda.Stream.null.synchronize()
     return out
