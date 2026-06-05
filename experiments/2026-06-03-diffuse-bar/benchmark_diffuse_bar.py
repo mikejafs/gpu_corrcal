@@ -1,24 +1,56 @@
-import numpy as np
 import cupy as cp
 import ctypes
-import matplotlib.pyplot as plt
-from matplotlib.ticker import ScalarFormatter
-from matplotlib.ticker import FixedLocator, FixedFormatter
+from pathlib import Path
+from gpu_corrcal.inverse_covariance import *
 from gpu_corrcal.utils.gridding import *
 from gpu_corrcal.utils.simulate_params import *
 from gpu_corrcal.utils.zp_puregpu_funcs_py import *
-from gpu_corrcal.inverse_covariance import *
 from gpu_corrcal.utils.tools import *
 from gpu_corrcal.cupy_reference.cupy_inverse_covariance import *
+import matplotlib.pyplot as plt
+from matplotlib.ticker import ScalarFormatter
+from matplotlib.ticker import FixedLocator, FixedFormatter
 from cupyx.profiler import benchmark
-cudart = ctypes.CDLL("libcudart.so")
 
+
+lib_dir = Path(__file__).resolve().parent
+
+#change this if more than one .so file in this parent directory
+file_path = list(lib_dir.glob("*.so"))[0]
+
+lib = ctypes.cdll.LoadLibrary(file_path)
+
+mul_temp_by_diffuse_chol_inv = lib.launch_mul_temp_by_chol
+mul_temp_by_diffuse_chol_inv.argtypes = [
+    ctypes.c_void_p,   #noise input
+    ctypes.c_void_p,   #diffuse input
+    ctypes.c_void_p,   #diffuse chol inv T mat
+    ctypes.c_void_p,   #output mat    
+    ctypes.c_void_p,      #edges
+    ctypes.c_int,      #num blocks
+    ctypes.c_int       #n_eig
+]
+def mul_temp_by_diffuse_chol(noise, diffuse, L_inv_T, out, edges):
+    n_eig = diffuse.shape[1]
+    nb = len(edges) - 1
+    mul_temp_by_diffuse_chol_inv(
+        noise.data.ptr,
+        diffuse.data.ptr,
+        L_inv_T.data.ptr,
+        out.data.ptr,
+        edges.data.ptr,
+        nb,
+        n_eig
+    )
+    return out
 
 # ============================================================
 # Timing test
 # ============================================================
 
-def timing_test(n_eig, rc_tuple, threads_per_block, seed):
+def timing_test(
+        n_eig, rc_tuple, threads_per_block, seed,
+        ):
     """Time the GPU kernel."""
     # Generate the test data
 
@@ -28,26 +60,27 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
     edges = test_data["edges"]
     source = test_data["source"]
 
-    # Initialize the output matrix
-    # out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
-
-
-    # Benchmark gen_eig kernel
-    ws = InvCovWorkspace(len(edges)-1, diffuse.shape[1], source.shape[1])
-    times = benchmark(inv_cov, 
-                      (noise, diffuse, source, edges, ws), 
+    # ------------------------------------------------------
+    # Benchmark [fused cholesky inverse kernel]
+    ws = InvCovWorkspace(diffuse, source, edges)
+    L_del_inv_T = inv_cov(noise, diffuse, source, edges, ws)
+    sync()
+    times = benchmark(mul_temp_by_diffuse_chol, 
+                      (noise, diffuse, L_del_inv_T, ws.diffuse_bar, edges), 
                       n_repeat= 1000)
-    
+    # -------------------------------------------------------
+
     avg_gpu = float(cp.mean(times.gpu_times)) * 1e6  # microseconds
     avg_cpu = float(cp.mean(times.cpu_times)) * 1e6
     
 
     # Benchmark [INSERT REF FUNCTION] -> CuPy ref right now
-    ref_times = benchmark(setup_cupy_ref, 
-                          (noise, diffuse, edges), 
+    temp, t3 = setup_cupy_ref(noise, diffuse, edges)
+
+    ref_times = benchmark(cupy_ref, 
+                          (temp, edges, L_del_inv_T), 
                           n_repeat= 1000)
-
-
+    
     ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) * 1e6  # microseconds
     ref_avg_cpu = float(cp.mean(ref_times.cpu_times)) * 1e6
 
@@ -62,7 +95,9 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
 # =========================================================================================================
 
 # =========================================================================================================
-def time_multiple(rc_tuple, tpb, eig_range, random_seed):
+def time_multiple(rc_tuple, tpb, eig_range, random_seed,
+                  kenel_fun=None, kernel_params=None
+                  ):
     eig_start, eig_stop = eig_range[0], eig_range[1]
 
     print()
@@ -90,7 +125,9 @@ def pop_row_col_input(end_iter_num):
 
 # =========================================================================================================
 def timing_plot_nant_varies(
-        n_eig, n_trials, tpb, random_seed, save_plot=True
+        n_eig, n_trials, tpb, random_seed,
+        kenel_fun=None, kernel_params=None,
+        save_plot=True
         ):
 
     n_iter = n_trials + 2
@@ -114,8 +151,8 @@ def timing_plot_nant_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'bmark_plots_fused_chol_inv'
-    file_name = f'var_nant: n_trials={n_iter-2}_device={file_label}'
+    dir_name = 'bmark_plots'
+    file_name = f'cluster_var_nant: n_trials={n_iter-2}_device={file_label}'
     title = r"$\mathbf{{{}\ ({}\ Eigenmodes)}}$".format(title_label, n_eig)
     
     #plotting
@@ -128,8 +165,8 @@ def timing_plot_nant_varies(
         })
 
     fig, ax = plt.subplots()
-    ax.loglog(n_ants, test_times, '-P', ms = 9,  label = 'Custom Inverse Cov')
-    ax.loglog(n_ants, reference_times, '-p', ms = 9, label = 'CuPy Inverse Cov')
+    ax.loglog(n_ants, test_times, '-P', ms = 9,  label = 'fused cholesky inv')
+    ax.loglog(n_ants, reference_times, '-p', ms = 9, label = 'CuPy')
     
     ax.xaxis.set_major_locator(FixedLocator(n_ants))
     ax.xaxis.set_major_formatter(
@@ -154,7 +191,9 @@ def timing_plot_nant_varies(
 
 # =========================================================================================================
 def timing_plot_neig_varies(
-        rc_tuple, eig_range, tpb, random_seed, save_plot=True
+        rc_tuple, eig_range, tpb, random_seed, 
+        kenel_fun=None, kernel_params=None,
+        save_plot=True
         ):
 
     eig_start, eig_stop = eig_range
@@ -174,7 +213,7 @@ def timing_plot_neig_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'bmark_plots_fused_chol_inv'
+    dir_name = 'bmark_plots'
     file_name = f'var_neig: nant={n_ant}_neig={eig_start}-{eig_stop}_device={file_label}'
     title = r"$\mathbf{{{}\ ({}\ Antennas)}}$".format(title_label, n_ant)
 
@@ -188,8 +227,8 @@ def timing_plot_neig_varies(
     })
 
     fig, ax = plt.subplots()
-    ax.semilogy(neigs, test_times, '-P', ms=9, label='Custom Inverse Cov')
-    ax.semilogy(neigs, reference_times, '-p', ms=9, label='CuPy Inverse Cov')
+    ax.semilogy(neigs, test_times, '-x', ms=7, label='Reduction Kernel')
+    ax.semilogy(neigs, reference_times, '-p', ms=7, label='CuPy')
 
     ax.xaxis.set_major_locator(FixedLocator(neigs))
     ax.xaxis.set_major_formatter(FixedFormatter([str(int(n)) for n in neigs]))
@@ -229,9 +268,9 @@ if __name__ == "__main__":
 
     one_timing_test = F
     many_timing_tests = F
-    plot_benchmark_nant = T
-    plot_benchmark_neig = F
-    save_plot=False
+    plot_benchmark_nant = F
+    plot_benchmark_neig = T
+    save_plot=True
 
     if one_timing_test:
         timing_test(n_eig, rc, 128, random_seed)
@@ -241,11 +280,9 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, random_seed)
     
     if plot_benchmark_nant:
-        n_trials = 8
+        n_trials = 10
         timing_plot_nant_varies(n_eig, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
-        eig_range = (1, 20)
+        eig_range = (1, 21)
         timing_plot_neig_varies(rc, eig_range, 128, random_seed, save_plot=save_plot)
-
-

@@ -26,7 +26,7 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     #!!! Note that setup_c.. has everything up to the point
     # we actually need it -- not cupy_ref
     ref_cupy, nb = setup_cupy_ref(noise, diffuse, edges)
-
+    
     # GPU --------------------------------------------
     # Initialize the workspace:
     ws = InvCovWorkspace(nb, diffuse.shape[1], source.shape[1])

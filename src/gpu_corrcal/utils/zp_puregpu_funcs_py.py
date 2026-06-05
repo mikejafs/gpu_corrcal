@@ -218,19 +218,27 @@ def zeroPad(array, edges, return_inv, dtype):
     return out_array, largest_block, n_blocks
 
     
-def undo_zeroPad(array, edges, ReImsplit=False):
+def undo_zeroPad(array, edges, dtype, ReImsplit=False):
     """
     "Undoes" the action of the zeroPad function. In other words, takes a matrix
     that has been padded with zeros according to the largest diffuse matrix block
     and returns the original matrix in its state prior to zeropadding.
     """
 
-    array = cp.array(array, dtype=cp.double)
+    array = cp.array(array, dtype=dtype)
     edges = cp.array(edges, dtype=cp.int64)
-    largest_block = cp.array(cp.diff(edges).max(), dtype = cp.int32)
-    n_blocks = cp.array(edges.size - 1, dtype = cp.int32)
+    largest_block = cp.array(cp.diff(edges).max(), dtype = dtype)
+    n_blocks = cp.array(edges.size - 1, dtype = dtype)
     largest_block = int(largest_block.get())
     n_blocks = int(n_blocks.get())
+
+    
+    if dtype == cp.float64:
+        lib = zp_cuda_lib
+        ctype = ctypes.c_double
+    elif dtype == cp.float32: 
+        lib = zp_cuda_lib_fp32
+        ctype = ctypes.c_float
 
     if ReImsplit:
         largest_block = largest_block
@@ -243,10 +251,10 @@ def undo_zeroPad(array, edges, ReImsplit=False):
 
     if array.ndim == 2:
         array = array.reshape(n_blocks*largest_block)
-        out_array = cp.zeros(n_bl, dtype = cp.double)
-        zp_cuda_lib.undo_zeroPad1d(
-            ctypes.cast(array.data.ptr, ctypes.POINTER(ctypes.c_double)),
-            ctypes.cast(out_array.data.ptr, ctypes.POINTER(ctypes.c_double)),
+        out_array = cp.zeros(n_bl, dtype = dtype)
+        lib.undo_zeroPad1d(
+            ctypes.cast(array.data.ptr, ctypes.POINTER(ctype)),
+            ctypes.cast(out_array.data.ptr, ctypes.POINTER(ctype)),
             ctypes.cast(edges.data.ptr, ctypes.POINTER(ctypes.c_long)),
             n_blocks,
             largest_block
@@ -257,10 +265,10 @@ def undo_zeroPad(array, edges, ReImsplit=False):
         array_cols = array.shape[2]
         array = array.reshape(n_blocks*largest_block*array_cols)
         # print(array)
-        out_array = cp.zeros((int(edges[-1]), array_cols), dtype = cp.double)
-        zp_cuda_lib.undo_zeroPad2d(
-            ctypes.cast(array.data.ptr, ctypes.POINTER(ctypes.c_double)),
-            ctypes.cast(out_array.data.ptr, ctypes.POINTER(ctypes.c_double)),
+        out_array = cp.zeros((int(edges[-1]), array_cols), dtype = dtype)
+        lib.undo_zeroPad2d(
+            ctypes.cast(array.data.ptr, ctypes.POINTER(ctype)),
+            ctypes.cast(out_array.data.ptr, ctypes.POINTER(ctype)),
             ctypes.cast(edges.data.ptr, ctypes.POINTER(ctypes.c_long)),
             array_cols,
             n_blocks,

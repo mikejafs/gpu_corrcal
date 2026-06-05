@@ -33,7 +33,7 @@ __global__ void batched_cholesky_inv(
         for (int k = 0; k < j; ++k)
             sum += L[j * N + k] * L[j * N + k];
         L[j * N + j] = sqrtf(A[j * N + j] + 1.0f - sum);
-
+        
         float inv_ljj = 1.0f / L[j * N + j];
         #pragma unroll
         for (int i = j + 1; i < N; ++i) {
@@ -70,7 +70,12 @@ __global__ void batched_cholesky_inv(
 
     // ---- Write L_inv to global memory ----
     #pragma unroll
-    for (int i = 0; i < N * N; ++i) R[i] = Linv[i];
+    // for (int i = 0; i < N * N; ++i) R[i] = Linv[i];
+    for (int row = 0; row < N; ++row){
+        for (int col = 0; col < N; ++col){
+            R[row * N + col] = Linv[col * N + row];
+        }
+    }
 }
 
 
