@@ -242,7 +242,7 @@ if __name__ == "__main__":
     many_timing_tests = F
     plot_benchmark_nant = F
     plot_benchmark_neig = T
-    save_plot=True
+    save_plot=False
 
     if one_timing_test:
         timing_test(n_eig, rc, 128, random_seed)
