@@ -43,9 +43,10 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     #the current red kernel does up to this
     # return temp2
 
-    L_del = xp.linalg.cholesky(xp.eye(Del.shape[2])[None, ...] + temp2)   
+    L_del = xp.linalg.cholesky(xp.eye(Del.shape[2], dtype=cp.float32)[None, ...] + temp2)
+    print(L_del.dtype)   
     t3 = xp.transpose(xp.linalg.inv(L_del), [0, 2, 1])
-
+    print(t3.dtype)
     # return temp, t3
 
     # Del_prime = temp @ xp.transpose(xp.linalg.inv(L_del).conj(), [0, 2, 1]) 

@@ -116,7 +116,7 @@ def timing_plot_nant_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'bmark_plots_upto_diffuse_bar'
+    dir_name = 'fp32_tests'
     if "5070" in file_label:
         file_name = f'device_var_nant: n_trials={n_iter-2}_device={file_label}'
     elif "A40" in file_label:
@@ -240,8 +240,8 @@ if __name__ == "__main__":
 
     one_timing_test = F
     many_timing_tests = F
-    plot_benchmark_nant = F
-    plot_benchmark_neig = T
+    plot_benchmark_nant = T
+    plot_benchmark_neig = F
     save_plot=True
 
     if one_timing_test:
@@ -252,7 +252,7 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, random_seed)
     
     if plot_benchmark_nant:
-        n_trials = 11
+        n_trials = 13
         timing_plot_nant_varies(n_eig, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
