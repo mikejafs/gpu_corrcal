@@ -180,7 +180,7 @@ def timing_plot_neig_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'bmark_plots_upto_diffuse_bar'
+    dir_name = 'fp32_tests'
     if "5070" in file_label:
         file_name = f'device_var_neig: nant={n_ant}_neig={eig_start}-{eig_stop}_device={file_label}'
         print(f"file name: {file_label}")
@@ -240,8 +240,8 @@ if __name__ == "__main__":
 
     one_timing_test = F
     many_timing_tests = F
-    plot_benchmark_nant = T
-    plot_benchmark_neig = F
+    plot_benchmark_nant = F
+    plot_benchmark_neig = T
     save_plot=True
 
     if one_timing_test:
