@@ -256,7 +256,7 @@ if __name__ == "__main__":
         timing_plot_nant_varies(n_eig, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
-        eig_range = (1, 6)
+        eig_range = (1, 21)
         timing_plot_neig_varies(rc, eig_range, 128, random_seed, save_plot=save_plot)
 
 
