@@ -28,7 +28,7 @@ def make_test_data(n_eig, rc_list, seed):
     n_ant = rows*cols
     # print(f" n_eig={n_eig}", end="", flush=True)
 
-    spms = SimCorrcalParams(n_ant, n_eig, n_src=5, precision='float32', xp=cp)
+    spms = SimCorrcalParams(n_ant, n_eig, n_src=3, precision='float32', xp=cp)
     edges = spms.edges(rows, cols, use_random=False)
     edges_gpu = cp.asarray(edges)
 

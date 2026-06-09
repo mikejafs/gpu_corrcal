@@ -1,5 +1,6 @@
 from gpu_corrcal.linalg import *
 from gpu_corrcal.utils.tools import *
+import time
 
 class InvCovWorkspace:
     def __init__(self, diffuse, src, edges):
@@ -52,10 +53,15 @@ def inv_cov(noise, diffuse, source, edges, init_workspace):
  
     # Kernel 1: build per-group B, accumulate Lambda into M_sig.
     # diffuse_bar plays the role of Del_prime (the whitened diffuse factor).
+    # sync()
+    # _t0 = time.perf_counter()
     B, M_sig = make_cap_reduce(
         source, diffuse_bar, noise, edges,
         init_workspace.B, init_workspace.M_sig
     )
+    # sync()
+    # print(f"cap_reduce real: {(time.perf_counter()-_t0)*1e6:.1f} us")
+
     # print(f"M_sig max={float(cp.abs(M_sig).max()):.3e}")
  
     # print("M_sig ptr in :", init_workspace.M_sig.data.ptr)

@@ -15,7 +15,8 @@ requires-python = ">=3.9"
 dependencies = [
     "numpy",
     "scipy",
-    "cupy-cuda13x"
+    "cupy-cuda13x",
+    "PyYAML"
 ]
 
 [project.optional-dependencies]

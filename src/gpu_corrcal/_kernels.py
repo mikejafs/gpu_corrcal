@@ -18,7 +18,7 @@ def _load(name):
 _warp_reduction_kernel = _load("geneig_warp_red_kernel_templated")
 _fused_chol_inv = _load("fused_chol_inv_kernel")
 _diffuse_bar_kernel = _load("diffuse_bar_kernel")
-_sig_prime_kernels = _load("sig_prime_kernels")
+_sig_prime_kernels = _load("sig_prime_kernels_pta")
 
 
 sync_device = _warp_reduction_kernel.sync_device

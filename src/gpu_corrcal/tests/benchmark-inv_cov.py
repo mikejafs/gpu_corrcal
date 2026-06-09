@@ -13,6 +13,7 @@ from gpu_corrcal.cupy_reference.cupy_inverse_covariance import *
 from cupyx.profiler import benchmark
 cudart = ctypes.CDLL("libcudart.so")
 
+from corrcal.sparse import *
 
 # ============================================================
 # Timing test
@@ -22,17 +23,25 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
     """Time the GPU kernel."""
     # Generate the test data
 
+    # --------------------------------------------------------
+    # Generating test data
+
     test_data = make_test_data(n_eig, rc_tuple, seed)
     diffuse = test_data["diffuse"]
     noise = test_data["noise"]
     edges = test_data["edges"]
     source = test_data["source"]
+    # print(len(diffuse))
 
-    # Initialize the output matrix
-    # out_kernel = cp.zeros((nb, n_eig, n_eig), dtype=cp.float32)
+    # CPU data for cpu corrcal
+    cpu_diffuse = cp.asnumpy(diffuse).astype(np.float64)
+    cpu_noise = cp.asnumpy(noise).astype(np.float64)
+    cpu_edges = cp.asnumpy(edges).astype(np.float64)
+    cpu_source = cp.asnumpy(source).astype(np.float64)
+    # --------------------------------------------------------
 
-
-    # Benchmark gen_eig kernel
+    
+    # Benchmark gen_eig kernel +++++++++++++++++++++++++++++++
     ws = InvCovWorkspace(diffuse, source, edges)
     times = benchmark(inv_cov,
                       (noise, diffuse, source, edges, ws), 
@@ -42,7 +51,7 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
     avg_cpu = float(cp.mean(times.cpu_times)) * 1e6
     
 
-    # Benchmark [INSERT REF FUNCTION] -> CuPy ref right now
+    # Benchmark [Custom GPU Routine] -> CuPy ref right now +++
     zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
     zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
     zp_source, lb, nb = zeroPad(source, edges, return_inv=False, dtype=cp.float32)
@@ -54,15 +63,26 @@ def timing_test(n_eig, rc_tuple, threads_per_block, seed):
     ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) * 1e6  # microseconds
     ref_avg_cpu = float(cp.mean(ref_times.cpu_times)) * 1e6
 
+    #CPU ref +++++++++++++++++++++++++++++++++++++++++++++++++
+    cpu_sparse_cov = SparseCov(cpu_noise, cpu_source, cpu_diffuse, cpu_edges, n_eig, False)
+
+    ref_cpu_times = benchmark(cpu_sparse_cov.inv, 
+                          (), 
+                          n_repeat= 1000)
+
+    ref_cpu_avg_gpu = float(cp.mean(ref_cpu_times.gpu_times)) * 1e6  # microseconds
+    ref_cpu_avg_cpu = float(cp.mean(ref_cpu_times.cpu_times)) * 1e6
 
     n_sym = n_eig * (n_eig + 1) // 2
     # Print out the results
     print(f"  [n_eig={n_eig}  n_sym={n_sym:>3}]   "
-            f"KERNEL: gpu={avg_gpu:>5.1f} us  cpu={avg_cpu:>5.1f} us | "
-            f"CUPY: gpu={ref_avg_gpu:>7.1f} us  cpu={ref_avg_cpu:>5.1f} us")
+            f"Custom Algo: gpu={avg_gpu:>5.1f} us  cpu={avg_cpu:>5.1f} us | "
+            f"CUPY: gpu={ref_avg_gpu:>7.1f} us  cpu={ref_avg_cpu:>5.1f} us | "
+            f"CPU: gpu={ref_cpu_avg_gpu:>7.1f} us  cpu={ref_cpu_avg_cpu:>5.1f} us")
     
-    return avg_gpu, ref_avg_gpu
+    return avg_gpu, ref_avg_gpu, ref_cpu_avg_cpu
 # =========================================================================================================
+
 
 # =========================================================================================================
 def time_multiple(rc_tuple, tpb, eig_range, random_seed):
@@ -78,6 +98,7 @@ def time_multiple(rc_tuple, tpb, eig_range, random_seed):
 
     print("=" * 65)
 # =========================================================================================================
+
 
 # =========================================================================================================
 #for generating combos of rows and columns for full benchmarking        
@@ -106,13 +127,15 @@ def timing_plot_nant_varies(
 
     test_times = np.zeros(len(row_col_inputs))
     reference_times = np.zeros(len(row_col_inputs))
+    cpu_reference_times = np.zeros(len(row_col_inputs))
 
     for i, rc in enumerate(row_col_inputs):
         print(f"on iteration {i}")
         # test_data = make_test_data(n_eig, rc, random_seed)
-        gpu_t, ref_gpu_t = timing_test(n_eig, rc, tpb, random_seed)
+        gpu_t, ref_gpu_t, ref_cpu_t = timing_test(n_eig, rc, tpb, random_seed)
         test_times[i] = gpu_t
         reference_times[i] = ref_gpu_t
+        cpu_reference_times[i] = ref_cpu_t
 
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
@@ -135,9 +158,10 @@ def timing_plot_nant_varies(
         })
 
     fig, ax = plt.subplots()
-    ax.loglog(n_ants, test_times, '-P', ms = 9,  label = 'Custom Inverse Cov')
+    ax.loglog(n_ants, test_times, '-P', ms = 9,  label = 'GPU Inverse Cov')
     ax.loglog(n_ants, reference_times, '-p', ms = 9, label = 'CuPy Inverse Cov')
-    
+    ax.loglog(n_ants, cpu_reference_times, '-p', ms = 9, label = 'CPU CorrCal Inverse Cov')
+
     ax.xaxis.set_major_locator(FixedLocator(n_ants))
     ax.xaxis.set_major_formatter(
         FixedFormatter([rf"${int(np.sqrt(n))}^2$" for n in n_ants])
@@ -158,6 +182,7 @@ def timing_plot_nant_varies(
  
     plt.show()
 # =========================================================================================================
+
 
 # =========================================================================================================
 def timing_plot_neig_varies(
@@ -225,9 +250,9 @@ def timing_plot_neig_varies(
 if __name__ == "__main__":
     # Test params
     # -------------------------------
-    rows = 32
-    cols = 18
-    n_eig = 5
+    rows = 10
+    cols = 5
+    n_eig = 3
     rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
@@ -243,7 +268,7 @@ if __name__ == "__main__":
     many_timing_tests = F
     plot_benchmark_nant = T
     plot_benchmark_neig = F
-    save_plot=True
+    save_plot=False
 
     if one_timing_test:
         timing_test(n_eig, rc, 128, random_seed)
@@ -253,7 +278,7 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, random_seed)
     
     if plot_benchmark_nant:
-        n_trials = 9
+        n_trials = 7
         timing_plot_nant_varies(n_eig, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
