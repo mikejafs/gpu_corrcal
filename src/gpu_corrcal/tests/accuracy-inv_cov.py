@@ -26,18 +26,32 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     # CuPy reference --------------------------------
     #!!! Note that setup_c.. has everything up to the point
     # we actually need it -- not cupy_ref
-    zp_ref_cupy = setup_cupy_ref(noise, diffuse, edges)
+    zp_diffuse_ref_cupy, zp_source_ref_cupy = setup_cupy_ref(noise, diffuse, source, edges)
     # print(f"cupy shape {zp_ref_cupy.shape}")
     
-    ref_cupy = undo_zeroPad(zp_ref_cupy, edges, dtype=cp.float32, ReImsplit=True)
+    # scale probes — do this BEFORE any undo_zeroPad
+    print("REF  source_bar:  max", float(cp.abs(zp_source_ref_cupy).max()),
+        "mean", float(cp.abs(zp_source_ref_cupy).mean()))
+
+    # kernel, also in padded space if you can get it pre-undo:
+    # (whatever inv_cov returns before undo)
+
+    diffuse_ref_cupy = undo_zeroPad(zp_diffuse_ref_cupy, edges, dtype=cp.float32, ReImsplit=True)
+    source_ref_cupy = undo_zeroPad(zp_source_ref_cupy, edges, dtype=cp.float32, ReImsplit=True)
+    # print(source_ref_cupy)
+
     # print(f"cupy shape {ref_cupy.shape}")
     
 
     # GPU --------------------------------------------
     # Initialize the workspace:
     ws = InvCovWorkspace(diffuse, source, edges)
-    out_kernel = inv_cov(noise, diffuse, 1, edges, ws)
-    
+    diffuse_out_kernel, source_out_kernel = inv_cov(noise, diffuse, source, edges, ws)
+
+    print("KERN source_out:  max", float(cp.abs(source_out_kernel).max()),
+        "mean", float(cp.abs(source_out_kernel).mean()))
+
+    # print(source_out_kernel)
     # print(f"out kern shape {out_kernel.shape}")
     # print(type(zp_ref_cupy))
     # print(type(zp_out_kernel))
@@ -46,8 +60,12 @@ def correctness_test(n_eig, rc_tuple, threads_per_block):
     sync()
 
     # Check against cupy
-    match_cupy = cp.allclose(ref_cupy, out_kernel, atol=1e-1, rtol=1e-5)
-    max_diff_cupy = np.max(np.abs(ref_cupy - out_kernel))
+
+    # match_cupy = cp.allclose(diffuse_ref_cupy, diffuse_out_kernel, atol=1e-1, rtol=1e-5)
+    # max_diff_cupy = np.max(np.abs(diffuse_ref_cupy - diffuse_out_kernel))
+
+    match_cupy = cp.allclose(source_ref_cupy, source_out_kernel, atol=1e-1, rtol=1e-5)
+    max_diff_cupy = np.max(np.abs(source_ref_cupy - source_out_kernel))
 
     print(f"AGAINST CUPY:  n_eig={n_eig:2d}  |  allclose: {match_cupy}  |  max |diff|: {max_diff_cupy:.2e}")    
     print(80*"-")

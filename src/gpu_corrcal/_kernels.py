@@ -18,6 +18,8 @@ def _load(name):
 _warp_reduction_kernel = _load("geneig_warp_red_kernel_templated")
 _fused_chol_inv = _load("fused_chol_inv_kernel")
 _diffuse_bar_kernel = _load("diffuse_bar_kernel")
+_sig_prime_kernels = _load("sig_prime_kernels")
+
 
 sync_device = _warp_reduction_kernel.sync_device
 sync_device.restype = None
@@ -54,4 +56,92 @@ mul_temp_by_diffuse_chol_inv.argtypes = [
     ctypes.c_void_p,      #edges
     ctypes.c_int,      #num blocks
     ctypes.c_int       #n_eig
+]
+
+# ============================================================================
+# Additions to gpu_corrcal/_kernels.py  --  Sig_prime (second Woodbury level)
+# Append these to the existing _kernels.py, after the diffuse_bar bindings.
+# Compile:  nvcc -Xcompiler -fPIC -shared -o sig_prime_kernels.so sig_prime_kernels.cu
+# ============================================================================
+  
+# ---- KERNEL 1: cap_reduce -> writes B and M_sig ----------------------------
+# cap_reduce = _sig_prime_kernels.launch_cap_reduce
+# cap_reduce.restype = None
+# cap_reduce.argtypes = [
+#     ctypes.c_void_p,   # Sig
+#     ctypes.c_void_p,   # Del_prime  (== diffuse_bar from the diffuse level)
+#     ctypes.c_void_p,   # noise
+#     ctypes.c_void_p,   # edges
+#     ctypes.c_void_p,   # B          (output, (nb, n_src, n_eig))
+#     ctypes.c_void_p,   # M_sig      (accumulated, (n_src, n_src) -- zero before launch)
+#     ctypes.c_int,      # nb
+#     ctypes.c_int,      # n_src
+#     ctypes.c_int,      # n_eig
+# ]
+
+cap_reduce = _sig_prime_kernels.launch_cap_reduce
+cap_reduce.restype = ctypes.c_int          # it returns int, not None
+cap_reduce.argtypes = [
+    ctypes.c_int,      # n_src
+    ctypes.c_int,      # n_eig
+    ctypes.c_int,      # nb
+    ctypes.c_void_p,   # Sig
+    ctypes.c_void_p,   # Del_prime
+    ctypes.c_void_p,   # noise
+    ctypes.c_void_p,   # edges
+    ctypes.c_void_p,   # B
+    ctypes.c_void_p,   # M_sig
+    ctypes.c_void_p,   # stream
+]
+ 
+# # ---- KERNEL 2: chol_inv_fused (single (n_src x n_src)) ----------------------
+# chol_inv_fused = _sig_prime_kernels.launch_chol_inv_fused
+# chol_inv_fused.restype = None
+# chol_inv_fused.argtypes = [
+#     ctypes.c_void_p,   # M_sig  (lower tri = Lambda)
+#     ctypes.c_void_p,   # L_inv  (output)
+#     ctypes.c_int,      # n_src
+# ]
+ 
+# ---- KERNEL 3: apply_sig_prime -> writes Sig_prime -------------------------
+# apply_sig_prime = _sig_prime_kernels.launch_apply_sig_prime
+# apply_sig_prime.restype = None
+# apply_sig_prime.argtypes = [
+#     ctypes.c_void_p,   # Sig
+#     ctypes.c_void_p,   # Del_prime
+#     ctypes.c_void_p,   # noise
+#     ctypes.c_void_p,   # edges
+#     ctypes.c_void_p,   # B          (from kernel 1)
+#     ctypes.c_void_p,   # L_inv
+#     ctypes.c_void_p,   # Sig_prime  (output, (n_total, n_src))
+#     ctypes.c_int,      # nb
+#     ctypes.c_int,      # n_src
+#     ctypes.c_int,      # n_eig
+# ]
+
+
+chol_inv_fused = _sig_prime_kernels.launch_chol_inv_fused
+chol_inv_fused.restype = ctypes.c_int
+chol_inv_fused.argtypes = [
+    ctypes.c_int,      # n_src
+    ctypes.c_void_p,   # M_sig
+    ctypes.c_void_p,   # L_inv
+    ctypes.c_void_p,   # stream
+]
+
+
+apply_sig_prime = _sig_prime_kernels.launch_apply_sig_prime
+apply_sig_prime.restype = ctypes.c_int
+apply_sig_prime.argtypes = [
+    ctypes.c_int,      # n_src
+    ctypes.c_int,      # n_eig
+    ctypes.c_int,      # nb
+    ctypes.c_void_p,   # Sig
+    ctypes.c_void_p,   # Del_prime
+    ctypes.c_void_p,   # noise
+    ctypes.c_void_p,   # edges
+    ctypes.c_void_p,   # B
+    ctypes.c_void_p,   # L_inv
+    ctypes.c_void_p,   # Sig_prime
+    ctypes.c_void_p,   # stream
 ]

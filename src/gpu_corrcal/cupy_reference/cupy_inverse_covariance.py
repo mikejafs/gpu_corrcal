@@ -52,19 +52,36 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     # Del_prime = temp @ xp.transpose(xp.linalg.inv(L_del).conj(), [0, 2, 1]) 
     Del_prime = temp @ t3
         
-    return Del_prime
+    # return Del_prime
+
+    # A = N_inv[..., None] * Sig
+    # B = xp.transpose(Sig.conj(), [0, 2, 1]) @ Del_prime
+    # W = A - Del_prime @ xp.transpose(B.conj(), [0, 2, 1])
+    # L_sig = xp.linalg.cholesky(
+    #     xp.eye(Sig.shape[2]) + xp.sum(
+    #         xp.transpose(A.conj(), [0, 2, 1]) @ Sig, axis = 0
+    #     ) - xp.sum(
+    #         B @ xp.transpose(B.conj(), [0, 2, 1]), axis = 0
+    #     )
+    # )
+    # Sig_prime = W @ xp.linalg.inv(L_sig).T.conj()[None, ...]
 
     A = N_inv[..., None] * Sig
-    B = xp.transpose(Sig.conj(), [0, 2, 1]) @ Del_prime
-    W = A - Del_prime @ xp.transpose(B.conj(), [0, 2, 1])
+    B = xp.transpose(Sig, [0, 2, 1]) @ Del_prime
+    W = A - Del_prime @ xp.transpose(B, [0, 2, 1])
+
     L_sig = xp.linalg.cholesky(
-        xp.eye(Sig.shape[2]) + xp.sum(
-            xp.transpose(A.conj(), [0, 2, 1]) @ Sig, axis = 0
+        xp.eye(Sig.shape[2], dtype = cp.float32) + xp.sum(
+            xp.transpose(A, [0, 2, 1]) @ Sig, axis = 0
         ) - xp.sum(
-            B @ xp.transpose(B.conj(), [0, 2, 1]), axis = 0
+            B @ xp.transpose(B, [0, 2, 1]), axis = 0
         )
     )
-    Sig_prime = W @ xp.linalg.inv(L_sig).T.conj()[None, ...]
+    
+    Sig_prime = W @ xp.linalg.inv(L_sig).T[None, ...]
+
+    return Del_prime, Sig_prime
+
     # Sig_prime = (A - Del_prime @ xp.transpose(B.conj(), [0, 2, 1])) @ xp.linalg.inv(L_sig).T.conj()[None, ...]
 
 
@@ -80,15 +97,17 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     return N_inv, Del_prime, Sig_prime
 
 
-def setup_cupy_ref(noise, diffuse, edges):
+def setup_cupy_ref(noise, diffuse, source, edges):
     zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
     zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
+    zp_source, lb, nb = zeroPad(source, edges, return_inv=False, dtype=cp.float32)
+
     # temp = zp_inv_noise[..., None] * zp_diffuse
     # out = cp.transpose(zp_diffuse, [0, 2, 1]) @ temp
-    diffuse_bar = inverse_covariance(zp_inv_noise, zp_diffuse, 1, cp, ret_det=False, N_is_inv=True)
+    diffuse_bar, source_bar = inverse_covariance(zp_inv_noise, zp_diffuse, zp_source, cp, ret_det=False, N_is_inv=True)
 
     cp.cuda.Stream.null.synchronize()
-    return diffuse_bar
+    return diffuse_bar, source_bar
 
 
 def cupy_ref(temp, edges, t3):
