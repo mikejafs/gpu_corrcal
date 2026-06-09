@@ -40,12 +40,13 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
     cpu_source = cp.asnumpy(source).astype(np.float64)
     # --------------------------------------------------------
 
-    
+    n_rep = 400
+
     # Benchmark gen_eig kernel +++++++++++++++++++++++++++++++
     ws = InvCovWorkspace(diffuse, source, edges)
     times = benchmark(inv_cov,
                       (noise, diffuse, source, edges, ws), 
-                      n_repeat= 1000)
+                      n_repeat=n_rep)
     
     avg_gpu = float(cp.mean(times.gpu_times)) * 1e6  # microseconds
     avg_cpu = float(cp.mean(times.cpu_times)) * 1e6
@@ -58,7 +59,7 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
 
     ref_times = benchmark(inverse_covariance, 
                           (zp_inv_noise, zp_diffuse, zp_source, cp, False, True), 
-                          n_repeat= 1000)
+                          n_repeat=n_rep)
 
     ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) * 1e6  # microseconds
     ref_avg_cpu = float(cp.mean(ref_times.cpu_times)) * 1e6
@@ -68,14 +69,14 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
 
     ref_cpu_times = benchmark(cpu_sparse_cov.inv, 
                           (), 
-                          n_repeat= 1000)
+                          n_repeat=n_rep)
 
     ref_cpu_avg_gpu = float(cp.mean(ref_cpu_times.gpu_times)) * 1e6  # microseconds
     ref_cpu_avg_cpu = float(cp.mean(ref_cpu_times.cpu_times)) * 1e6
 
     n_sym = n_eig * (n_eig + 1) // 2
     # Print out the results
-    print(f"  [n_eig={n_eig}  n_sym={n_sym:>3}]   "
+    print(f"  [n_eig={n_eig:>2}  n_src={n_src:>2}]   "
             f"Custom Algo: gpu={avg_gpu:>5.1f} us  cpu={avg_cpu:>5.1f} us | "
             f"CUPY: gpu={ref_avg_gpu:>7.1f} us  cpu={ref_avg_cpu:>5.1f} us | "
             f"CPU: gpu={ref_cpu_avg_gpu:>7.1f} us  cpu={ref_cpu_avg_cpu:>5.1f} us")
@@ -85,16 +86,23 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
 
 
 # =========================================================================================================
-def time_multiple(rc_tuple, tpb, eig_range, random_seed):
+def time_multiple(rc_tuple, tpb, eig_range, src_range,  random_seed, time_eigs=False, time_srcs=False):
     eig_start, eig_stop = eig_range[0], eig_range[1]
+    src_start, src_stop = src_range[0], src_range[1]
+
+    eig, src = 3, 3
 
     print()
     print("=" * 65)
     print(f"TIMING TESTS -> n_ant = {rc_tuple[0]} * {rc_tuple[1]} = {rc_tuple[0]*rc_tuple[1]}")
     print("=" * 65)
 
-    for n_eig in range(eig_start, eig_stop):
-        timing_test(n_eig, rc_tuple, tpb, random_seed)
+    if time_eigs:
+        for n_eig in range(eig_start, eig_stop):
+            timing_test(n_eig, src, rc_tuple, tpb, random_seed)
+    elif time_srcs:
+        for n_src in range(src_start, src_stop):
+            timing_test(eig, src, rc_tuple, tpb, random_seed)
 
     print("=" * 65)
 # =========================================================================================================
@@ -111,6 +119,7 @@ def pop_row_col_input(end_iter_num):
         row_col_list.append(row_col)
     return row_col_list
 # =========================================================================================================
+
 
 # =========================================================================================================
 def timing_plot_nant_varies(
@@ -186,7 +195,7 @@ def timing_plot_nant_varies(
 
 # =========================================================================================================
 def timing_plot_neig_varies(
-        rc_tuple, eig_range, tpb, random_seed, save_plot=True
+        rc_tuple, eig_range, n_src, tpb, random_seed, save_plot=True
         ):
 
     eig_start, eig_stop = eig_range
@@ -194,26 +203,28 @@ def timing_plot_neig_varies(
 
     test_times = np.zeros(len(neigs))
     reference_times = np.zeros(len(neigs))
+    cpu_reference_times = np.zeros(len(neigs))
 
     n_ant = rc_tuple[0] * rc_tuple[1]
     print(f"n_ant fixed at {n_ant}")
 
     for i, n_eig in enumerate(neigs):
-        gpu_t, ref_gpu_t = timing_test(n_eig, rc_tuple, tpb, random_seed)
+        gpu_t, ref_gpu_t, ref_cpu_t = timing_test(n_eig, n_src, rc_tuple, tpb, random_seed)
         test_times[i] = gpu_t
         reference_times[i] = ref_gpu_t
+        cpu_reference_times[i] = ref_cpu_t
 
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'fp32_tests'
+    dir_name = 'full_inv_cov_tests'
     if "5070" in file_label:
-        file_name = f'device_var_neig: nant={n_ant}_neig={eig_start}-{eig_stop}_device={file_label}'
+        file_name = f'device_var_neig: nant={n_ant}_nsrc={n_src}_neig={eig_start}-{eig_stop}_device={file_label}'
         print(f"file name: {file_label}")
     elif "A40" in file_label:
-        file_name = f'cluster_var_neig: nant={n_ant}_neig={eig_start}-{eig_stop}_device={file_label}'        
+        file_name = f'cluster_var_neig: nant={n_ant}_nsrc={n_src}_neig={eig_start}-{eig_stop}_device={file_label}'        
 
-    title = r"$\mathbf{{{}\ ({}\ Antennas)}}$".format(title_label, n_ant)
+    title = r"$\mathbf{{{}\ ({}\ Antennas,\ {}\ Sources)}}$".format(title_label, n_ant, n_src)
 
     #plotting
     plt.rcParams["text.usetex"] = False
@@ -227,6 +238,7 @@ def timing_plot_neig_varies(
     fig, ax = plt.subplots()
     ax.semilogy(neigs, test_times, '-P', ms=9, label='Custom Inverse Cov')
     ax.semilogy(neigs, reference_times, '-p', ms=9, label='CuPy Inverse Cov')
+    ax.semilogy(neigs, cpu_reference_times, '-p', ms=9, label='CPU CorrCal Inverse Cov')
 
     ax.xaxis.set_major_locator(FixedLocator(neigs))
     ax.xaxis.set_major_formatter(FixedFormatter([str(int(n)) for n in neigs]))
@@ -246,35 +258,37 @@ def timing_plot_neig_varies(
     plt.show()
 
 
-def timing_plot_neig_varies(
-        rc_tuple, eig_range, tpb, random_seed, save_plot=True
+def timing_plot_nsrc_varies(
+        rc_tuple, src_range, n_eig, tpb, random_seed, save_plot=True
         ):
 
-    eig_start, eig_stop = eig_range
-    neigs = np.arange(eig_start, eig_stop)
+    src_start, src_stop = src_range
+    nsrcs = np.arange(src_start, src_stop)
 
-    test_times = np.zeros(len(neigs))
-    reference_times = np.zeros(len(neigs))
+    test_times = np.zeros(len(nsrcs))
+    reference_times = np.zeros(len(nsrcs))
+    cpu_reference_times = np.zeros(len(nsrcs))
 
     n_ant = rc_tuple[0] * rc_tuple[1]
     print(f"n_ant fixed at {n_ant}")
 
-    for i, n_eig in enumerate(neigs):
-        gpu_t, ref_gpu_t = timing_test(n_eig, rc_tuple, tpb, random_seed)
+    for i, n_src in enumerate(nsrcs):
+        gpu_t, ref_gpu_t, ref_cpu_t = timing_test(n_eig, n_src, rc_tuple, tpb, random_seed)
         test_times[i] = gpu_t
         reference_times[i] = ref_gpu_t
+        cpu_reference_times[i] = ref_cpu_t
 
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'fp32_tests'
+    dir_name = 'full_inv_cov_tests'
     if "5070" in file_label:
-        file_name = f'device_var_neig: nant={n_ant}_neig={eig_start}-{eig_stop}_device={file_label}'
+        file_name = f'device_var_nsrc: nant={n_ant}_neig={n_eig}_nsrc={src_start}-{src_stop}_device={file_label}'
         print(f"file name: {file_label}")
     elif "A40" in file_label:
-        file_name = f'cluster_var_neig: nant={n_ant}_neig={eig_start}-{eig_stop}_device={file_label}'        
+        file_name = f'cluster_var_nsrc: nant={n_ant}_neig={n_eig}_nsrc={src_start}-{src_stop}_device={file_label}'        
 
-    title = r"$\mathbf{{{}\ ({}\ Antennas)}}$".format(title_label, n_ant)
+    title = r"$\mathbf{{{}\ ({}\ Antennas,\ {}\ Eigenmodes)}}$".format(title_label, n_ant, n_eig)
 
     #plotting
     plt.rcParams["text.usetex"] = False
@@ -286,15 +300,16 @@ def timing_plot_neig_varies(
     })
 
     fig, ax = plt.subplots()
-    ax.semilogy(neigs, test_times, '-P', ms=9, label='Custom Inverse Cov')
-    ax.semilogy(neigs, reference_times, '-p', ms=9, label='CuPy Inverse Cov')
+    ax.semilogy(nsrcs, test_times, '-P', ms=9, label='Custom GPU Inverse Cov')
+    ax.semilogy(nsrcs, reference_times, '-p', ms=9, label='CuPy Inverse Cov')
+    ax.semilogy(nsrcs, cpu_reference_times, '-p', ms=9, label='CPU CorrCal Inverse Cov')
 
-    ax.xaxis.set_major_locator(FixedLocator(neigs))
-    ax.xaxis.set_major_formatter(FixedFormatter([str(int(n)) for n in neigs]))
+    ax.xaxis.set_major_locator(FixedLocator(nsrcs))
+    ax.xaxis.set_major_formatter(FixedFormatter([str(int(n)) for n in nsrcs]))
     ax.tick_params(axis='both', which='major',
                    labelsize=13, length=6, width=1.5)
 
-    ax.set_xlabel(r"$\mathbf{Number\ of\ Eigenmodes}$")
+    ax.set_xlabel(r"$\mathbf{Number\ of\ Sources}$")
     ax.set_ylabel(r"$\mathbf{Time\ (\mu s)}$")
     ax.set_title(title, fontsize='14')
     ax.grid(axis='y', alpha=0.3)
@@ -311,8 +326,8 @@ def timing_plot_neig_varies(
 if __name__ == "__main__":
     # Test params
     # -------------------------------
-    rows = 10
-    cols = 5
+    rows = 32
+    cols = 16
     n_eig = 3
     n_src = 3
     rc = (rows, cols)
@@ -328,8 +343,9 @@ if __name__ == "__main__":
 
     one_timing_test = F
     many_timing_tests = F
-    plot_benchmark_nant = T
+    plot_benchmark_nant = F
     plot_benchmark_neig = F
+    plot_benchmark_nsrc = T
     save_plot=True
 
     if one_timing_test:
@@ -337,7 +353,8 @@ if __name__ == "__main__":
     
     if many_timing_tests:
         eig_range = (1, 10)
-        time_multiple(rc, 128, eig_range, random_seed)
+        src_range = (1, 10)
+        time_multiple(rc, 128, eig_range, src_range, random_seed, time_eigs=False, time_srcs=True)
     
     if plot_benchmark_nant:
         n_trials = 10
@@ -345,6 +362,9 @@ if __name__ == "__main__":
 
     if plot_benchmark_neig:
         eig_range = (3, 18)
-        timing_plot_neig_varies(rc, eig_range, 128, random_seed, save_plot=save_plot)
+        timing_plot_neig_varies(rc, eig_range, n_src, 128, random_seed, save_plot=save_plot)
 
+    if plot_benchmark_nsrc:
+        src_range = (3, 18)
+        timing_plot_nsrc_varies(rc, src_range, n_eig, 128, random_seed, save_plot=save_plot)
 
