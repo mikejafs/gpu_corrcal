@@ -1,3 +1,5 @@
+// nvcc -Xcompiler -fPIC -shared -o geneig_warp_red_kernel_templated.so geneig_warp_red_kernel_templated.cu
+
 // sig_prime_kernels.cu
 // Second-level Woodbury: produce the whitened source factor Sig_prime (Sig_bar)
 // such that  C^{-1} = N^{-1} - Del_bar Del_bar^T - Sig_bar Sig_bar^T

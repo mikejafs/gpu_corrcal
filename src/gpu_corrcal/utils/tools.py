@@ -18,7 +18,7 @@ def get_machine_label():
     return plot_label, file_label
 
 
-def make_test_data(n_eig, rc_list, seed):
+def make_test_data(n_eig, n_src, rc_list, seed):
     """Generate random test data using the simulate params library"""
     cp.random.seed(seed)
 
@@ -28,7 +28,7 @@ def make_test_data(n_eig, rc_list, seed):
     n_ant = rows*cols
     # print(f" n_eig={n_eig}", end="", flush=True)
 
-    spms = SimCorrcalParams(n_ant, n_eig, n_src=3, precision='float32', xp=cp)
+    spms = SimCorrcalParams(n_ant, n_eig, n_src, precision='float32', xp=cp)
     edges = spms.edges(rows, cols, use_random=False)
     edges_gpu = cp.asarray(edges)
 
