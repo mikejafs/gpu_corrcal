@@ -224,8 +224,8 @@ def timing_plot_neig_varies(
 if __name__ == "__main__":
     # Test params
     # -------------------------------
-    rows = 42
-    cols = 34
+    rows = 32
+    cols = 18
     n_eig = 3
     rc = (rows, cols)
     n_ant = rows*cols
@@ -252,11 +252,11 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, random_seed)
     
     if plot_benchmark_nant:
-        n_trials = 13
+        n_trials = 7
         timing_plot_nant_varies(n_eig, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
-        eig_range = (1, 21)
+        eig_range = (16, 18)
         timing_plot_neig_varies(rc, eig_range, 128, random_seed, save_plot=save_plot)
 
 
