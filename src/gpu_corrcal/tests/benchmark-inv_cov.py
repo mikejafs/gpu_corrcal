@@ -1,3 +1,10 @@
+# This kills any multithreaded activity:
+import os
+# os.environ["OMP_NUM_THREADS"] = "1"
+# os.environ["MKL_NUM_THREADS"] = "1"
+# os.environ["OPENBLAS_NUM_THREADS"] = "1"
+
+# All of the rest of the code
 import numpy as np
 import cupy as cp
 import ctypes
@@ -43,7 +50,7 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
 
     n_rep = 400
 
-    # Benchmark gen_eig kernel +++++++++++++++++++++++++++++++
+    # Benchmark gen_eig kernel ++++++++++++++++++++++++++++++++++++++++++++++
     ws = InvCovWorkspace(diffuse, source, edges)
     times = benchmark(inv_cov,
                       (noise, diffuse, source, edges, ws), 
@@ -52,7 +59,7 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
     avg_gpu = float(cp.mean(times.gpu_times)) # if want in  microseconds: *1e6
     avg_cpu = float(cp.mean(times.cpu_times))    
 
-    # Benchmark [Custom GPU Routine] -> CuPy ref right now +++
+    # Benchmark [Custom GPU Routine] -> CuPy ref right now ++++++++++++++++++
     zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
     zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
     zp_source, lb, nb = zeroPad(source, edges, return_inv=False, dtype=cp.float32)
@@ -64,17 +71,26 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
     ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) 
     ref_avg_cpu = float(cp.mean(ref_times.cpu_times))
 
-    #CPU ref +++++++++++++++++++++++++++++++++++++++++++++++++
+    #CPU ref ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
     cpu_sparse_cov = SparseCov(cpu_noise, cpu_source, cpu_diffuse, cpu_edges, n_eig, False)
+    
+    # Leave in if only want single core --------
+    # original_affinity = os.sched_getaffinity(0)
+    # os.sched_setaffinity(0, {0})
+    # ------------------------------------------
 
     ref_cpu_times = benchmark(cpu_sparse_cov.inv, 
                           (), 
                           n_repeat=n_rep)
 
+    # Leave in if only want single core --------
+    # os.sched_setaffinity(0, original_affinity)
+    # ------------------------------------------
+
     ref_cpu_avg_gpu = float(cp.mean(ref_cpu_times.gpu_times))
     ref_cpu_avg_cpu = float(cp.mean(ref_cpu_times.cpu_times))
 
-    n_sym = n_eig * (n_eig + 1) // 2
+    # n_sym = n_eig * (n_eig + 1) // 2
     # Print out the results
     # ------------------IF USING MU SECONDS-----------------------------------------
     # print(f"  [n_eig={n_eig:>2}  n_src={n_src:>2}]   "
@@ -140,7 +156,7 @@ def pop_row_col_input_tens(iter_num):
                     row_col_list.append(rc_list_pair)
                     break
 
-    row_col_list = row_col_list[:-2]
+    row_col_list = row_col_list[:-1]
     return row_col_list
 
 # =========================================================================================================
@@ -180,7 +196,7 @@ def timing_plot_nant_varies(
     # dir_name = 'full_inv_cov_tests'
     dir_name = 'single_core_test_plots'
     if "5070" in file_label:
-        file_name = f'device_var_nant: n_trials={n_iter-2}_device={file_label}'
+        file_name = f'MC_device_var_nant: n_trials={n_iter-2}_device={file_label}'
     elif "A40" in file_label:
         file_name = f'cluster_var_nant: n_trials={n_iter-2}_device={file_label}'
     
@@ -188,7 +204,7 @@ def timing_plot_nant_varies(
     
     #plotting
     plt.rcParams["text.usetex"] = False
-    plt.rcParams['axes.labelsize'] = 13
+    plt.rcParams['axes.labelsize'] = 16
     plt.rcParams['figure.figsize'] = (15, 5)
     plt.rcParams.update({
         "mathtext.fontset": "cm",
@@ -227,18 +243,18 @@ def timing_plot_nant_varies(
     #     FixedFormatter([rf"${int(np.sqrt(n))}^2$" for n in n_ants])
     # )
     ax.xaxis.set_major_formatter(
-        FixedFormatter([rf"${n}$" for n in n_ants])
+        FixedFormatter([rf"${int(n)}$" for n in n_ants])
     )
     ax.tick_params(axis='both', which='major',
-        labelsize=13, length=6, width=1.5)
+        labelsize=18, length=6, width=1.5)
     
     # ax.tick_params(axis='x', labelrotation=-20)
     
-    ax.set_xlabel(r"$\mathbf{Number\ of\ Antennas}$")
-    ax.set_ylabel(r"$\mathbf{Average\ Run\ Time\ (s)}$")
-    ax.set_title(title, fontsize='14')
-    ax.grid(axis='y', alpha=0.3)
-    ax.legend()
+    ax.set_xlabel(r"$\mathbf{Number\ of\ Antennas}$", fontsize=18)
+    ax.set_ylabel(r"$\mathbf{Average\ Run\ Time\ (s)}$", fontsize=18)
+    ax.set_title(title, fontsize='19')
+    ax.grid(axis='y', alpha=0.5)
+    ax.legend(fontsize=16)
     
     if save_plot:
         plt.savefig(f'{dir_name}/{file_name}.png', format = 'png', dpi = 300, bbox_inches = 'tight')
@@ -444,7 +460,7 @@ def timing_plot_neig_nsrc_varies(
 if __name__ == "__main__":
     # Test params
     # -------------------------------
-    rows = 64
+    rows = 16
     cols = 32
     n_eig = 3
     n_src = 5
@@ -465,7 +481,7 @@ if __name__ == "__main__":
     plot_benchmark_neig = F
     plot_benchmark_nsrc = F
     plot_benchmark_neig_nsrc = F
-    save_plot=False
+    save_plot=True
 
     if one_timing_test:
         timing_test(n_eig, n_src, rc, 128, random_seed)
