@@ -53,34 +53,35 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
     
 
     # Benchmark [Custom GPU Routine] -> CuPy ref right now +++
-    zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
-    zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
-    zp_source, lb, nb = zeroPad(source, edges, return_inv=False, dtype=cp.float32)
+    # zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
+    # zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
+    # zp_source, lb, nb = zeroPad(source, edges, return_inv=False, dtype=cp.float32)
 
-    ref_times = benchmark(inverse_covariance, 
-                          (zp_inv_noise, zp_diffuse, zp_source, cp, False, True), 
-                          n_repeat=n_rep)
+    # ref_times = benchmark(inverse_covariance, 
+    #                       (zp_inv_noise, zp_diffuse, zp_source, cp, False, True), 
+    #                       n_repeat=n_rep)
 
-    ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) * 1e6  # microseconds
-    ref_avg_cpu = float(cp.mean(ref_times.cpu_times)) * 1e6
+    # ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) * 1e6  # microseconds
+    # ref_avg_cpu = float(cp.mean(ref_times.cpu_times)) * 1e6
 
-    #CPU ref +++++++++++++++++++++++++++++++++++++++++++++++++
-    cpu_sparse_cov = SparseCov(cpu_noise, cpu_source, cpu_diffuse, cpu_edges, n_eig, False)
+    # #CPU ref +++++++++++++++++++++++++++++++++++++++++++++++++
+    # cpu_sparse_cov = SparseCov(cpu_noise, cpu_source, cpu_diffuse, cpu_edges, n_eig, False)
 
-    ref_cpu_times = benchmark(cpu_sparse_cov.inv, 
-                          (), 
-                          n_repeat=n_rep)
+    # ref_cpu_times = benchmark(cpu_sparse_cov.inv, 
+    #                       (), 
+    #                       n_repeat=n_rep)
 
-    ref_cpu_avg_gpu = float(cp.mean(ref_cpu_times.gpu_times)) * 1e6  # microseconds
-    ref_cpu_avg_cpu = float(cp.mean(ref_cpu_times.cpu_times)) * 1e6
+    # ref_cpu_avg_gpu = float(cp.mean(ref_cpu_times.gpu_times)) * 1e6  # microseconds
+    # ref_cpu_avg_cpu = float(cp.mean(ref_cpu_times.cpu_times)) * 1e6
 
-    n_sym = n_eig * (n_eig + 1) // 2
-    # Print out the results
-    print(f"  [n_eig={n_eig:>2}  n_src={n_src:>2}]   "
-            f"Custom Algo: gpu={avg_gpu:>5.1f} us  cpu={avg_cpu:>5.1f} us | "
-            f"CUPY: gpu={ref_avg_gpu:>7.1f} us  cpu={ref_avg_cpu:>5.1f} us | "
-            f"CPU: gpu={ref_cpu_avg_gpu:>7.1f} us  cpu={ref_cpu_avg_cpu:>5.1f} us")
+    # n_sym = n_eig * (n_eig + 1) // 2
+    # # Print out the results
+    # print(f"  [n_eig={n_eig:>2}  n_src={n_src:>2}]   "
+    #         f"Custom Algo: gpu={avg_gpu:>5.1f} us  cpu={avg_cpu:>5.1f} us | "
+    #         f"CUPY: gpu={ref_avg_gpu:>7.1f} us  cpu={ref_avg_cpu:>5.1f} us | "
+    #         f"CPU: gpu={ref_cpu_avg_gpu:>7.1f} us  cpu={ref_cpu_avg_cpu:>5.1f} us")
     
+    return avg_gpu
     return avg_gpu, ref_avg_gpu, ref_cpu_avg_cpu
 # =========================================================================================================
 
@@ -141,10 +142,12 @@ def timing_plot_nant_varies(
     for i, rc in enumerate(row_col_inputs):
         print(f"on iteration {i}")
         # test_data = make_test_data(n_eig, rc, random_seed)
-        gpu_t, ref_gpu_t, ref_cpu_t = timing_test(n_eig, n_src, rc, tpb, random_seed)
+        # gpu_t, ref_gpu_t, ref_cpu_t = timing_test(n_eig, n_src, rc, tpb, random_seed)
+        gpu_t = timing_test(n_eig, n_src, rc, tpb, random_seed)
+        
         test_times[i] = gpu_t
-        reference_times[i] = ref_gpu_t
-        cpu_reference_times[i] = ref_cpu_t
+        # reference_times[i] = ref_gpu_t
+        # cpu_reference_times[i] = ref_cpu_t
 
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
@@ -167,9 +170,30 @@ def timing_plot_nant_varies(
         })
 
     fig, ax = plt.subplots()
-    ax.loglog(n_ants, test_times, '-P', ms = 9,  label = 'GPU Inverse Cov')
-    ax.loglog(n_ants, reference_times, '-p', ms = 9, label = 'CuPy Inverse Cov')
-    ax.loglog(n_ants, cpu_reference_times, '-p', ms = 9, label = 'CPU CorrCal Inverse Cov')
+    ax.loglog(n_ants, test_times, '-P', ms = 9,  label = 'Custom GPU Inverse Cov')
+    # ax.loglog(n_ants, reference_times, '-p', ms = 9, label = 'CuPy Inverse Cov')
+    # ax.loglog(n_ants, cpu_reference_times, '-p', ms = 9, label = 'CPU CorrCal Inverse Cov')
+
+    # --- CHORD 512-antenna marker ---
+    from scipy.interpolate import interp1d
+    f_gpu = interp1d(np.log10(n_ants), np.log10(test_times))
+    t_512 = 10**f_gpu(np.log10(512))
+
+    # ax.plot(512, t_512, 'o', color='red', markersize=5, zorder=5)
+    # ax.plot([512, 512], [ax.get_ylim()[0], t_512], '--', color='red', alpha=0.4, lw=1)
+    # ax.plot([ax.get_xlim()[0], 512], [t_512, t_512], '--', color='red', alpha=0.4, lw=1)
+    # ax.text(512 * 1.3, t_512, f'(N_ant=512, {t_512:.0f} μs)', fontsize=10, color='red', va='center')
+
+    ax.plot(512, t_512, 'o', color='red', markersize=5, zorder=5)
+
+    xlim = ax.get_xlim()
+    ylim = ax.get_ylim()
+    ax.plot([512, 512], [ylim[0], t_512], '--', color='red', alpha=0.4, lw=1)
+    ax.plot([xlim[0], 512], [t_512, t_512], '--', color='red', alpha=0.4, lw=1)
+    ax.set_xlim(xlim)
+    ax.set_ylim(ylim)
+
+    ax.text(512 * 1.3, t_512, f'(N_ant=512, {t_512:.0f} μs)', fontsize=10, color='red', va='center')
 
     ax.xaxis.set_major_locator(FixedLocator(n_ants))
     ax.xaxis.set_major_formatter(
@@ -189,7 +213,9 @@ def timing_plot_nant_varies(
     if save_plot:
         plt.savefig(f'{dir_name}/{file_name}.png', format = 'png', dpi = 300, bbox_inches = 'tight')
  
+    # plt.show()
     plt.show()
+    # plt.pause(0.1)
 # =========================================================================================================
 
 
@@ -236,7 +262,7 @@ def timing_plot_neig_varies(
     })
 
     fig, ax = plt.subplots()
-    ax.semilogy(neigs, test_times, '-P', ms=9, label='Custom Inverse Cov')
+    ax.semilogy(neigs, test_times, '-P', ms=9, label='Custom GPU Inverse Cov')
     ax.semilogy(neigs, reference_times, '-p', ms=9, label='CuPy Inverse Cov')
     ax.semilogy(neigs, cpu_reference_times, '-p', ms=9, label='CPU CorrCal Inverse Cov')
 
@@ -255,8 +281,9 @@ def timing_plot_neig_varies(
         os.makedirs(dir_name, exist_ok=True)
         plt.savefig(f'{dir_name}/{file_name}.png', format='png', dpi=300, bbox_inches='tight')
 
-    plt.show()
-
+    # plt.show()
+    plt.show(block=False)
+    plt.pause(0.1)
 
 def timing_plot_nsrc_varies(
         rc_tuple, src_range, n_eig, tpb, random_seed, save_plot=True
@@ -328,8 +355,8 @@ if __name__ == "__main__":
     # -------------------------------
     rows = 32
     cols = 16
-    n_eig = 15
-    n_src = 15
+    n_eig = 3
+    n_src = 5
     rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
@@ -341,9 +368,9 @@ if __name__ == "__main__":
     # Switch board for running tests
     # -------------------------------
 
-    one_timing_test = T
+    one_timing_test = F
     many_timing_tests = F
-    plot_benchmark_nant = F
+    plot_benchmark_nant = T
     plot_benchmark_neig = F
     plot_benchmark_nsrc = F
     save_plot=False
@@ -357,11 +384,11 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, src_range, random_seed, time_eigs=False, time_srcs=True)
     
     if plot_benchmark_nant:
-        n_trials = 10
+        n_trials = 9
         timing_plot_nant_varies(n_eig, n_src, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
-        eig_range = (3, 18)
+        eig_range = (3, 5)
         timing_plot_neig_varies(rc, eig_range, n_src, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_nsrc:
