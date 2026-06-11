@@ -410,8 +410,8 @@ def timing_plot_neig_nsrc_varies(
 if __name__ == "__main__":
     # Test params
     # -------------------------------
-    rows = 32
-    cols = 16
+    rows = 64
+    cols = 32
     n_eig = 3
     n_src = 5
     rc = (rows, cols)
