@@ -198,7 +198,7 @@ def timing_plot_nant_varies(
     if "5070" in file_label:
         file_name = f'MC_device_var_nant: n_trials={n_iter-2}_device={file_label}'
     elif "A40" in file_label:
-        file_name = f'cluster_var_nant: n_trials={n_iter-2}_device={file_label}'
+        file_name = f'MC_cluster_var_nant: n_trials={n_iter-2}_device={file_label}'
     
     title = r"$\mathbf{{{}\ ({}\ Eigenmodes,\ {}\ Sources)}}$".format(title_label, n_eig, n_src)
     
@@ -492,7 +492,7 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, src_range, random_seed, time_eigs=False, time_srcs=True)
     
     if plot_benchmark_nant:
-        n_trials = 1
+        n_trials = 2
         timing_plot_nant_varies(n_eig, n_src, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
