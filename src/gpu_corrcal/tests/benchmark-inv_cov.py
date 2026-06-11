@@ -374,7 +374,7 @@ if __name__ == "__main__":
     plot_benchmark_nant = T
     plot_benchmark_neig = F
     plot_benchmark_nsrc = F
-    save_plot=False
+    save_plot=True
 
     if one_timing_test:
         timing_test(n_eig, n_src, rc, 128, random_seed)
