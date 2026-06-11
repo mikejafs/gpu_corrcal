@@ -347,6 +347,64 @@ def timing_plot_nsrc_varies(
 
     plt.show()
 
+
+def timing_plot_neig_nsrc_varies(
+        rc_tuple, eig_src_range, tpb, random_seed, save_plot=True
+        ):
+
+    start, stop = eig_src_range
+    vals = np.arange(start, stop, 2)
+
+    test_times = np.zeros(len(vals))
+    reference_times = np.zeros(len(vals))
+    cpu_reference_times = np.zeros(len(vals))
+
+    n_ant = rc_tuple[0] * rc_tuple[1]
+    print(f"n_ant fixed at {n_ant}")
+
+    for i, v in enumerate(vals):
+        gpu_t, ref_gpu_t, ref_cpu_t = timing_test(v, v, rc_tuple, tpb, random_seed)
+        test_times[i] = gpu_t
+        reference_times[i] = ref_gpu_t
+        cpu_reference_times[i] = ref_cpu_t
+
+    # ---------------------------------------------------------------------
+    title_label, file_label = get_machine_label()
+    dir_name = 'test_plots'
+    file_name = f'var_neig_nsrc: nant={n_ant}_range={start}-{stop}_device={file_label}'
+
+    title = r"$\mathbf{{{}\ ({}\ Antennas,\ n_{{eig}}=n_{{src}})}}$".format(title_label, n_ant)
+
+    plt.rcParams["text.usetex"] = False
+    plt.rcParams['axes.labelsize'] = 13
+    plt.rcParams['figure.figsize'] = (8, 5)
+    plt.rcParams.update({
+        "mathtext.fontset": "cm",
+        "font.family": "serif",
+    })
+
+    fig, ax = plt.subplots()
+    ax.semilogy(vals, test_times, '-P', ms=9, label='Custom GPU Inverse Cov')
+    ax.semilogy(vals, reference_times, '-p', ms=9, label='CuPy Inverse Cov')
+    ax.semilogy(vals, cpu_reference_times, '-p', ms=9, label='CPU CorrCal Inverse Cov')
+
+    ax.xaxis.set_major_locator(FixedLocator(vals))
+    ax.xaxis.set_major_formatter(FixedFormatter([str(int(v)) for v in vals]))
+    ax.tick_params(axis='both', which='major',
+                   labelsize=13, length=6, width=1.5)
+
+    ax.set_xlabel(r"$\mathbf{n_{eig} = n_{src}}$")
+    ax.set_ylabel(r"$\mathbf{Time\ (\mu s)}$")
+    ax.set_title(title, fontsize='14')
+    ax.grid(axis='y', alpha=0.3)
+    ax.legend()
+
+    if save_plot:
+        os.makedirs(dir_name, exist_ok=True)
+        plt.savefig(f'{dir_name}/{file_name}.png', format='png', dpi=300, bbox_inches='tight')
+
+    plt.show()
+
 # =========================================================================================================
 
 if __name__ == "__main__":
@@ -371,8 +429,9 @@ if __name__ == "__main__":
     many_timing_tests = F
     plot_benchmark_nant = F
     plot_benchmark_neig = F
-    plot_benchmark_nsrc = T
-    save_plot=True
+    plot_benchmark_nsrc = F
+    plot_benchmark_neig_nsrc = T
+    save_plot=False
 
     if one_timing_test:
         timing_test(n_eig, n_src, rc, 128, random_seed)
@@ -394,3 +453,6 @@ if __name__ == "__main__":
         src_range = (1, 20)
         timing_plot_nsrc_varies(rc, src_range, n_eig, 128, random_seed, save_plot=save_plot)
 
+    if plot_benchmark_neig_nsrc:
+        eig_src_range = (2, 22)  # 2, 4, 6, 8, ..., 20
+        timing_plot_neig_nsrc_varies(rc, eig_src_range, 128, random_seed, save_plot=save_plot)
