@@ -328,8 +328,8 @@ if __name__ == "__main__":
     # -------------------------------
     rows = 32
     cols = 16
-    n_eig = 3
-    n_src = 3
+    n_eig = 15
+    n_src = 15
     rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
@@ -341,15 +341,15 @@ if __name__ == "__main__":
     # Switch board for running tests
     # -------------------------------
 
-    one_timing_test = F
+    one_timing_test = T
     many_timing_tests = F
     plot_benchmark_nant = F
     plot_benchmark_neig = F
-    plot_benchmark_nsrc = T
-    save_plot=True
+    plot_benchmark_nsrc = F
+    save_plot=False
 
     if one_timing_test:
-        timing_test(n_eig, rc, 128, random_seed)
+        timing_test(n_eig, n_src, rc, 128, random_seed)
     
     if many_timing_tests:
         eig_range = (1, 10)
