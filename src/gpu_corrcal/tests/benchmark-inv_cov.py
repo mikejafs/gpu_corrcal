@@ -239,7 +239,8 @@ def timing_plot_neig_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'full_inv_cov_tests'
+    # dir_name = 'full_inv_cov_tests'
+    dir_name = 'test_plots'
     if "5070" in file_label:
         file_name = f'device_var_neig: nant={n_ant}_nsrc={n_src}_neig={eig_start}-{eig_stop}_device={file_label}'
         print(f"file name: {file_label}")
@@ -281,6 +282,7 @@ def timing_plot_neig_varies(
     plt.show(block=False)
     plt.pause(0.1)
 
+
 def timing_plot_nsrc_varies(
         rc_tuple, src_range, n_eig, tpb, random_seed, save_plot=True
         ):
@@ -304,7 +306,8 @@ def timing_plot_nsrc_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'full_inv_cov_tests'
+    # dir_name = 'full_inv_cov_tests'
+    dir_name = 'test_plots'
     if "5070" in file_label:
         file_name = f'device_var_nsrc: nant={n_ant}_neig={n_eig}_nsrc={src_start}-{src_stop}_device={file_label}'
         print(f"file name: {file_label}")
@@ -366,8 +369,8 @@ if __name__ == "__main__":
 
     one_timing_test = F
     many_timing_tests = F
-    plot_benchmark_nant = T
-    plot_benchmark_neig = F
+    plot_benchmark_nant = F
+    plot_benchmark_neig = T
     plot_benchmark_nsrc = F
     save_plot=True
 
@@ -384,10 +387,10 @@ if __name__ == "__main__":
         timing_plot_nant_varies(n_eig, n_src, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
-        eig_range = (3, 5)
+        eig_range = (1, 20)
         timing_plot_neig_varies(rc, eig_range, n_src, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_nsrc:
-        src_range = (3, 18)
+        src_range = (1, 20)
         timing_plot_nsrc_varies(rc, src_range, n_eig, 128, random_seed, save_plot=save_plot)
 
