@@ -373,7 +373,7 @@ def timing_plot_neig_nsrc_varies(
     dir_name = 'test_plots'
     file_name = f'var_neig_nsrc: nant={n_ant}_range={start}-{stop}_device={file_label}'
 
-    title = r"$\mathbf{{{}\ ({}\ Antennas,\ n_{{eig}}=n_{{src}})}}$".format(title_label, n_ant)
+    title = r"$\mathbf{{{}\ ({}\ Antennas)}}$".format(title_label, n_ant)
 
     plt.rcParams["text.usetex"] = False
     plt.rcParams['axes.labelsize'] = 13
@@ -393,7 +393,7 @@ def timing_plot_neig_nsrc_varies(
     ax.tick_params(axis='both', which='major',
                    labelsize=13, length=6, width=1.5)
 
-    ax.set_xlabel(r"$\mathbf{n_{eig} = n_{src}}$")
+    ax.set_xlabel(r"$\mathbf{Number\ of\ Eigenmodes\ and\ Sources}$")
     ax.set_ylabel(r"$\mathbf{Time\ (\mu s)}$")
     ax.set_title(title, fontsize='14')
     ax.grid(axis='y', alpha=0.3)
@@ -431,7 +431,7 @@ if __name__ == "__main__":
     plot_benchmark_neig = F
     plot_benchmark_nsrc = F
     plot_benchmark_neig_nsrc = T
-    save_plot=False
+    save_plot=True
 
     if one_timing_test:
         timing_test(n_eig, n_src, rc, 128, random_seed)
