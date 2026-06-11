@@ -152,7 +152,8 @@ def timing_plot_nant_varies(
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
-    dir_name = 'full_inv_cov_tests'
+    # dir_name = 'full_inv_cov_tests'
+    dir_name = 'test_plots'
     if "5070" in file_label:
         file_name = f'device_var_nant: n_trials={n_iter-2}_device={file_label}'
     elif "A40" in file_label:
