@@ -1,6 +1,7 @@
 import numpy as np
 import cupy as cp
 import ctypes
+import math
 import matplotlib.pyplot as plt
 from matplotlib.ticker import ScalarFormatter
 from matplotlib.ticker import FixedLocator, FixedFormatter
@@ -48,9 +49,8 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
                       (noise, diffuse, source, edges, ws), 
                       n_repeat=n_rep)
     
-    avg_gpu = float(cp.mean(times.gpu_times)) * 1e6  # microseconds
-    avg_cpu = float(cp.mean(times.cpu_times)) * 1e6
-    
+    avg_gpu = float(cp.mean(times.gpu_times)) # if want in  microseconds: *1e6
+    avg_cpu = float(cp.mean(times.cpu_times))    
 
     # Benchmark [Custom GPU Routine] -> CuPy ref right now +++
     zp_inv_noise, lb, nb = zeroPad(noise, edges, return_inv=True, dtype=cp.float32)
@@ -61,8 +61,8 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
                           (zp_inv_noise, zp_diffuse, zp_source, cp, False, True), 
                           n_repeat=n_rep)
 
-    ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) * 1e6  # microseconds
-    ref_avg_cpu = float(cp.mean(ref_times.cpu_times)) * 1e6
+    ref_avg_gpu = float(cp.mean(ref_times.gpu_times)) 
+    ref_avg_cpu = float(cp.mean(ref_times.cpu_times))
 
     #CPU ref +++++++++++++++++++++++++++++++++++++++++++++++++
     cpu_sparse_cov = SparseCov(cpu_noise, cpu_source, cpu_diffuse, cpu_edges, n_eig, False)
@@ -71,16 +71,23 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
                           (), 
                           n_repeat=n_rep)
 
-    ref_cpu_avg_gpu = float(cp.mean(ref_cpu_times.gpu_times)) * 1e6  # microseconds
-    ref_cpu_avg_cpu = float(cp.mean(ref_cpu_times.cpu_times)) * 1e6
+    ref_cpu_avg_gpu = float(cp.mean(ref_cpu_times.gpu_times))
+    ref_cpu_avg_cpu = float(cp.mean(ref_cpu_times.cpu_times))
 
     n_sym = n_eig * (n_eig + 1) // 2
     # Print out the results
+    # ------------------IF USING MU SECONDS-----------------------------------------
+    # print(f"  [n_eig={n_eig:>2}  n_src={n_src:>2}]   "
+    #         f"Custom Algo: gpu={avg_gpu:>5.1f} us  cpu={avg_cpu:>5.1f} us | "
+    #         f"CUPY: gpu={ref_avg_gpu:>7.1f} us  cpu={ref_avg_cpu:>5.1f} us | "
+    #         f"CPU: gpu={ref_cpu_avg_gpu:>7.1f} us  cpu={ref_cpu_avg_cpu:>5.1f} us")
+
+    #--------------------IF USING NORMAL SECONDS------------------------------------
     print(f"  [n_eig={n_eig:>2}  n_src={n_src:>2}]   "
-            f"Custom Algo: gpu={avg_gpu:>5.1f} us  cpu={avg_cpu:>5.1f} us | "
-            f"CUPY: gpu={ref_avg_gpu:>7.1f} us  cpu={ref_avg_cpu:>5.1f} us | "
-            f"CPU: gpu={ref_cpu_avg_gpu:>7.1f} us  cpu={ref_cpu_avg_cpu:>5.1f} us")
-    
+            f"Custom Algo: gpu={avg_gpu*1e6:>5.1f} us  cpu={avg_cpu*1e6:>5.1f} us | "
+            f"CUPY: gpu={ref_avg_gpu*1e6:>7.1f} us  cpu={ref_avg_cpu*1e6:>7.1f} us | "
+            f"CPU: gpu={ref_cpu_avg_gpu*1e6:>7.1f} us  cpu={ref_cpu_avg_cpu*1e6:>7.1f} us")
+
     # return avg_gpu
     return avg_gpu, ref_avg_gpu, ref_cpu_avg_cpu
 # =========================================================================================================
@@ -119,6 +126,23 @@ def pop_row_col_input(end_iter_num):
         row_col = [j, j]
         row_col_list.append(row_col)
     return row_col_list
+
+# This function generates the same nant inputs as Bobby's paper plot
+def pop_row_col_input_tens(iter_num):
+    row_col_list = []
+    coeff = [1, 2, 3, 5]
+    for n in range(iter_num+1):
+        for c in coeff:
+            ant_val = c*10**(n+1)
+            for i in range(int(math.isqrt(ant_val)), 0, -1):
+                if ant_val % i == 0:
+                    rc_list_pair = [i, ant_val // i]
+                    row_col_list.append(rc_list_pair)
+                    break
+
+    row_col_list = row_col_list[:-2]
+    return row_col_list
+
 # =========================================================================================================
 
 
@@ -128,7 +152,8 @@ def timing_plot_nant_varies(
         ):
 
     n_iter = n_trials + 2
-    row_col_inputs = pop_row_col_input(n_iter)
+    # row_col_inputs = pop_row_col_input(n_iter)
+    row_col_inputs = pop_row_col_input_tens(n_trials)
     n_ants = np.zeros(len(row_col_inputs))
     for i, rc in enumerate(row_col_inputs):
         n_ant = rc[0]*rc[1]
@@ -153,7 +178,7 @@ def timing_plot_nant_varies(
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
     # dir_name = 'full_inv_cov_tests'
-    dir_name = 'test_plots'
+    dir_name = 'single_core_test_plots'
     if "5070" in file_label:
         file_name = f'device_var_nant: n_trials={n_iter-2}_device={file_label}'
     elif "A40" in file_label:
@@ -164,7 +189,7 @@ def timing_plot_nant_varies(
     #plotting
     plt.rcParams["text.usetex"] = False
     plt.rcParams['axes.labelsize'] = 13
-    plt.rcParams['figure.figsize'] = (8, 5)
+    plt.rcParams['figure.figsize'] = (15, 5)
     plt.rcParams.update({
         "mathtext.fontset": "cm",
         "font.family": "serif",
@@ -175,25 +200,34 @@ def timing_plot_nant_varies(
     ax.loglog(n_ants, reference_times, '-p', ms = 9, label = 'CuPy Inverse Cov')
     ax.loglog(n_ants, cpu_reference_times, '-p', ms = 9, label = 'CPU CorrCal Inverse Cov')
 
-    # --- CHORD 512-antenna marker ---
-    from scipy.interpolate import interp1d
-    f_gpu = interp1d(np.log10(n_ants), np.log10(test_times))
-    t_512 = 10**f_gpu(np.log10(512))
+    # ------------------------- CHORD 512-antenna marker ---------------------------------------
+    # temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | 
+    # temp v temp v temp v temp v temp v temp v temp v temp v temp v temp v temp v temp v temp v 
 
-    ax.plot(512, t_512, 'o', color='red', markersize=5, zorder=5)
+    # from scipy.interpolate import interp1d
+    # f_gpu = interp1d(np.log10(n_ants), np.log10(test_times))
+    # t_512 = 10**f_gpu(np.log10(512))
 
-    xlim = ax.get_xlim()
-    ylim = ax.get_ylim()
-    ax.plot([512, 512], [ylim[0], t_512], '--', color='red', alpha=0.4, lw=1)
-    ax.plot([xlim[0], 512], [t_512, t_512], '--', color='red', alpha=0.4, lw=1)
-    ax.set_xlim(xlim)
-    ax.set_ylim(ylim)
+    # ax.plot(512, t_512, 'o', color='red', markersize=5, zorder=5)
 
-    ax.text(512 * 1.3, t_512, f'(N_ant=512, {t_512:.0f} μs)', fontsize=10, color='red', va='center')
+    # xlim = ax.get_xlim()
+    # ylim = ax.get_ylim()
+    # ax.plot([512, 512], [ylim[0], t_512], '--', color='red', alpha=0.4, lw=1)
+    # ax.plot([xlim[0], 512], [t_512, t_512], '--', color='red', alpha=0.4, lw=1)
+    # ax.set_xlim(xlim)
+    # ax.set_ylim(ylim)
+
+    # ax.text(512 * 1.3, t_512, f'(N_ant=512, {t_512:.0f} μs)', fontsize=10, color='red', va='center')
+
+    # temp ^ temp ^ temp ^ temp ^ temp ^ temp ^ temp ^ temp ^ temp ^ temp ^ temp ^ temp ^ temp ^ 
+    # temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | 
 
     ax.xaxis.set_major_locator(FixedLocator(n_ants))
+    # ax.xaxis.set_major_formatter(
+    #     FixedFormatter([rf"${int(np.sqrt(n))}^2$" for n in n_ants])
+    # )
     ax.xaxis.set_major_formatter(
-        FixedFormatter([rf"${int(np.sqrt(n))}^2$" for n in n_ants])
+        FixedFormatter([rf"${n}$" for n in n_ants])
     )
     ax.tick_params(axis='both', which='major',
         labelsize=13, length=6, width=1.5)
@@ -201,7 +235,7 @@ def timing_plot_nant_varies(
     # ax.tick_params(axis='x', labelrotation=-20)
     
     ax.set_xlabel(r"$\mathbf{Number\ of\ Antennas}$")
-    ax.set_ylabel(r"$\mathbf{Time\ (\mu s)}$")
+    ax.set_ylabel(r"$\mathbf{Average\ Run\ Time\ (s)}$")
     ax.set_title(title, fontsize='14')
     ax.grid(axis='y', alpha=0.3)
     ax.legend()
@@ -427,11 +461,11 @@ if __name__ == "__main__":
 
     one_timing_test = F
     many_timing_tests = F
-    plot_benchmark_nant = F
+    plot_benchmark_nant = T
     plot_benchmark_neig = F
     plot_benchmark_nsrc = F
-    plot_benchmark_neig_nsrc = T
-    save_plot=True
+    plot_benchmark_neig_nsrc = F
+    save_plot=False
 
     if one_timing_test:
         timing_test(n_eig, n_src, rc, 128, random_seed)
@@ -442,7 +476,7 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, src_range, random_seed, time_eigs=False, time_srcs=True)
     
     if plot_benchmark_nant:
-        n_trials = 10
+        n_trials = 1
         timing_plot_nant_varies(n_eig, n_src, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
@@ -456,3 +490,14 @@ if __name__ == "__main__":
     if plot_benchmark_neig_nsrc:
         eig_src_range = (2, 22)  # 2, 4, 6, 8, ..., 20
         timing_plot_neig_nsrc_varies(rc, eig_src_range, 128, random_seed, save_plot=save_plot)
+
+
+    # rcl = pop_row_col_input_tens(2)
+    # # print(rcl)
+    # # # print(f"lenk: {len(rcl)}")
+
+    # for i, rc in enumerate(rcl):
+    #     # print(i)
+    #     # print(rc)
+
+    #     print(rc[0]*rc[1])
