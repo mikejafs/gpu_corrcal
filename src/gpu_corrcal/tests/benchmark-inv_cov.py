@@ -1,8 +1,8 @@
 # This kills any multithreaded activity:
 import os
-# os.environ["OMP_NUM_THREADS"] = "1"
-# os.environ["MKL_NUM_THREADS"] = "1"
-# os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
 
 # All of the rest of the code
 import numpy as np
@@ -75,8 +75,8 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
     cpu_sparse_cov = SparseCov(cpu_noise, cpu_source, cpu_diffuse, cpu_edges, n_eig, False)
     
     # Leave in if only want single core --------
-    # original_affinity = os.sched_getaffinity(0)
-    # os.sched_setaffinity(0, {0})
+    original_affinity = os.sched_getaffinity(0)
+    os.sched_setaffinity(0, {0})
     # ------------------------------------------
 
     ref_cpu_times = benchmark(cpu_sparse_cov.inv, 
@@ -84,7 +84,7 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
                           n_repeat=n_rep)
 
     # Leave in if only want single core --------
-    # os.sched_setaffinity(0, original_affinity)
+    os.sched_setaffinity(0, original_affinity)
     # ------------------------------------------
 
     ref_cpu_avg_gpu = float(cp.mean(ref_cpu_times.gpu_times))
@@ -196,9 +196,9 @@ def timing_plot_nant_varies(
     # dir_name = 'full_inv_cov_tests'
     dir_name = 'single_core_test_plots'
     if "5070" in file_label:
-        file_name = f'MC_device_var_nant: n_trials={n_iter-2}_device={file_label}'
+        file_name = f'SC_device_var_nant: n_trials={n_iter-2}_device={file_label}'
     elif "A40" in file_label:
-        file_name = f'MC_cluster_var_nant: n_trials={n_iter-2}_device={file_label}'
+        file_name = f'SC_cluster_var_nant: n_trials={n_iter-2}_device={file_label}'
     
     title = r"$\mathbf{{{}\ ({}\ Eigenmodes,\ {}\ Sources)}}$".format(title_label, n_eig, n_src)
     
