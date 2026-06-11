@@ -370,8 +370,8 @@ if __name__ == "__main__":
     one_timing_test = F
     many_timing_tests = F
     plot_benchmark_nant = F
-    plot_benchmark_neig = T
-    plot_benchmark_nsrc = F
+    plot_benchmark_neig = F
+    plot_benchmark_nsrc = T
     save_plot=True
 
     if one_timing_test:
