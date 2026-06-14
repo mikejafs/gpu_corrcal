@@ -19,6 +19,7 @@ from gpu_corrcal.inverse_covariance import *
 from gpu_corrcal.utils.tools import *
 from gpu_corrcal.cupy_reference.cupy_inverse_covariance import *
 from cupyx.profiler import benchmark
+from datetime import datetime
 cudart = ctypes.CDLL("libcudart.so")
 
 from corrcal.sparse import *
@@ -199,10 +200,11 @@ def timing_plot_nant_varies(
     title_label, file_label = get_machine_label()
     # dir_name = 'full_inv_cov_tests'
     dir_name = 'single_core_test_plots'
+    tstamp = datetime.now().strftime("%Y%m%d_%H%M")
     if "5070" in file_label:
-        file_name = f'SC_device_var_nant: n_trials={n_iter-2}_device={file_label}'
+        file_name = f'SC_device_var_nant: n_trials={n_iter-2}_device={file_label}_{tstamp}'
     elif "A40" in file_label:
-        file_name = f'SC_cluster_var_nant: n_trials={n_iter-2}_device={file_label}'
+        file_name = f'SC_cluster_var_nant: n_trials={n_iter-2}_device={file_label}_{tstamp}'
     
     title = r"$\mathbf{{{}\ ({}\ Eigenmodes,\ {}\ Sources)}}$".format(title_label, n_eig, n_src)
     
@@ -522,7 +524,7 @@ if __name__ == "__main__":
     plot_benchmark_neig = F
     plot_benchmark_nsrc = F
     plot_benchmark_neig_nsrc = F
-    save_plot=False
+    save_plot=True
 
     if one_timing_test:
         timing_test(n_eig, n_src, rc, 128, random_seed)
@@ -533,7 +535,7 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, src_range, random_seed, time_eigs=False, time_srcs=True)
     
     if plot_benchmark_nant:
-        n_trials = 2
+        n_trials = 1
         timing_plot_nant_varies(n_eig, n_src, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
