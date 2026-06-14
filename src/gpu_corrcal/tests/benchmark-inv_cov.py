@@ -535,7 +535,7 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, src_range, random_seed, time_eigs=False, time_srcs=True)
     
     if plot_benchmark_nant:
-        n_trials = 1
+        n_trials = 2
         timing_plot_nant_varies(n_eig, n_src, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
