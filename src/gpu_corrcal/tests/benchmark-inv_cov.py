@@ -87,6 +87,10 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
     os.sched_setaffinity(0, original_affinity)
     # ------------------------------------------
 
+    # print(70*'-')
+    # print(f"printing a single output for more granular cpu times:")
+    # print(f"{ref_cpu_times}")
+
     ref_cpu_avg_gpu = float(cp.mean(ref_cpu_times.gpu_times))
     ref_cpu_avg_cpu = float(cp.mean(ref_cpu_times.cpu_times))
 
@@ -102,7 +106,7 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed):
     print(f"  [n_eig={n_eig:>2}  n_src={n_src:>2}]   "
             f"Custom Algo: gpu={avg_gpu*1e6:>5.1f} us  cpu={avg_cpu*1e6:>5.1f} us | "
             f"CUPY: gpu={ref_avg_gpu*1e6:>7.1f} us  cpu={ref_avg_cpu*1e6:>7.1f} us | "
-            f"CPU: gpu={ref_cpu_avg_gpu*1e6:>7.1f} us  cpu={ref_cpu_avg_cpu*1e6:>7.1f} us")
+            f"CPU: gpu={ref_cpu_avg_gpu*1e6:>7.1f} us  cpu={ref_cpu_avg_cpu*1e6:>7.1f} us  &  cpu_std={cp.std(ref_cpu_times.cpu_times)}")
 
     # return avg_gpu
     return avg_gpu, ref_avg_gpu, ref_cpu_avg_cpu
@@ -205,7 +209,7 @@ def timing_plot_nant_varies(
     #plotting
     plt.rcParams["text.usetex"] = False
     plt.rcParams['axes.labelsize'] = 16
-    plt.rcParams['figure.figsize'] = (15, 5)
+    plt.rcParams['figure.figsize'] = (13, 5)
     plt.rcParams.update({
         "mathtext.fontset": "cm",
         "font.family": "serif",
@@ -215,6 +219,43 @@ def timing_plot_nant_varies(
     ax.loglog(n_ants, test_times, '-P', ms = 9,  label = 'Custom GPU Inverse Cov')
     ax.loglog(n_ants, reference_times, '-p', ms = 9, label = 'CuPy Inverse Cov')
     ax.loglog(n_ants, cpu_reference_times, '-p', ms = 9, label = 'CPU CorrCal Inverse Cov')
+
+
+    # -------------- Power law best-fit in compute-dominated regime ---------------------------
+    # Fit t = A * N^alpha in log-log space for n_ant >= n_ant_cutoff,
+    # then anchor the line to pass through the measured data at n_ant_ref.
+    n_ant_ref = 1000     # power law line passes through data here
+    n_ant_cutoff = 100   # only fit points at or above this (compute-dominated)
+ 
+    fit_colors = [None, None, None]  # grab from the data lines
+    for idx_line, line in enumerate(ax.get_lines()[:3]):
+        fit_colors[idx_line] = line.get_color()
+ 
+    for k, (times_arr, lbl) in enumerate([
+        (test_times,          'Custom'),
+        (reference_times,     'CuPy'),
+        (cpu_reference_times, 'CPU'),
+    ]):
+        mask = n_ants >= n_ant_cutoff
+        if mask.sum() < 2:
+            continue
+ 
+        log_n = np.log10(n_ants[mask])
+        log_t = np.log10(times_arr[mask])
+        alpha, _ = np.polyfit(log_n, log_t, 1)   # slope from the fit
+ 
+        # Anchor: force line through (n_ant_ref, t_measured_at_ref)
+        idx_ref = np.argmin(np.abs(n_ants - n_ant_ref))
+        t_ref = times_arr[idx_ref]
+        A_anchored = t_ref / (n_ant_ref ** alpha)
+ 
+        n_fit = np.logspace(np.log10(n_ants[mask].min()),
+                            np.log10(n_ants[mask].max()), 200)
+        t_fit = A_anchored * n_fit ** alpha
+ 
+        ax.loglog(n_fit, t_fit, '--', color=fit_colors[k],
+                  linewidth=1.5, alpha=0.55,
+                  label=rf'{lbl} fit: $\propto N^{{{alpha:.2f}}}$')
 
     # ------------------------- CHORD 512-antenna marker ---------------------------------------
     # temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | temp | 
@@ -462,8 +503,8 @@ if __name__ == "__main__":
     # -------------------------------
     rows = 16
     cols = 32
-    n_eig = 3
-    n_src = 5
+    n_eig = 2
+    n_src = 1
     rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
@@ -481,7 +522,7 @@ if __name__ == "__main__":
     plot_benchmark_neig = F
     plot_benchmark_nsrc = F
     plot_benchmark_neig_nsrc = F
-    save_plot=True
+    save_plot=False
 
     if one_timing_test:
         timing_test(n_eig, n_src, rc, 128, random_seed)
