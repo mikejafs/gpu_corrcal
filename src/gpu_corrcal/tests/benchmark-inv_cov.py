@@ -251,12 +251,12 @@ def timing_plot_nant_varies(
         t_ref = times_arr[idx_ref]
         A_anchored = t_ref / (n_ant_ref ** alpha)
  
-        n_fit = np.logspace(np.log10(n_ants[mask].min()),
-                            np.log10(n_ants[mask].max()), 200)
+        n_fit = np.logspace(np.log10(n_ants.min()),
+                            np.log10(n_ants.max()), 200)
         t_fit = A_anchored * n_fit ** alpha
  
         ax.loglog(n_fit, t_fit, '--', color=fit_colors[k],
-                  linewidth=1.5, alpha=0.55,
+                  linewidth=2.5, alpha=0.55,
                   label=rf'{lbl} fit: $\propto N^{{{alpha:.2f}}}$')
 
     # ------------------------- CHORD 512-antenna marker ---------------------------------------
