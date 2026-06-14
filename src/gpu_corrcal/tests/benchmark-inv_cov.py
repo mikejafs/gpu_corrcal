@@ -161,7 +161,7 @@ def pop_row_col_input_tens(iter_num):
                     row_col_list.append(rc_list_pair)
                     break
 
-    row_col_list = row_col_list[:-1]
+    row_col_list = row_col_list[:]
     return row_col_list
 
 # =========================================================================================================
@@ -227,7 +227,7 @@ def timing_plot_nant_varies(
     # Fit t = A * N^alpha in log-log space for n_ant >= n_ant_cutoff,
     # then anchor the line to pass through the measured data at n_ant_ref.
     n_ant_ref = 1000     # power law line passes through data here
-    n_ant_cutoff = 100   # only fit points at or above this (compute-dominated)
+    n_ant_cutoff = 500   # only fit points at or above this (compute-dominated)
  
     fit_colors = [None, None, None]  # grab from the data lines
     for idx_line, line in enumerate(ax.get_lines()[:3]):
