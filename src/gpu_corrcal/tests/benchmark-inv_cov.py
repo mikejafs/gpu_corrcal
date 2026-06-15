@@ -588,7 +588,7 @@ if __name__ == "__main__":
 
     one_timing_test = F
     many_timing_tests = F
-    plot_benchmark_nant = F
+    plot_benchmark_nant = T
     plot_benchmark_neig = F
     plot_benchmark_nsrc = F
     plot_benchmark_neig_nsrc = F
@@ -619,7 +619,7 @@ if __name__ == "__main__":
         timing_plot_neig_nsrc_varies(rc, eig_src_range, 128, random_seed, save_plot=save_plot)
 
 
-    replot_nant('src/gpu_corrcal/tests/benchmark_data/nant_neig3_nsrc5_20260615_082457.npz')
+    # replot_nant('src/gpu_corrcal/tests/benchmark_data/nant_neig3_nsrc5_20260615_082457.npz')
     # rcl = pop_row_col_input_tens(2)
     # # print(rcl)
     # # # print(f"lenk: {len(rcl)}")
