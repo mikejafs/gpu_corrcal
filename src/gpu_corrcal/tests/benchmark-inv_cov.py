@@ -322,7 +322,7 @@ def timing_plot_nant_varies(
 
 
 # =========================================================================================================
-def replot_nant(npz_path, n_ant_ref=1000, n_ant_cutoff=200, save_plot=False):
+def replot_nant(npz_path, n_ant_ref=1000, n_ant_cutoff=500, save_plot=True):
     """Replot a varying-nant benchmark from saved .npz data."""
     d = np.load(npz_path)
     n_ants           = d['n_ants']
@@ -352,7 +352,7 @@ def replot_nant(npz_path, n_ant_ref=1000, n_ant_cutoff=200, save_plot=False):
         alpha, _ = np.polyfit(np.log10(n_ants[mask]), np.log10(times_arr[mask]), 1)
         idx_ref = np.argmin(np.abs(n_ants - n_ant_ref))
         A = times_arr[idx_ref] / (n_ant_ref ** alpha)
-        n_fit = np.logspace(np.log10(n_ants[3].min()), np.log10(n_ants.max()), 200)
+        n_fit = np.logspace(np.log10(n_ants.min()), np.log10(n_ants.max()), 200)
         t_fit = A * n_fit**alpha
         keep = t_fit >= 10e-6
         n_fit, t_fit = n_fit[keep], t_fit[keep]
@@ -573,8 +573,8 @@ if __name__ == "__main__":
     # -------------------------------
     rows = 16
     cols = 32
-    n_eig = 2
-    n_src = 1
+    n_eig = 3
+    n_src = 5
     rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
@@ -619,7 +619,7 @@ if __name__ == "__main__":
         timing_plot_neig_nsrc_varies(rc, eig_src_range, 128, random_seed, save_plot=save_plot)
 
 
-    # replot_nant('src/gpu_corrcal/tests/benchmark_data/nant_neig3_nsrc5_20260615_082457.npz')
+    # replot_nant('/home/mikej/phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/benchmark_data/nant_neig2_nsrc1_20260615_090227.npz')
     # rcl = pop_row_col_input_tens(2)
     # # print(rcl)
     # # # print(f"lenk: {len(rcl)}")
