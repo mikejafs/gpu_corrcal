@@ -195,6 +195,19 @@ def timing_plot_nant_varies(
         reference_times[i] = ref_gpu_t
         cpu_reference_times[i] = ref_cpu_t
 
+    # Save raw data for later replotting
+    tstamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    os.makedirs('benchmark_data', exist_ok=True)
+    data_file = f'benchmark_data/nant_neig{n_eig}_nsrc{n_src}_{tstamp}.npz'
+    np.savez(data_file,
+             n_ants=n_ants,
+             test_times=test_times,
+             reference_times=reference_times,
+             cpu_reference_times=cpu_reference_times,
+             n_eig=n_eig,
+             n_src=n_src)
+    print(f"Saved benchmark data to {data_file}")
+
     # ---------------------------------------------------------------------
     # Returning the correct file name and title (cluster vs Device)
     title_label, file_label = get_machine_label()
@@ -505,8 +518,8 @@ if __name__ == "__main__":
     # -------------------------------
     rows = 16
     cols = 32
-    n_eig = 2
-    n_src = 1
+    n_eig = 3
+    n_src = 5
     rc = (rows, cols)
     n_ant = rows*cols
     random_seed=42
@@ -524,7 +537,7 @@ if __name__ == "__main__":
     plot_benchmark_neig = F
     plot_benchmark_nsrc = F
     plot_benchmark_neig_nsrc = F
-    save_plot=True
+    save_plot=False
 
     if one_timing_test:
         timing_test(n_eig, n_src, rc, 128, random_seed)
@@ -535,7 +548,7 @@ if __name__ == "__main__":
         time_multiple(rc, 128, eig_range, src_range, random_seed, time_eigs=False, time_srcs=True)
     
     if plot_benchmark_nant:
-        n_trials = 2
+        n_trials = 1
         timing_plot_nant_varies(n_eig, n_src, n_trials, 128, random_seed, save_plot=save_plot)
 
     if plot_benchmark_neig:
