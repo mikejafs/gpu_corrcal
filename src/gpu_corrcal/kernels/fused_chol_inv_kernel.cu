@@ -9,7 +9,9 @@ template <int N>
 __global__ void batched_cholesky_inv(
     const float* __restrict__ in,   // (n_mat, N, N) - input matrices
     float* __restrict__ out,         // (n_mat, N, N) - L_inv output
+    // float* __restrict__ out_diffuse_det
     int n_mat
+
 ){
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx >= n_mat) return;
@@ -44,6 +46,9 @@ __global__ void batched_cholesky_inv(
             L[i * N + j] = (A[i * N + j] - sum2) * inv_ljj;
         }
     }
+
+    for (int i = 0; i < N)
+    out_diffuse_det = 
 
     // ---- Step 2: Triangular inverse via forward substitution ----
     // Solve L @ L_inv = I column by column
