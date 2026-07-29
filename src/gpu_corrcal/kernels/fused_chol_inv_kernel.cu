@@ -5,11 +5,11 @@
 #include <cuda_runtime.h>
 
 
-template <int N>
+template <int N, bool COMPUTE_DET>
 __global__ void batched_cholesky_inv(
     const float* __restrict__ in,   // (n_mat, N, N) - input matrices
     float* __restrict__ out,         // (n_mat, N, N) - L_inv output
-    // float* __restrict__ out_diffuse_det
+    float* __restrict__ out_diffuse_det, // storage of 1st half of logdet expression
     int n_mat
 
 ){
@@ -18,6 +18,8 @@ __global__ void batched_cholesky_inv(
 
     const float* A = in + idx * N * N;
     float* R = out + idx * N * N;
+
+    float logdiag = 0.0f;
 
     // Local storage for L
     float L[N * N];
@@ -34,8 +36,11 @@ __global__ void batched_cholesky_inv(
         #pragma unroll
         for (int k = 0; k < j; ++k)
             sum += L[j * N + k] * L[j * N + k];
-        L[j * N + j] = sqrtf(A[j * N + j] + 1.0f - sum);
-        
+        // L[j * N + j] = sqrtf(A[j * N + j] + 1.0f - sum);
+        float ljj = sqrtf(A[j * N + j] + 1.0f - sum);
+        L[j * N + j] = ljj;
+        if (COMPUTE_DET) logdiag += logf(ljj);
+
         float inv_ljj = 1.0f / L[j * N + j];
         #pragma unroll
         for (int i = j + 1; i < N; ++i) {
@@ -44,11 +49,15 @@ __global__ void batched_cholesky_inv(
             for (int k = 0; k < j; ++k)
                 sum2 += L[i * N + k] * L[j * N + k];
             L[i * N + j] = (A[i * N + j] - sum2) * inv_ljj;
+
         }
     }
 
-    for (int i = 0; i < N)
-    out_diffuse_det = 
+    if (COMPUTE_DET) out_diffuse_det[idx] = logdiag;
+
+    // for (int i = 0; i < N; ++i){
+    //     out_diffuse_det = 
+    // }
 
     // ---- Step 2: Triangular inverse via forward substitution ----
     // Solve L @ L_inv = I column by column
@@ -84,36 +93,50 @@ __global__ void batched_cholesky_inv(
 }
 
 
-template __global__ void batched_cholesky_inv<1>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<2>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<3>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<4>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<5>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<6>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<7>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<8>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<9>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<10>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<11>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<12>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<13>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<14>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<15>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<16>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<17>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<18>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<19>(const float*, float*, int);
-template __global__ void batched_cholesky_inv<20>(const float*, float*, int);
+# define INST_DIFFUSE(N) \
+    template __global__ void batched_cholesky_inv<N, true>(const float*, float*, float*, int); \
+    template __global__ void batched_cholesky_inv<N, false>(const float*, float*, float*, int);
+
+INST_DIFFUSE(1)  INST_DIFFUSE(2)  INST_DIFFUSE(3)  INST_DIFFUSE(4)
+INST_DIFFUSE(5)  INST_DIFFUSE(6)  INST_DIFFUSE(7)  INST_DIFFUSE(8)
+INST_DIFFUSE(9)  INST_DIFFUSE(10) INST_DIFFUSE(11) INST_DIFFUSE(12)
+INST_DIFFUSE(13) INST_DIFFUSE(14) INST_DIFFUSE(15) INST_DIFFUSE(16)
+INST_DIFFUSE(17) INST_DIFFUSE(18) INST_DIFFUSE(19) INST_DIFFUSE(20)
+#undef INST_DIFFUSE
+
+// template __global__ void batched_cholesky_inv<1>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<2>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<3>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<4>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<5>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<6>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<7>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<8>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<9>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<10>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<11>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<12>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<13>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<14>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<15>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<16>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<17>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<18>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<19>(const float*, float*, int);
+// template __global__ void batched_cholesky_inv<20>(const float*, float*, int);
 
 
 #define LAUNCH_CHOL_INV(N) \
     case N: \
-        batched_cholesky_inv<N><<<(n_mat+255)/256, 256>>>(in, out, n_mat); \
+        if (compute_det) \
+            batched_cholesky_inv<N, true><<<(n_mat+255)/256, 256>>>(in, out, out_diffuse_det, n_mat); \
+        else \
+            batched_cholesky_inv<N, false><<<(n_mat+255)/256, 256>>>(in, out, nullptr, n_mat); \
         break;
 
 extern "C"
 void launch_batched_cholesky_inv(
-    const float* in, float* out, int n_mat, int n_eig
+    const float* in, float* out, float* out_diffuse_det, int n_mat, int n_eig, int compute_det
 ){
     switch(n_eig) {
         LAUNCH_CHOL_INV(1)

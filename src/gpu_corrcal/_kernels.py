@@ -42,8 +42,10 @@ fused_chol_inv.restype = None
 fused_chol_inv.argtypes = [
     ctypes.c_void_p,
     ctypes.c_void_p,
+    ctypes.c_void_p,
     ctypes.c_int,
-    ctypes.c_int
+    ctypes.c_int,
+    ctypes.c_int,
 ]
 
 mul_temp_by_diffuse_chol_inv = _diffuse_bar_kernel.launch_mul_temp_by_chol
@@ -55,7 +57,7 @@ mul_temp_by_diffuse_chol_inv.argtypes = [
     ctypes.c_void_p,   #output mat    
     ctypes.c_void_p,      #edges
     ctypes.c_int,      #num blocks
-    ctypes.c_int       #n_eig
+    ctypes.c_int,      #n_eig
 ]
 
 # ============================================================================

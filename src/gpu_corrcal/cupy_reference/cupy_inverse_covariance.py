@@ -80,7 +80,7 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     
     Sig_prime = W @ xp.linalg.inv(L_sig).T[None, ...]
 
-    return Del_prime, Sig_prime
+    # return Del_prime, Sig_prime
 
     # Sig_prime = (A - Del_prime @ xp.transpose(B.conj(), [0, 2, 1])) @ xp.linalg.inv(L_sig).T.conj()[None, ...]
 
@@ -88,7 +88,9 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     if ret_det:
         # logdet = 2*(xp.sum(xp.diag(L_del)) + xp.sum(xp.diag(L_sig)))
         #the line should actually be -> Need to check why this works and how differ from xp.diag
-        logdet = 2*(xp.sum(xp.diagonal(xp.log(L_del), axis2 = 1, axis1 = 2)) + xp.sum(xp.diagonal(xp.log(L_sig))))
+        # logdet = 2*(xp.sum(xp.diagonal(xp.log(L_del), axis2 = 1, axis1 = 2)) + xp.sum(xp.diagonal(xp.log(L_sig))))
+        logdet = 2*(xp.sum(xp.diagonal(xp.log(L_del), axis2 = 1, axis1 = 2)))
+
         # cp.cuda.Stream.null.synchronize()
         return logdet, N_inv, Del_prime, Sig_prime 
     else:
@@ -104,10 +106,10 @@ def setup_cupy_ref(noise, diffuse, source, edges):
 
     # temp = zp_inv_noise[..., None] * zp_diffuse
     # out = cp.transpose(zp_diffuse, [0, 2, 1]) @ temp
-    diffuse_bar, source_bar = inverse_covariance(zp_inv_noise, zp_diffuse, zp_source, cp, ret_det=False, N_is_inv=True)
+    logdet, N_inv, diffuse_bar, source_bar = inverse_covariance(zp_inv_noise, zp_diffuse, zp_source, cp, ret_det=True, N_is_inv=True)
 
     cp.cuda.Stream.null.synchronize()
-    return diffuse_bar, source_bar
+    return diffuse_bar, source_bar, logdet
 
 
 def cupy_ref(temp, edges, t3):

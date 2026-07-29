@@ -6,6 +6,13 @@ class InvCovWorkspace:
     def __init__(self, diffuse, src, edges):
         self.temp2 = cp.empty((len(edges)-1, diffuse.shape[1], diffuse.shape[1]), dtype=cp.float32)
         self.L_del = cp.empty((len(edges)-1, diffuse.shape[1], diffuse.shape[1]), dtype=cp.float32)
+        self.out_diffuse_det = cp.empty((len(edges)-1), dtype=cp.float32)
+        # print("nb:", len(edges)-1, "shape:", d.shape)
+        # print("per-group logdiag:", d)
+        # print("min", float(d.min()), "max", float(d.max()),
+        #     "nan", int(cp.sum(cp.isnan(d))), "inf", int(cp.sum(cp.isinf(d))))
+        # # also dump the group sizes:
+        # print("group sizes:", cp.asarray(edges[1:]) - cp.asarray(edges[:-1]))
         self.diffuse_bar = cp.empty((diffuse.shape[0], diffuse.shape[1]), dtype=cp.float32)
         # ... etc, one buffer per intermediate the chain needs
 
@@ -25,7 +32,7 @@ class InvCovWorkspace:
         # sig_prime (Sig_bar): the source-level output. Fully overwritten.
         self.sig_prime = cp.empty((n_total, n_src), dtype=cp.float32)
 
-def inv_cov(noise, diffuse, source, edges, init_workspace):
+def inv_cov(noise, diffuse, source, edges, init_workspace, compute_det=False):
     """
     Custom kernel inverse covariance.
     
@@ -39,7 +46,7 @@ def inv_cov(noise, diffuse, source, edges, init_workspace):
     # print(f"temp2: max={float(cp.max(cp.abs(temp2))):.2e}, nan={int(cp.sum(cp.isnan(temp2)))}, inf={int(cp.sum(cp.isinf(temp2)))}")
 
     L_del_inv_T = fused_cholesky_inverse(
-        temp2, edges, out=init_workspace.L_del
+        temp2, edges, out=init_workspace.L_del, out_diffuse_det=init_workspace.out_diffuse_det if compute_det else None,
     )
     # print(f"L_inv: max={float(cp.max(cp.abs(L_del_inv_T))):.2e}, nan={int(cp.sum(cp.isnan(L_del_inv_T)))}, inf={int(cp.sum(cp.isinf(L_del_inv_T)))}")
 
@@ -81,6 +88,10 @@ def inv_cov(noise, diffuse, source, edges, init_workspace):
     # if ret != 0:
     #     raise RuntimeError(f"apply_sig_prime dispatch failed: n_src={source.shape[1]}, n_eig={len(edges)-1}, ret={ret}")
 
-    return diffuse_bar, sig_prime
+    if compute_det:
+        logdet = 2.0* (cp.sum(init_workspace.out_diffuse_det)) #FOR NOW ONLY INCLUDE THE DIFFUSE PART
+        return diffuse_bar, sig_prime, logdet
+    else:
+        return diffuse_bar, sig_prime
 
     return diffuse_bar

@@ -13,7 +13,7 @@ def make_small_blocks(
     n_eig = diffuse_gpu.shape[1]
     nb = len(edges_gpu) - 1
     threads_per_block = 128
-
+    
     warp_reduction(
         diffuse_gpu.data.ptr,
         noise_gpu.data.ptr,
@@ -26,14 +26,17 @@ def make_small_blocks(
     # cp.cuda.Stream.null.synchronize()
     return out
 
-def fused_cholesky_inverse(temp2, edges, out):
+def fused_cholesky_inverse(temp2, edges, out, out_diffuse_det=None):
     n_eig = temp2.shape[1]
     num_blocks = len(edges) - 1
+    compute_det = out_diffuse_det is not None
     fused_chol_inv(
         temp2.data.ptr,
         out.data.ptr,
+        out_diffuse_det.data.ptr if compute_det else 0,
         num_blocks,
-        n_eig
+        n_eig,
+        int(compute_det),
     )
     # cp.cuda.Stream.null.synchronize()
     return out
