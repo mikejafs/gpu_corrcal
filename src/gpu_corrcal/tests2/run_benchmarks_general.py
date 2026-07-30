@@ -38,7 +38,8 @@ cudart = ctypes.CDLL("libcudart.so")
 
 from corrcal.sparse import *
 
-DATA_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
+DATA_DIR = "/home/mikejafs/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
+
 
 
 # ============================================================
