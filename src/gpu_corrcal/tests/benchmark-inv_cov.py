@@ -322,7 +322,7 @@ def timing_plot_nant_varies(
 
 
 # =========================================================================================================
-def replot_nant(npz_path, n_ant_ref=500, n_ant_cutoff=500, save_plot=True):
+def replot_nant(npz_path, n_ant_ref=500, n_ant_cutoff=500, save_plot=False):
     """Replot a varying-nant benchmark from saved .npz data."""
     d = np.load(npz_path)
     n_ants           = d['n_ants']
@@ -339,30 +339,30 @@ def replot_nant(npz_path, n_ant_ref=500, n_ant_cutoff=500, save_plot=True):
     fig, ax = plt.subplots()
     ax.loglog(n_ants, test_times,       '-P', ms=9, label='Custom GPU Inverse Cov')
     ax.loglog(n_ants, reference_times,  '-p', ms=9, label='CuPy Inverse Cov')
-    ax.loglog(n_ants, cpu_reference_times, '-p', ms=9, label='CPU CorrCal Inverse Cov')
+    # ax.loglog(n_ants, cpu_reference_times, '-p', ms=9, label='CPU CorrCal Inverse Cov')
 
-    # power law fits
-    fit_colors = [line.get_color() for line in ax.get_lines()[:3]]
-    for k, (times_arr, lbl) in enumerate([
-        (test_times, 'Custom'), (reference_times, 'CuPy'), (cpu_reference_times, 'CPU'),
-    ]):
-        mask = n_ants >= n_ant_cutoff
-        if mask.sum() < 2:
-            continue
-        # alpha, _ = np.polyfit(np.log10(n_ants[mask]), np.log10(times_arr[mask]), 1)
-        alpha = 2
-        idx_ref = np.argmin(np.abs(n_ants - n_ant_ref))
-        A = times_arr[idx_ref] / (n_ant_ref ** alpha)
-        n_fit = np.logspace(np.log10(n_ants.min()), np.log10(n_ants.max()), 200)
-        t_fit = A * n_fit**alpha
-        keep = t_fit >= 10e-6
-        n_fit, t_fit = n_fit[keep], t_fit[keep]
-        if lbl == 'CPU':
-            ax.loglog(n_fit, t_fit, '--', color=fit_colors[k],
-                  linewidth=2.5, alpha=0.55, label=rf' $\propto N_\mathrm{{ant}}^{{{2}}}$')
-        else:
-            ax.loglog(n_fit, t_fit, '--', color=fit_colors[k],
-                  linewidth=2.5, alpha=0.55)
+    # # power law fits
+    # fit_colors = [line.get_color() for line in ax.get_lines()[:3]]
+    # for k, (times_arr, lbl) in enumerate([
+    #     (test_times, 'Custom'), (reference_times, 'CuPy'), (cpu_reference_times, 'CPU'),
+    # ]):
+    #     mask = n_ants >= n_ant_cutoff
+    #     if mask.sum() < 2:
+    #         continue
+    #     # alpha, _ = np.polyfit(np.log10(n_ants[mask]), np.log10(times_arr[mask]), 1)
+    #     alpha = 2
+    #     idx_ref = np.argmin(np.abs(n_ants - n_ant_ref))
+    #     A = times_arr[idx_ref] / (n_ant_ref ** alpha)
+    #     n_fit = np.logspace(np.log10(n_ants.min()), np.log10(n_ants.max()), 200)
+    #     t_fit = A * n_fit**alpha
+    #     keep = t_fit >= 10e-6
+    #     n_fit, t_fit = n_fit[keep], t_fit[keep]
+    #     if lbl == 'CPU':
+    #         ax.loglog(n_fit, t_fit, '--', color=fit_colors[k],
+    #               linewidth=2.5, alpha=0.55, label=rf' $\propto N_\mathrm{{ant}}^{{{2}}}$')
+    #     else:
+    #         ax.loglog(n_fit, t_fit, '--', color=fit_colors[k],
+    #               linewidth=2.5, alpha=0.55)
 
     ax.xaxis.set_major_locator(FixedLocator(n_ants))
     ax.xaxis.set_major_formatter(FixedFormatter([rf"${int(n)}$" for n in n_ants]))
@@ -372,7 +372,7 @@ def replot_nant(npz_path, n_ant_ref=500, n_ant_cutoff=500, save_plot=True):
     ax.set_title(rf"$\mathbf{{{n_eig}\ Eigenmodes,\ {n_src}\ Sources}}$", fontsize=19)
     ax.grid(axis='y', alpha=0.5)
     leg = ax.legend(fontsize=16)
-    leg.get_lines()[3].set_color("black")
+    # leg.get_lines()[3].set_color("black")
 
     if save_plot:
         out = npz_path.replace('.npz', '.png')
@@ -625,7 +625,7 @@ if __name__ == "__main__":
         timing_plot_neig_nsrc_varies(rc, eig_src_range, 128, random_seed, save_plot=save_plot)
 
 
-    replot_nant('/home/mikej/phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/benchmark_data/nant_neig3_nsrc5_20260615_094659.npz')
+    replot_nant('/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/benchmark_data/nant_neig3_nsrc5_20260615_094659.npz')
     # rcl = pop_row_col_input_tens(2)
     # # print(rcl)
     # # # print(f"lenk: {len(rcl)}")

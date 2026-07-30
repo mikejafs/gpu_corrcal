@@ -7,12 +7,6 @@ class InvCovWorkspace:
         self.temp2 = cp.empty((len(edges)-1, diffuse.shape[1], diffuse.shape[1]), dtype=cp.float32)
         self.L_del = cp.empty((len(edges)-1, diffuse.shape[1], diffuse.shape[1]), dtype=cp.float32)
         self.out_diffuse_det = cp.empty((len(edges)-1), dtype=cp.float32)
-        # print("nb:", len(edges)-1, "shape:", d.shape)
-        # print("per-group logdiag:", d)
-        # print("min", float(d.min()), "max", float(d.max()),
-        #     "nan", int(cp.sum(cp.isnan(d))), "inf", int(cp.sum(cp.isinf(d))))
-        # # also dump the group sizes:
-        # print("group sizes:", cp.asarray(edges[1:]) - cp.asarray(edges[:-1]))
         self.diffuse_bar = cp.empty((diffuse.shape[0], diffuse.shape[1]), dtype=cp.float32)
         # ... etc, one buffer per intermediate the chain needs
 
@@ -20,6 +14,7 @@ class InvCovWorkspace:
         n_eig = diffuse.shape[1]
         n_src = src.shape[1]
         n_total = diffuse.shape[0]
+        
         # ---- source level (Sig_prime chain) ----
         # B: per-group factor, written by kernel 1, read by kernel 3.
         #    Fully overwritten each call -> cp.empty is safe.
