@@ -312,8 +312,8 @@ def time_multiple(rc_tuple, tpb, eig_range, src_range, seed,
 if __name__ == "__main__":
     # Test params
     # -------------------------------
-    rows = 16
-    cols = 32
+    rows = 12
+    cols = 10
     n_eig = 3
     n_src = 5
     rc = (rows, cols)
@@ -332,7 +332,7 @@ if __name__ == "__main__":
     # -------------------------------
     one_timing_test = F
     many_timing_tests = F
-    bench_nant = T
+    bench_nant = F
     bench_neig = F
     bench_nsrc = F
     bench_neig_nsrc = F
