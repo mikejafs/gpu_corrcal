@@ -147,7 +147,7 @@ def _build_targets(test_data, n_eig):
 # Returns (names, times): parallel lists of length len(spec).
 # ============================================================
 def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed,
-                target="inv", n_rep=400):
+                target="inv", n_rep=1000):
     """Benchmark every series in `target` (see _build_targets).
     Returns (names, times) where times are mean GPU times in seconds."""
     test_data = make_test_data(n_eig, n_src, rc_tuple, seed)
