@@ -38,9 +38,21 @@ cudart = ctypes.CDLL("libcudart.so")
 
 from corrcal.sparse import *
 
-DATA_DIR = "/home/mikejafs/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
+# DATA_DIR = "/home/mikejafs/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
 
+def _resolve_data_dir():
+    """Pick the benchmark_data dir based on which machine we're on,
+    using the same get_machine_label() the filenames/plots key on."""
+    _, file_label = get_machine_label()
+    if "5070" in file_label:
+        return "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
+    elif "A40" in file_label:
+        return "/home/mikejafs/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
+    else:
+        raise RuntimeError(f"unrecognized machine label {file_label!r}; "
+                           f"add its data dir to _resolve_data_dir()")
 
+DATA_DIR = _resolve_data_dir()
 
 # ============================================================
 # Target registry — THE ONLY PLACE THAT KNOWS ABOUT SPECIFIC
@@ -313,8 +325,8 @@ def time_multiple(rc_tuple, tpb, eig_range, src_range, seed,
 if __name__ == "__main__":
     # Test params
     # -------------------------------
-    rows = 12
-    cols = 10
+    rows = 32
+    cols = 16
     n_eig = 3
     n_src = 5
     rc = (rows, cols)
@@ -333,7 +345,7 @@ if __name__ == "__main__":
     # -------------------------------
     one_timing_test = F
     many_timing_tests = F
-    bench_nant = F
+    bench_nant = T
     bench_neig = F
     bench_nsrc = F
     bench_neig_nsrc = F
@@ -342,7 +354,7 @@ if __name__ == "__main__":
         timing_test(n_eig, n_src, rc, tpb, random_seed, target=target)
 
     if many_timing_tests:
-        time_multiple(rc, tpb, (1, 10), (1, 10), random_seed, time_srcs=True, target=target)
+        time_multiple(rc, tpb, (1, 10), (1, 10), random_seed, time_srcs=True, time_eigs=True, target=target)
 
     if bench_nant:
         run_nant_sweep(n_eig, n_src, n_trials=2, tpb=tpb, seed=random_seed, target=target)

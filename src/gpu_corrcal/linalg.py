@@ -155,13 +155,16 @@ def make_cap_reduce(Sig, Del_prime, noise, edges, B, M_sig):
     return B, M_sig
  
  
-def fused_cholesky_inverse_sig(M_sig, out):
+def fused_cholesky_inverse_sig(M_sig, out, out_source_det = None):
     """Kernel 2: L_inv = (chol(I + Lambda))^{-1} for the single (n_src x n_src) M_sig."""
     n_src = M_sig.shape[0]
+    compute_det = out_source_det is not None
     ret = chol_inv_fused(
         n_src,
         M_sig.data.ptr,
         out.data.ptr,
+        out_source_det.data.ptr if compute_det else 0,
+        int(compute_det),
         0,                       # stream = default
     )
     if ret != 0:

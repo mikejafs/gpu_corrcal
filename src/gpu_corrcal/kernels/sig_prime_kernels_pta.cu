@@ -1,4 +1,4 @@
-// nvcc -Xcompiler -fPIC -shared -o geneig_warp_red_kernel_templated.so geneig_warp_red_kernel_templated.cu
+// nvcc -Xcompiler -fPIC -shared -o sig_prime_kernels_pta.so sig_prime_kernels_pta.cu
 
 // sig_prime_kernels.cu
 // Second-level Woodbury: produce the whitened source factor Sig_prime (Sig_bar)
@@ -178,14 +178,17 @@ __global__ void cap_reduce(
 //   M = I + Lambda, Lambda = lower tri stored in M_sig (symmetric). One thread.
 //   Output L_inv = (chol(M))^{-1}, lower triangular.
 // ============================================================================
-template <int N_SRC>
+template <int N_SRC, bool COMPUTE_DET>
 __global__ void chol_inv_fused(
     const float* __restrict__ M_sig,   // (N_SRC,N_SRC) lower tri = Lambda
-    float*       __restrict__ L_inv    // (N_SRC,N_SRC) output, lower tri
+    float*       __restrict__ L_inv,    // (N_SRC,N_SRC) output, lower tri
+    float*       __restrict__ out_source_det
 ){
     if (blockIdx.x != 0 || threadIdx.x != 0) return;
 
     float L[N_SRC * N_SRC];
+    float logdiag = 0.0f;
+
     #pragma unroll
     for (int i = 0; i < N_SRC * N_SRC; ++i) L[i] = 0.f;
 
@@ -198,6 +201,9 @@ __global__ void chol_inv_fused(
         }
         float ljj = sqrtf(diag);
         L[j * N_SRC + j] = ljj;
+
+        if (COMPUTE_DET) logdiag += logf(ljj);
+        
         float inv_ljj = 1.0f / ljj;
 
         for (int i = j + 1; i < N_SRC; ++i) {
@@ -207,6 +213,8 @@ __global__ void chol_inv_fused(
             L[i * N_SRC + j] = sum * inv_ljj;
         }
     }
+
+    if (COMPUTE_DET) *out_source_det = logdiag;
 
     // Triangular inverse (forward substitution)
     for (int j = 0; j < N_SRC; ++j) {
@@ -324,7 +332,8 @@ __global__ void apply_sig_prime(
         const float*,const float*,const float*,const int*, \
         const float*,const float*,float*,int);
 #define INST_CHOL(NS, _) \
-    template __global__ void chol_inv_fused<NS>(const float*,float*);
+    template __global__ void chol_inv_fused<NS, false>(const float*,float*, float*); \
+    template __global__ void chol_inv_fused<NS, true>(const float*,float*, float*);
 
 GRID_2D(INST_CAP)        // N_SRC x N_EIG  cap_reduce specializations
 GRID_2D(INST_APPLY)      // N_SRC x N_EIG  apply_sig_prime specializations
@@ -356,16 +365,19 @@ NSRC_LIST(INST_CHOL, 0)  // N_SRC          chol_inv_fused (N_EIG arg ignored)
 typedef void (*cap_fn)(const float*,const float*,const float*,const int*,float*,float*,int);
 typedef void (*apply_fn)(const float*,const float*,const float*,const int*,
                          const float*,const float*,float*,int);
-typedef void (*chol_fn)(const float*,float*);
+typedef void (*chol_fn)(const float*,float*,float*);
 
 // ---- table fillers (reuse the grid macros) ----
 #define FILL_CAP(NS,NE)   cap_tab  [(NS)-1][(NE)-1] = &cap_reduce<NS,NE>;
 #define FILL_APPLY(NS,NE) apply_tab[(NS)-1][(NE)-1] = &apply_sig_prime<NS,NE>;
-#define FILL_CHOL(NS,_)   chol_tab [(NS)-1]         = &chol_inv_fused<NS>;
+#define FILL_CHOL(NS,_) \
+   chol_tab [(NS)-1][0] = &chol_inv_fused<NS, false>; \
+   chol_tab [(NS)-1][1] = &chol_inv_fused<NS, true>;
+   
 
 static cap_fn   cap_tab  [NSRC_MAX][NEIG_MAX];
 static apply_fn apply_tab[NSRC_MAX][NEIG_MAX];
-static chol_fn  chol_tab [NSRC_MAX];
+static chol_fn  chol_tab [NSRC_MAX][2];
 static bool     tables_ready = false;
 
 static void build_tables() {
@@ -400,12 +412,13 @@ int launch_cap_reduce(
 }
 
 int launch_chol_inv_fused(
-    int n_src, const float* M_sig, float* L_inv, void* stream)
+    int n_src, const float* M_sig, float* L_inv, float* out_source_det, bool compute_det, void* stream)
 {
     if (n_src < 1 || n_src > NSRC_MAX) return 1;
+    if (compute_det && out_source_det == nullptr) return 2;
     build_tables();
     cudaStream_t s = (cudaStream_t)stream;
-    chol_tab[n_src-1]<<<1, 1, 0, s>>>(M_sig, L_inv);
+    chol_tab[n_src-1][compute_det]<<<1, 1, 0, s>>>(M_sig, L_inv, out_source_det);
     return 0;
 }
 

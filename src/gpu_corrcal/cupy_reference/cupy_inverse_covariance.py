@@ -88,8 +88,10 @@ def inverse_covariance(N, Del, Sig, xp, ret_det = False, N_is_inv = True):
     if ret_det:
         # logdet = 2*(xp.sum(xp.diag(L_del)) + xp.sum(xp.diag(L_sig)))
         #the line should actually be -> Need to check why this works and how differ from xp.diag
-        # logdet = 2*(xp.sum(xp.diagonal(xp.log(L_del), axis2 = 1, axis1 = 2)) + xp.sum(xp.diagonal(xp.log(L_sig))))
-        logdet = 2*(xp.sum(xp.diagonal(xp.log(L_del), axis2 = 1, axis1 = 2)))
+        logdet = 2*(xp.sum(xp.diagonal(xp.log(L_del), axis2 = 1, axis1 = 2)) + xp.sum(xp.diagonal(xp.log(L_sig))))
+        old_logdet = 2*(xp.sum(xp.diagonal(xp.log(L_del), axis2 = 1, axis1 = 2)))
+
+        # print(f"CUPY:  old={old_logdet}, new={logdet}")
 
         # cp.cuda.Stream.null.synchronize()
         return logdet, N_inv, Del_prime, Sig_prime 

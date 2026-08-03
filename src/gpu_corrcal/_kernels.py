@@ -128,6 +128,8 @@ chol_inv_fused.argtypes = [
     ctypes.c_int,      # n_src
     ctypes.c_void_p,   # M_sig
     ctypes.c_void_p,   # L_inv
+    ctypes.c_void_p,   # logdet
+    ctypes.c_int,      # return_det (bool)
     ctypes.c_void_p,   # stream
 ]
 

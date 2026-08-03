@@ -4,16 +4,20 @@ import time
 
 class InvCovWorkspace:
     def __init__(self, diffuse, src, edges):
-        self.temp2 = cp.empty((len(edges)-1, diffuse.shape[1], diffuse.shape[1]), dtype=cp.float32)
-        self.L_del = cp.empty((len(edges)-1, diffuse.shape[1], diffuse.shape[1]), dtype=cp.float32)
-        self.out_diffuse_det = cp.empty((len(edges)-1), dtype=cp.float32)
-        self.diffuse_bar = cp.empty((diffuse.shape[0], diffuse.shape[1]), dtype=cp.float32)
-        # ... etc, one buffer per intermediate the chain needs
 
         nb = len(edges) - 1
         n_eig = diffuse.shape[1]
         n_src = src.shape[1]
         n_total = diffuse.shape[0]
+
+        # ---- Diffuse level (Del_prime chain) ----
+        self.temp2 = cp.empty((len(edges)-1, diffuse.shape[1], diffuse.shape[1]), dtype=cp.float32)
+        self.L_del = cp.empty((len(edges)-1, diffuse.shape[1], diffuse.shape[1]), dtype=cp.float32)
+        # self.out_diffuse_det = cp.empty((len(edges)-1), dtype=cp.float32)
+        self.diffuse_bar = cp.empty((diffuse.shape[0], diffuse.shape[1]), dtype=cp.float32)
+        # ... etc, one buffer per intermediate the chain needs
+
+
         
         # ---- source level (Sig_prime chain) ----
         # B: per-group factor, written by kernel 1, read by kernel 3.
@@ -26,6 +30,11 @@ class InvCovWorkspace:
         self.L_sig_inv = cp.empty((n_src, n_src), dtype=cp.float32)
         # sig_prime (Sig_bar): the source-level output. Fully overwritten.
         self.sig_prime = cp.empty((n_total, n_src), dtype=cp.float32)
+
+        #log determinant components
+        self.out_diffuse_det = cp.empty((nb), dtype=cp.float32)
+        self.out_source_det = cp.empty((1), dtype = cp.float32)
+
 
 def inv_cov(noise, diffuse, source, edges, init_workspace, compute_det=False):
     """
@@ -71,7 +80,7 @@ def inv_cov(noise, diffuse, source, edges, init_workspace, compute_det=False):
     # print(f"B max={float(cp.abs(B).max()):.3e}")
     # Kernel 2: L_sig_inv = (chol(I + Lambda))^{-1}.
     L_sig_inv = fused_cholesky_inverse_sig(
-        M_sig, out=init_workspace.L_sig_inv
+        M_sig, out=init_workspace.L_sig_inv, out_source_det=init_workspace.out_source_det if compute_det else None
     )
  
     # Kernel 3: assemble Gamma and apply (L_sig^T)^{-1} -> sig_prime.
@@ -84,7 +93,11 @@ def inv_cov(noise, diffuse, source, edges, init_workspace, compute_det=False):
     #     raise RuntimeError(f"apply_sig_prime dispatch failed: n_src={source.shape[1]}, n_eig={len(edges)-1}, ret={ret}")
 
     if compute_det:
-        logdet = 2.0* (cp.sum(init_workspace.out_diffuse_det)) #FOR NOW ONLY INCLUDE THE DIFFUSE PART
+        logdet = 2.0* (cp.sum(init_workspace.out_diffuse_det) + init_workspace.out_source_det[0]) #FOR NOW ONLY INCLUDE THE DIFFUSE PART
+        old_logdet = 2.0* (cp.sum(init_workspace.out_diffuse_det)) #FOR NOW ONLY INCLUDE THE DIFFUSE PART
+
+        # print(f"CUSTOM: old={old_logdet}, new={logdet}")
+
         return diffuse_bar, sig_prime, logdet
     else:
         return diffuse_bar, sig_prime
