@@ -36,10 +36,12 @@ def make_test_data(n_eig, n_src, rc_list, seed):
     noise = sim_data[0]
     diffuse = sim_data[1]
     source = sim_data[2]
+    data_vec = sim_data[4]
 
     return {
             "noise": noise,
             "diffuse": diffuse,
             "source" : source,
-            "edges": edges_gpu
+            "edges": edges_gpu,
+            "data_vec" : data_vec
             }

@@ -19,11 +19,15 @@ _warp_reduction_kernel = _load("geneig_warp_red_kernel_templated")
 _fused_chol_inv = _load("fused_chol_inv_kernel")
 _diffuse_bar_kernel = _load("diffuse_bar_kernel")
 _sig_prime_kernels = _load("sig_prime_kernels_pta")
+_matvec_mul_kernels = _load("sparse_cov_times_vec")
 
 
 sync_device = _warp_reduction_kernel.sync_device
 sync_device.restype = None
 sync_device.argtypes = []
+
+
+# INVERSE COVARIANCE
 
 warp_reduction = _warp_reduction_kernel.launch_two_level_warp_reduction
 warp_reduction.restype = None
@@ -148,4 +152,25 @@ apply_sig_prime.argtypes = [
     ctypes.c_void_p,   # L_inv
     ctypes.c_void_p,   # Sig_prime
     ctypes.c_void_p,   # stream
+]
+
+# --------------------------
+# MULTIPLY SPARSE COV BY VEC
+# --------------------------
+sparse_cov_times_vec = _matvec_mul_kernels.launch_sparse_cov_times_vec
+sparse_cov_times_vec.restype = None
+sparse_cov_times_vec.argtypes = [
+    ctypes.c_void_p,   # noise
+    ctypes.c_void_p,   # diffuse
+    ctypes.c_void_p,   # source
+    ctypes.c_void_p,   # vec
+    ctypes.c_void_p,   # out
+    ctypes.c_void_p,   # del_tmp workspace
+    ctypes.c_void_p,   # sig_tmp workspace
+    ctypes.c_void_p,   # edges (int32)
+    ctypes.c_int,      # nb
+    ctypes.c_int,      # n_src
+    ctypes.c_int,      # n_eig
+    ctypes.c_int,      # is_inv
+    ctypes.c_void_p,   # cudaStream_t
 ]

@@ -195,3 +195,94 @@ def apply_sig_prime_launch(Sig, Del_prime, noise, edges, B, L_inv, out):
             f"apply_sig_prime dispatch failed: n_src={n_src}, n_eig={n_eig}, ret={ret}"
         )
     return out
+
+
+# ---------------------------------------------------------------------------
+# workspace
+# ---------------------------------------------------------------------------
+class MatvecWorkspace:
+    """
+    Preallocated scratch for sparse_cov_times_vec.
+
+    Instantiate once before the CG loop -- nb, n_eig and n_src are fixed across
+    iterations, so nothing here needs to be reallocated.
+
+    del_tmp is fully overwritten every call and is cp.empty-safe.
+    sig_tmp is an atomic accumulator; it is zeroed inside the C launcher, so it
+    does NOT need to be zeroed from Python.
+    """
+
+    def __init__(self, nb, n_eig, n_src, out_size=None):
+        self.nb = int(nb)
+        self.n_eig = int(n_eig)
+        self.n_src = int(n_src)
+
+        self.del_tmp = cp.empty(self.nb * self.n_eig, dtype=cp.float32)
+        self.sig_tmp = cp.empty(self.n_src, dtype=cp.float32)
+
+        # optional persistent output buffer for the CG loop
+        self.out = (
+            cp.empty(int(out_size), dtype=cp.float32)
+            if out_size is not None
+            else None
+        )
+        
+
+def sparse_cov_vec_mul(
+    noise,
+    diffuse,
+    source,
+    vec,
+    edges,
+    ws,
+    isinv=True,
+    out=None,
+    check=True,
+):
+    """
+    Apply the sparse covariance (or its inverse) to a vector.
+
+    Parameters
+    ----------
+    noise    : (n_row,) float32 cupy array.  Pass N^-1 when isinv=True.
+    diffuse  : (n_row, n_eig) float32, C-contiguous.  Pass Del_bar when isinv=True.
+    source   : (n_row, n_src) float32, C-contiguous.  Pass Sig_bar when isinv=True.
+    vec      : (n_row,) float32
+    edges    : (nb+1,) int32
+    ws       : MatvecWorkspace sized for this (nb, n_eig, n_src)
+    isinv    : sign convention.  True  -> N*vec - Del@.. - Sig@..
+                                 False -> N*vec + Del@.. + Sig@..
+    out      : optional preallocated (n_row,) float32 output
+    check    : run the shape/dtype assertions (disable in the hot loop)
+
+    Returns
+    -------
+    (n_row,) float32 cupy array
+    """
+    n_row = vec.shape[0]
+    nb = edges.shape[0] - 1
+    n_eig = diffuse.shape[1]
+    n_src = source.shape[1]
+
+    if out is None:
+        out = ws.out if ws.out is not None else cp.empty(n_row, dtype=cp.float32)
+
+    stream = cp.cuda.get_current_stream()
+
+    sparse_cov_times_vec(
+        noise.data.ptr,
+        diffuse.data.ptr,
+        source.data.ptr,
+        vec.data.ptr,
+        out.data.ptr,
+        ws.del_tmp.data.ptr,
+        ws.sig_tmp.data.ptr,
+        edges.data.ptr,
+        ctypes.c_int(nb),
+        ctypes.c_int(n_src),
+        ctypes.c_int(n_eig),
+        ctypes.c_int(1 if isinv else 0),
+        ctypes.c_void_p(stream.ptr),
+    )
+
+    return out
