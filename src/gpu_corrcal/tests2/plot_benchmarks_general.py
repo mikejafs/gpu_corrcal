@@ -240,12 +240,13 @@ def compare_benchmarks(npz_paths, series_label=None, labels=None,
 if __name__ == "__main__":
     # One file, all its series (2, 3, or 4 lines — whatever the target had):
     # file_name = "src/gpu_corrcal/tests2/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_5070_20260730_183002.npz"
-    file_name = "src/gpu_corrcal/tests2/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_A40_20260803_220244.npz"
+    # file_name = "src/gpu_corrcal/tests2/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_A40_20260803_220244.npz"
+    file_name = "src/gpu_corrcal/tests2/benchmark_data/nant_targetmatvec_n_eig3_n_src5_tpb128_seed42_5070_20260826_165448.npz"
     # plot_benchmark(file_name)
 
     # With fits, only fit the CPU line, mark CHORD's 512 antennas:
-    plot_benchmark(file_name, power_law_fits=True, fit_on=["Inv+logdet"],
-                   chord_marker=True, min_t = 1e-5, save_plot=True)
+    plot_benchmark(file_name, power_law_fits=False, fit_on=["Inv+logdet"],
+                   chord_marker=False, min_t = 1e-5, save_plot=False)
 
     # Drop a series without regenerating data:
     # plot_benchmark(path, exclude=["CPU"])

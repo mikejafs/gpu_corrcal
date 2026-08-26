@@ -356,9 +356,9 @@ if __name__ == "__main__":
 
     # Switch board
     # -------------------------------
-    one_timing_test = T
+    one_timing_test = F
     many_timing_tests = F
-    bench_nant = F
+    bench_nant = T
     bench_neig = F
     bench_nsrc = F
     bench_neig_nsrc = F
@@ -370,7 +370,7 @@ if __name__ == "__main__":
         time_multiple(rc, tpb, (1, 10), (1, 10), random_seed, time_srcs=True, time_eigs=True, target=target)
 
     if bench_nant:
-        run_nant_sweep(n_eig, n_src, n_trials=2, tpb=tpb, seed=random_seed, target=target)
+        run_nant_sweep(n_eig, n_src, n_trials=1, tpb=tpb, seed=random_seed, target=target)
 
     if bench_neig:
         run_neig_sweep(rc, (1, 20), n_src, tpb, random_seed, target=target)
