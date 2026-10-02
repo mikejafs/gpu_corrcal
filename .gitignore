@@ -1,4 +1,4 @@
 *.egg-info/
 *so
 __pycache__/
-
+.accuracy_cache/
