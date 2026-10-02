@@ -6,6 +6,7 @@
 - [2026-03-04](#2026-03-04) $\rightarrow$ ***From backlog thesis project roughwork*** 
 - [2026-04-15](#2026-04-15)
 - [2026-05-14](#2026-05-14)
+- [2026-10-01](#2026-10-01)
 
 
 ## 2026-03-24
@@ -74,3 +75,13 @@
 ### Urgent
 - **Code up relevant tests for correctness and timing comparisons relative to the hardcoded, bobby's, and cupy version $\Rightarrow$ Then fully ready to begin coding other corrcal inversion functions**
 - *URGENT:* To the above point, essentially following the TODOs listed within the warp reduction experiment as the main priority so we can get moving to writing the next functions asap $\Rightarrow$ No need to tie up every loose end, just clean things up so we had some idea of wtf was going on when we were working on that stuff
+
+## 2026-10-01
+- Finish remaining corrcal functions and kernels and add to src code
+  - Remaining:
+    - multiply vec by mat (JUST NEED TO CHECK BENCHMARKING) 
+    - apply gains
+    - full likelihood (likely just python side)
+    - gradient kernel (+python code)
+- take a solid stab at curvature
+- start getting bandpass going
