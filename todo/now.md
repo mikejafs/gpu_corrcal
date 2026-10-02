@@ -78,6 +78,7 @@
 
 ## 2026-10-01
 - Finish remaining corrcal functions and kernels and add to src code
+  - Finish coding robust accuracy checker against cpu reference for remainder of functions
   - Remaining:
     - multiply vec by mat (JUST NEED TO CHECK BENCHMARKING) 
     - apply gains
