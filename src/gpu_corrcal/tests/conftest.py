@@ -11,7 +11,7 @@ Run from src/gpu_corrcal/tests:
     pytest -s --refresh-ref           # recompute cached CPU references
 
 -s shows the per-block error table for every case; without it, the table
-appears only for failures.
+appears only for failures. -sv adds the node ID that each test belongs to.
 """
 
 import sys
