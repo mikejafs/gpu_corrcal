@@ -2,6 +2,8 @@ ACCESSING TORONTO TEST CLUSTER
 
     ssh mikejafs@ctc.chord-observatory.ca
 
+btw password is: Mike&CHORD1995
+
 $\Rightarrow$ Then ssh into one of the two main test systems (either cx66 or cx77)
 
 For changing persmissions
