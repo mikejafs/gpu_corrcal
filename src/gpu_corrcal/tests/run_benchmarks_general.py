@@ -373,8 +373,8 @@ if __name__ == "__main__":
     # Which target to benchmark this run
     # -------------------------------
     # "inv" | "logdet" | "logdet_vs_onlyinv" | (later) "matvec" | ...
-    target = "logdet_vs_onlyinv"
-    # target = "matvec"
+    # target = "logdet_vs_onlyinv"
+    target = "matvec"
 
     # Switch board
     # -------------------------------
