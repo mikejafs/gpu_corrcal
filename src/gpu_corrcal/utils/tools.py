@@ -36,12 +36,17 @@ def make_test_data(n_eig, n_src, rc_list, seed):
     noise = sim_data[0]
     diffuse = sim_data[1]
     source = sim_data[2]
+    gains = sim_data[3]
     data_vec = sim_data[4]
+
+    ant_arrays = spms.ant_arrays()
 
     return {
             "noise": noise,
             "diffuse": diffuse,
             "source" : source,
             "edges": edges_gpu,
-            "data_vec" : data_vec
+            "gains": gains,
+            "data_vec" : data_vec,
+            "ant_arrays": ant_arrays
             }

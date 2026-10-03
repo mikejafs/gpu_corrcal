@@ -69,6 +69,7 @@ TARGET_DIRS = {
     "logdet":            "tests_logdet",
     "logdet_vs_onlyinv": "tests_logdet",
     "matvec":            "tests_matvec",
+    "apply_gains":       "tests_applygains"
 }
 
 def data_dir(target):
@@ -106,6 +107,8 @@ def _build_targets(test_data, n_eig):
     edges = test_data["edges"]
     source = test_data["source"]
     vec = test_data["data_vec"]
+    gains = test_data["gains"]
+    ant_arrays = test_data["ant_arrays"]
 
     # CPU-side copies (float64) for the corrcal reference
     cpu_diffuse = cp.asnumpy(diffuse).astype(np.float64)
@@ -113,6 +116,7 @@ def _build_targets(test_data, n_eig):
     cpu_edges = cp.asnumpy(edges).astype(np.float64)
     cpu_source = cp.asnumpy(source).astype(np.float64)
     cpu_vec = cp.asnumpy(vec).astype(np.float64)
+    cpu_gains = cp.asnumpy(gains).astype(np.float64)
 
     # Shared setup ------------------------------------------------------
     ws = InvCovWorkspace(diffuse, source, edges)
@@ -122,6 +126,8 @@ def _build_targets(test_data, n_eig):
     zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
     zp_source, lb, nb = zeroPad(source, edges, return_inv=False, dtype=cp.float32)
     zp_vec, _, _ = zeroPad(vec, edges, return_inv=False, dtype=cp.float32)
+
+    zp_cplex_gain_mat = cupy_utils.zeropad_gains(gains, edges, ant_arrays[0], ant_arrays[1], cp, False)
 
     cpu_sparse_cov = SparseCov(cpu_noise, cpu_source, cpu_diffuse, cpu_edges, n_eig, False)
 
@@ -151,6 +157,12 @@ def _build_targets(test_data, n_eig):
 
         "matvec": {
             "Custom GPU": (sparse_cov_vec_mul, (noise, diffuse, source, vec, edges, matvec_ws, True)),
+            "CuPy":       (cupy_utils.sparse_cov_times_vec, (zp_inv_noise, zp_diffuse, zp_source, zp_vec, True)),
+            "CPU":        (linalg.sparse_cov_times_vec, (cpu_sparse_cov, cpu_vec)),
+        },
+
+        "applygains": {
+            "Custom GPU": (gpu_apply_gains, (noise, diffuse, source, vec, edges, out, True)),
             "CuPy":       (cupy_utils.sparse_cov_times_vec, (zp_inv_noise, zp_diffuse, zp_source, zp_vec, True)),
             "CPU":        (linalg.sparse_cov_times_vec, (cpu_sparse_cov, cpu_vec)),
         },
@@ -375,6 +387,7 @@ if __name__ == "__main__":
     # "inv" | "logdet" | "logdet_vs_onlyinv" | (later) "matvec" | ...
     # target = "logdet_vs_onlyinv"
     target = "matvec"
+    target = "apply_gains"
 
     # Switch board
     # -------------------------------

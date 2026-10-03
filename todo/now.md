@@ -82,7 +82,8 @@
   - Remaining:
     - ~~multiply vec by mat (JUST NEED TO CHECK BENCHMARKING)~~ 
     - ~~Try and add text to plots or a title to show which kernel or function is being tested~~
-    - apply gains
+    - apply gains 
+      - in the middle of setting up the benchmark runs (building targets -- lines 165 etc in run_benchamrks_general)
     - full likelihood (likely just python side)
     - gradient kernel (+python code)
 - take a solid stab at curvature
