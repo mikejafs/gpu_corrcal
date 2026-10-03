@@ -78,9 +78,10 @@
 
 ## 2026-10-01
 - Finish remaining corrcal functions and kernels and add to src code
-  - Finish coding robust accuracy checker against cpu reference for remainder of functions
+  - ~~Finish coding robust accuracy checker against cpu reference for remainder of functions~~
   - Remaining:
-    - multiply vec by mat (JUST NEED TO CHECK BENCHMARKING) 
+    - ~~multiply vec by mat (JUST NEED TO CHECK BENCHMARKING)~~ 
+    - Try and add text to plots or a title to show which kernel or function is being tested
     - apply gains
     - full likelihood (likely just python side)
     - gradient kernel (+python code)

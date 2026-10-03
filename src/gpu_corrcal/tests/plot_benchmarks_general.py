@@ -18,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FixedFormatter
 
-PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_logdet/benchmark_data"
+PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_matvec/benchmark_data"
 
 X_LABELS = {
     "nant":      r"$\mathbf{Number\ of\ Antennas}$",
@@ -241,7 +241,7 @@ if __name__ == "__main__":
     # One file, all its series (2, 3, or 4 lines — whatever the target had):
     # file_name = "src/gpu_corrcal/tests2/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_5070_20260730_183002.npz"
     # file_name = "src/gpu_corrcal/tests2/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_A40_20260803_220244.npz"
-    file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_logdet/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_A40_20261003_003426.npz"
+    file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_matvec/benchmark_data/nant_targetmatvec_n_eig3_n_src5_tpb128_seed42_A40_20261003_011036.npz"
     # plot_benchmark(file_name)
 
     # With fits, only fit the CPU line, mark CHORD's 512 antennas:
