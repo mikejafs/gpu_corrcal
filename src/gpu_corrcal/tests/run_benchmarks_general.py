@@ -45,19 +45,39 @@ from corrcal import linalg
 
 # DATA_DIR = "/home/mikejafs/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
 
-def _resolve_data_dir():
-    """Pick the benchmark_data dir based on which machine we're on,
-    using the same get_machine_label() the filenames/plots key on."""
-    _, file_label = get_machine_label()
-    if "5070" in file_label:
-        return "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
-    elif "A40" in file_label:
-        return "/home/mikejafs/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
-    else:
-        raise RuntimeError(f"unrecognized machine label {file_label!r}; "
-                           f"add its data dir to _resolve_data_dir()")
+# def _resolve_data_dir():
+#     """Pick the benchmark_data dir based on which machine we're on,
+#     using the same get_machine_label() the filenames/plots key on."""
+#     _, file_label = get_machine_label()
+#     if "5070" in file_label:
+#         return "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
+#     elif "A40" in file_label:
+#         return "/home/mikejafs/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
+#     else:
+#         raise RuntimeError(f"unrecognized machine label {file_label!r}; "
+#                            f"add its data dir to _resolve_data_dir()")
 
-DATA_DIR = _resolve_data_dir()
+# DATA_DIR = _resolve_data_dir()
+
+from pathlib import Path
+
+TESTS_DIR = Path(__file__).resolve().parent
+
+# target name -> per-kernel test folder
+TARGET_DIRS = {
+    "inv":               "tests_invcov",
+    "logdet":            "tests_logdet",
+    "logdet_vs_onlyinv": "tests_logdet",
+    "matvec":            "tests_matvec",
+}
+
+def data_dir(target):
+    """benchmark_data folder for a target, created if missing."""
+    if target not in TARGET_DIRS:
+        raise KeyError(f"no output folder for target {target!r}; add it to TARGET_DIRS")
+    d = TESTS_DIR / TARGET_DIRS[target] / "benchmark_data"
+    d.mkdir(parents=True, exist_ok=True)
+    return d
 
 # ============================================================
 # Target registry — THE ONLY PLACE THAT KNOWS ABOUT SPECIFIC
@@ -227,11 +247,13 @@ def _save_results(sweep, x_values, series_names, series_times, params):
       ...plus all fixed params passed in `params`
     """
     title_label, file_label = get_machine_label()
-    os.makedirs(DATA_DIR, exist_ok=True)
+    # os.makedirs(DATA_DIR, exist_ok=True)
+    out_dir = data_dir(params["target"])
     tstamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     param_str = "_".join(f"{k}{v}" for k, v in params.items())
-    data_file = f"{DATA_DIR}/{sweep}_{param_str}_{file_label}_{tstamp}.npz"
+    # data_file = f"{DATA_DIR}/{sweep}_{param_str}_{file_label}_{tstamp}.npz"
+    data_file = str(out_dir / f"{sweep}_{param_str}_{file_label}_{tstamp}.npz")
 
     np.savez(data_file,
              sweep=sweep,
