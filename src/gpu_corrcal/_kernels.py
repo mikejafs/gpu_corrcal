@@ -20,6 +20,7 @@ _fused_chol_inv = _load("fused_chol_inv_kernel")
 _diffuse_bar_kernel = _load("diffuse_bar_kernel")
 _sig_prime_kernels = _load("sig_prime_kernels_pta")
 _matvec_mul_kernels = _load("sparse_cov_times_vec")
+_apply_gains_kernel = _load("apply_gains")
 
 
 sync_device = _warp_reduction_kernel.sync_device
@@ -172,5 +173,18 @@ sparse_cov_times_vec.argtypes = [
     ctypes.c_int,      # n_src
     ctypes.c_int,      # n_eig
     ctypes.c_int,      # is_inv
+    ctypes.c_void_p,   # cudaStream_t
+]
+
+apply_gains_launch = _apply_gains_kernel.launch_apply_gains
+apply_gains_launch.restype = ctypes.c_int
+apply_gains_launch.argtypes = [
+    ctypes.c_void_p,   # gains  (2*n_ant,) float32, Re/Im alternating
+    ctypes.c_void_p,   # ant_1  (n_bl,) int32
+    ctypes.c_void_p,   # ant_2  (n_bl,) int32
+    ctypes.c_void_p,   # mat    (2*n_bl, n_col) float32
+    ctypes.c_void_p,   # out    (2*n_bl, n_col) float32
+    ctypes.c_int,      # n_bl
+    ctypes.c_int,      # n_col
     ctypes.c_void_p,   # cudaStream_t
 ]

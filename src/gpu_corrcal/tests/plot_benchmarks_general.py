@@ -18,7 +18,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FixedFormatter
 
-PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_matvec/benchmark_data"
+PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_matvec/benchmark_plots"
+# PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_logdet/benchmark_plots"
+
 
 X_LABELS = {
     "nant":      r"$\mathbf{Number\ of\ Antennas}$",
@@ -27,9 +29,21 @@ X_LABELS = {
     "neig_nsrc": r"$\mathbf{Number\ of\ Eigenmodes\ and\ Sources}$",
 }
 
+TARGET_TITLES = {
+    "inv":               r"Inverse\ Covariance",
+    "logdet":            r"Inverse\ Covariance\ +\ Log\ Determinant",
+    "logdet_vs_onlyinv": r"Log\ Determinant\ Overhead",
+    "matvec":            r"Sparse\ Covariance\ \times\ Vector",
+}
+
 # marker cycle — extended past 3 so 4+ series each get a distinct marker
 MARKERS = ["-P", "-p", "-o", "-s", "-^", "-D", "-v", "-X"]
 
+
+def _make_suptitle(b):
+    target = str(b.get("target", ""))
+    name = TARGET_TITLES.get(target, target.replace("_", r"\_"))
+    return rf"$\mathbf{{{name}}}$" if name else ""
 
 # ------------------------------------------------------------
 def load_benchmark(npz_path):
@@ -168,7 +182,11 @@ def plot_benchmark(npz_path, save_plot=False, only=None, exclude=None,
         series = [(l, t) for l, t in series if l not in exclude]
 
     _setup_style()
-    fig, ax = plt.subplots()
+    fig, ax = plt.subplots(layout="constrained")
+    st = fig.suptitle(_make_suptitle(b), fontsize=21)
+    fig.canvas.draw()
+    pos = ax.get_position()
+    st.set_x(pos.x0 + pos.width / 1.9)
 
     plot_fn = ax.loglog if sweep == "nant" else ax.semilogy
     for (lbl, times), m in zip(series, MARKERS):
@@ -186,12 +204,14 @@ def plot_benchmark(npz_path, save_plot=False, only=None, exclude=None,
     ax.tick_params(axis="both", which="major", labelsize=18, length=6, width=1.5)
     ax.set_xlabel(X_LABELS.get(sweep, ""), fontsize=18)
     ax.set_ylabel(r"$\mathbf{Average\ Run\ Time\ (s)}$", fontsize=18)
-    ax.set_title(_make_title(b), fontsize=19)
+    ax.set_title(_make_title(b), fontsize=15, loc="center")
     ax.grid(axis="y", alpha=0.5)
     ax.legend(fontsize=16)
 
     _save_fig(npz_path, save_plot)
-    plt.show()
+    plt.pause(10)
+    plt.close()
+    # plt.show()
     return fig, ax
 
 
@@ -242,11 +262,13 @@ if __name__ == "__main__":
     # file_name = "src/gpu_corrcal/tests2/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_5070_20260730_183002.npz"
     # file_name = "src/gpu_corrcal/tests2/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_A40_20260803_220244.npz"
     file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_matvec/benchmark_data/nant_targetmatvec_n_eig3_n_src5_tpb128_seed42_A40_20261003_011036.npz"
+    # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_logdet/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_A40_20261003_003426.npz"
     # plot_benchmark(file_name)
 
     # With fits, only fit the CPU line, mark CHORD's 512 antennas:
-    plot_benchmark(file_name, power_law_fits=True, fit_on=["Inv+logdet"],
-                   chord_marker=True, min_t = 1e-5, save_plot=False)
+    plot_benchmark(file_name, power_law_fits=True, fit_on=["CuPy"],
+                   chord_marker=True, min_t = 1e-5, save_plot=True)
+
 
     # Drop a series without regenerating data:
     # plot_benchmark(path, exclude=["CPU"])

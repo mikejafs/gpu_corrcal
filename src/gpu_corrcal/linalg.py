@@ -286,3 +286,28 @@ def sparse_cov_vec_mul(
     )
 
     return out
+
+
+MAX_N_COL = 20
+
+def gpu_apply_gains(gains, mat, ant_1, ant_2, out=None, check=True):
+    """GPU port of corrcal.utils.apply_gains_to_mat. mat: (2*n_bl, n_col) float32."""
+    n_bl, n_col = ant_1.shape[0], mat.shape[1]
+    if check:
+        assert gains.dtype == cp.float32 and mat.dtype == cp.float32
+        assert ant_1.dtype == cp.int32 and ant_2.dtype == cp.int32
+        assert mat.flags.c_contiguous and mat.shape[0] == 2 * n_bl
+        assert 1 <= n_col <= MAX_N_COL, f"n_col={n_col} outside compiled grid"
+        if out is not None:
+            assert out.data.ptr != mat.data.ptr, "out must not alias mat"
+    if out is None:
+        out = cp.empty_like(mat)
+    ret = apply_gains_launch(
+        gains.data.ptr, ant_1.data.ptr, ant_2.data.ptr,
+        mat.data.ptr, out.data.ptr,
+        ctypes.c_int(n_bl), ctypes.c_int(n_col),
+        ctypes.c_void_p(cp.cuda.get_current_stream().ptr),
+    )
+    if ret != 0:
+        raise RuntimeError(f"apply_gains dispatch failed: n_col={n_col}")
+    return out

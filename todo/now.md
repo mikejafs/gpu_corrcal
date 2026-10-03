@@ -81,7 +81,7 @@
   - ~~Finish coding robust accuracy checker against cpu reference for remainder of functions~~
   - Remaining:
     - ~~multiply vec by mat (JUST NEED TO CHECK BENCHMARKING)~~ 
-    - Try and add text to plots or a title to show which kernel or function is being tested
+    - ~~Try and add text to plots or a title to show which kernel or function is being tested~~
     - apply gains
     - full likelihood (likely just python side)
     - gradient kernel (+python code)

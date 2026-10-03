@@ -1,15 +1,18 @@
 """
 CPU references: thin adapters over r-pascua/corrcal (float64).
 
-Each function takes host data from accuracy_helpers.make_host_data and
-returns a dict of NumPy arrays in gpu_corrcal's flat layout, so the cache
-can store it directly. Every computation goes through CorrCal's own code
-path (SparseCov, corrcal.linalg); nothing here reimplements the math.
+Expensive references (ref_logdet, ref_matvec_*) take host data from
+accuracy_helpers.make_host_data and return a dict of NumPy arrays, so
+accuracy_helpers.cached can store them with np.savez. Cheap references
+(ref_apply_gains) return the array directly and are not cached. Every
+computation goes through CorrCal's own code path; nothing here
+reimplements the math.
 """
 
 import numpy as np
 from corrcal import linalg as cc_linalg
 from corrcal.sparse import SparseCov
+from corrcal.utils import apply_gains_to_mat
 
 
 def _cov(noise, diffuse, source, edges, n_eig, isinv=False):
@@ -110,3 +113,11 @@ def ref_matvec_inv(d):
         "out": out,
         "scale": term_scale(ninv32, dbar32, sbar32, d["vec"], d["edges"]),
     }
+
+
+def ref_apply_gains(gains, mat, ant_1, ant_2):
+    """corrcal.utils.apply_gains_to_mat in float64 on the same float32 inputs."""
+    return apply_gains_to_mat(
+        np.asarray(gains, dtype=np.float64), np.asarray(mat, dtype=np.float64),
+        np.asarray(ant_1, dtype=np.int64), np.asarray(ant_2, dtype=np.int64),
+    )
