@@ -2,6 +2,7 @@ import numpy as np
 import cupy as cp
 from typing import Any
 # from zp_puregpu_funcs_py import *
+from gpu_corrcal.utils.zp_puregpu_funcs_py import *
 from cupyx.profiler import benchmark
 
 def sparse_cov_times_vec(N, Del, Sig, vec, isinv):
@@ -33,7 +34,7 @@ Separating the zeropadding of the gains matrix into its own funnction and making
 -----------------------------------------------------------------------------------------------------------------------
 """
 
-def zeropad_gains(gains, edges, ant_1_array, ant_2_array, xp=cp, return_inv=False):
+def zeropad_gains(gains, edges, ant_1_array, ant_2_array, xp=cp, return_inv=False, dtype=cp.float32):
     """
     Zeropads and constructs the gain matrix used to apply gains to the source and
     diffuse matrices.
@@ -65,12 +66,12 @@ def zeropad_gains(gains, edges, ant_1_array, ant_2_array, xp=cp, return_inv=Fals
 
     # initialize gain mat to be zeropadded
     # gain_mat = xp.zeros((len(complex_gains), 1))
-    gain_mat = xp.zeros((2*len(tmp_gain_mat), 1))
+    gain_mat = xp.zeros((2*len(tmp_gain_mat), 1), dtype=dtype)
 
     # Re/Im split the gain mat and zeropad using edges array
     gain_mat[::2] = tmp_gain_mat.real
     gain_mat[1::2] = tmp_gain_mat.imag
-    zp_gain_mat, largest_block, n_blocks = zeroPad(gain_mat, edges, return_inv=False)
+    zp_gain_mat, largest_block, n_blocks = zeroPad(gain_mat, edges, return_inv=False, dtype=dtype)
     # print(zp_gain_mat.shape)
     zp_gain_mat = zp_gain_mat.reshape(n_blocks*largest_block, 1)
     # print(zp_gai-n_mat.shape)
@@ -187,7 +188,7 @@ def apply_gains_to_mat(
 
         #re-assemble and re-shape the (now zeropadded) complex gain mat
         re_zp_gain_mat = zp_gain_mat[::2]
-        im_zp_gain_mat = zp_gain_mat[1::2]
+        im_zp_gain_mat = zp_gain_mat[1::2] 
         cplex_gain_mat = re_zp_gain_mat + 1j*im_zp_gain_mat
         cplex_gain_mat = cplex_gain_mat.reshape(n_blocks, largest_block//2, 1)  #really shouldn't need the floor devision
         # if edges array has even number of entries for every block, but leaving in for now

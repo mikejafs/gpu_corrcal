@@ -292,6 +292,9 @@ MAX_N_COL = 20
 
 def gpu_apply_gains(gains, mat, ant_1, ant_2, out=None, check=True):
     """GPU port of corrcal.utils.apply_gains_to_mat. mat: (2*n_bl, n_col) float32."""
+    
+    "TODO: switch the internally allocated out initialization to a ws buffer when writing the full pipeline"
+    "For now, just pass initialization outside of wrapper into the out parameter"
     n_bl, n_col = ant_1.shape[0], mat.shape[1]
     if check:
         assert gains.dtype == cp.float32 and mat.dtype == cp.float32

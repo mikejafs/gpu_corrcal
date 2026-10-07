@@ -84,6 +84,7 @@
     - ~~Try and add text to plots or a title to show which kernel or function is being tested~~
     - apply gains 
       - in the middle of setting up the benchmark runs (building targets -- lines 165 etc in run_benchamrks_general)
+      - Better get a sense for what actually needs zeropadding on the cupy side of things to know what to benchmark and then get back to building the functions out (assuming for now would have beeen able to pass zeropadded gains to GC solver)
     - full likelihood (likely just python side)
     - gradient kernel (+python code)
 - take a solid stab at curvature
