@@ -264,14 +264,14 @@ if __name__ == "__main__":
     # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_matvec/benchmark_data/nant_targetmatvec_n_eig3_n_src5_tpb128_seed42_A40_20261003_011036.npz"
     # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_logdet/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_A40_20261003_003426.npz"
     # plot_benchmark(file_name)
-    file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_nll/benchmark_data/nant_targetnll_n_eig3_n_src5_tpb128_seed42_A40_20261014_063349.npz"
+    file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_nll/benchmark_data/nant_targetnll_n_eig2_n_src1_tpb128_seed42_A40_20261014_150051.npz"
 
     # With fits, only fit the CPU line, mark CHORD's 512 antennas:
     # plot_benchmark(file_name, power_law_fits=True, fit_on=["CuPy"],
     #                chord_marker=True, min_t = 1e-5, save_plot=False)
 
     plot_benchmark(file_name, power_law_fits=True, fit_on=["CPU"],
-                   chord_marker=True, min_t = 1e-5, save_plot=True)
+                   chord_marker=True, min_t = 1e-5, save_plot=False)
 
 
     # Drop a series without regenerating data:

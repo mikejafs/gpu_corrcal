@@ -245,8 +245,7 @@ def pop_row_col_input(end_iter_num):
 def pop_row_col_input_tens(iter_num):
     """Generates the same nant inputs as Bobby's paper plot."""
     row_col_list = []
-    # coeff = [1, 2, 3, 5]
-    coeff = [1, 2]
+    coeff = [1, 2, 3, 5]
     for n in range(iter_num + 1):
         for c in coeff:
             ant_val = c * 10 ** (n + 1)
@@ -254,7 +253,7 @@ def pop_row_col_input_tens(iter_num):
                 if ant_val % i == 0:
                     row_col_list.append([i, ant_val // i])
                     break
-    return row_col_list
+    return row_col_list[:-2]
 
 
 # ============================================================
