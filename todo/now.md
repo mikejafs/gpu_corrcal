@@ -97,3 +97,4 @@
     - gradient kernel (+python code)
 - take a solid stab at curvature
 - start getting bandpass going
+
