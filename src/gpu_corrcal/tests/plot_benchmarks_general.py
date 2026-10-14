@@ -20,7 +20,7 @@ from matplotlib.ticker import FixedLocator, FixedFormatter
 
 # PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_matvec/benchmark_plots"
 # PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_logdet/benchmark_plots"
-PLOR_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_applygains/benchmark_data"
+PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_applygains/benchmark_data"
 
 X_LABELS = {
     "nant":      r"$\mathbf{Number\ of\ Antennas}$",
@@ -264,14 +264,14 @@ if __name__ == "__main__":
     # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_matvec/benchmark_data/nant_targetmatvec_n_eig3_n_src5_tpb128_seed42_A40_20261003_011036.npz"
     # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_logdet/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_A40_20261003_003426.npz"
     # plot_benchmark(file_name)
-    file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_applygains/benchmark_data/nant_targetapplygains_n_eig3_n_src5_tpb128_seed42_5070_20261013_210757.npz"
+    file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_applygains/benchmark_data/nant_targetapplygains_n_eig3_n_src5_tpb128_seed42_A40_20261014_014618.npz"
 
     # With fits, only fit the CPU line, mark CHORD's 512 antennas:
     # plot_benchmark(file_name, power_law_fits=True, fit_on=["CuPy"],
     #                chord_marker=True, min_t = 1e-5, save_plot=False)
 
-    plot_benchmark(file_name, power_law_fits=False,
-                   chord_marker=False, min_t = 1e-5, save_plot=False)
+    plot_benchmark(file_name, power_law_fits=True, fit_on=["CPU"],
+                   chord_marker=True, min_t = 1e-5, save_plot=True)
 
 
     # Drop a series without regenerating data:

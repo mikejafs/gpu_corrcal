@@ -1,0 +1,21 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.4, pytest-9.1.1, pluggy-1.6.0 -- /home/mikej/miniconda3/envs/gpu_corrcal/bin/python3.14
+cachedir: .pytest_cache
+rootdir: /home/mikej/main_phd_work/thesis_projects/gpu_corrcal
+configfile: pyproject.toml
+collecting ... collected 4 items
+
+test_accuracy_apply_gains.py::test_apply_gains_diffuse[18x32-eig3] 
+  G Delta                max=6.08e-08 (block   786)  median=4.37e-08  over_tol=0/1102  tol=1e-05  PASS
+PASSED
+test_accuracy_apply_gains.py::test_apply_gains_diffuse[32x48-eig3] 
+  G Delta                max=6.55e-08 (block  2986)  median=4.36e-08  over_tol=0/2992  tol=1e-05  PASS
+PASSED
+test_accuracy_apply_gains.py::test_apply_gains_source[18x32-src5] 
+  G Sigma                max=6.98e-08 (block  1044)  median=4.37e-08  over_tol=0/1102  tol=1e-05  PASS
+PASSED
+test_accuracy_apply_gains.py::test_apply_gains_source[32x48-src5] 
+  G Sigma                max=5.79e-08 (block  2986)  median=4.36e-08  over_tol=0/2992  tol=1e-05  PASS
+PASSED
+
+============================== 4 passed in 2.35s ===============================
