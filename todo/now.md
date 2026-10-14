@@ -86,6 +86,14 @@
       - ~~in the middle of setting up the benchmark runs (building targets -- lines 165 etc in run_benchamrks_general)~~
       - ~~Better get a sense for what actually needs zeropadding on the cupy side of things to know what to benchmark and then get back to building the functions out (assuming for now would have beeen able to pass zeropadded gains to GC solver) ~~
     - full likelihood (likely just python side)
+        NEED TO LOOK INTO THE FOLLOWING NOTES FOR BMARKING NLL FROM CLAUDE:
+       5. Switchboard (line 394): target = "nll"
+
+          Notes:
+  
+          CPU cost per call: one CPU nll call is a gain application, a full inverse and a matvec. With n_rep=1000, the large-antenna points will take a very long time. Add the max_duration=30.0 and n_warmup=1 change for the CPU series in timing_test (line 211) before running the n_ant sweep.
+          Fair comparison: the GPU time includes the final float() device-to-host sync. That’s the real per-evaluation cost an optimizer would pay, so it belongs in the comparison.
+          Extra GPU memory: GpuSparseCov allocates its own workspace for every target build, roughly the size of InvCovWorkspace plus two gained matrices. This is fine on the A40. To avoid it for other targets, pass ws= from a shared CovWorkspace.
     - gradient kernel (+python code)
 - take a solid stab at curvature
 - start getting bandpass going
