@@ -245,7 +245,8 @@ def pop_row_col_input(end_iter_num):
 def pop_row_col_input_tens(iter_num):
     """Generates the same nant inputs as Bobby's paper plot."""
     row_col_list = []
-    coeff = [1, 2, 3, 5]
+    # coeff = [1, 2, 3, 5]
+    coeff = [1, 2]
     for n in range(iter_num + 1):
         for c in coeff:
             ant_val = c * 10 ** (n + 1)
@@ -389,8 +390,8 @@ if __name__ == "__main__":
     # -------------------------------
     rows = 32
     cols = 16
-    n_eig = 3
-    n_src = 5
+    n_eig = 2
+    n_src = 1
     rc = (rows, cols)
     random_seed = 42
     tpb = 128
