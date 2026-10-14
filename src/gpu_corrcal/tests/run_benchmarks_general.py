@@ -408,9 +408,9 @@ if __name__ == "__main__":
 
     # Switch board
     # -------------------------------
-    one_timing_test = T
+    one_timing_test = F
     many_timing_tests = F
-    bench_nant = F
+    bench_nant = T
     bench_neig = F
     bench_nsrc = F
     bench_neig_nsrc = F
