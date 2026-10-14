@@ -22,7 +22,7 @@ class SimCorrcalParams():
 
     def ant_arrays(self):
         ant_1_array, ant_2_array = cp.tril_indices(self.n_ant, k=-1)
-        return ant_1_array, ant_2_array
+        return ant_1_array.astype(cp.int32), ant_2_array.astype(cp.int32)
     
     def n_bl(self):
         ant_1_array = self.ant_arrays()[0]

@@ -41,6 +41,7 @@ cudart = ctypes.CDLL("libcudart.so")
 
 from corrcal.sparse import *
 from corrcal import linalg
+from corrcal import utils
 
 
 # DATA_DIR = "/home/mikejafs/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
@@ -69,7 +70,7 @@ TARGET_DIRS = {
     "logdet":            "tests_logdet",
     "logdet_vs_onlyinv": "tests_logdet",
     "matvec":            "tests_matvec",
-    "apply_gains":       "tests_applygains"
+    "applygains":       "tests_applygains"
 }
 
 def data_dir(target):
@@ -109,6 +110,7 @@ def _build_targets(test_data, n_eig):
     vec = test_data["data_vec"]
     gains = test_data["gains"]
     ant_arrays = test_data["ant_arrays"]
+    ant1_arr, ant2_arr = ant_arrays
 
     # CPU-side copies (float64) for the corrcal reference
     cpu_diffuse = cp.asnumpy(diffuse).astype(np.float64)
@@ -117,6 +119,7 @@ def _build_targets(test_data, n_eig):
     cpu_source = cp.asnumpy(source).astype(np.float64)
     cpu_vec = cp.asnumpy(vec).astype(np.float64)
     cpu_gains = cp.asnumpy(gains).astype(np.float64)
+    cpu_ant1_arr, cpu_ant2_arr = cp.asnumpy(ant1_arr).astype(np.int32), cp.asnumpy(ant2_arr).astype(np.int32)
 
     # Shared setup ------------------------------------------------------
     ws = InvCovWorkspace(diffuse, source, edges)
@@ -126,6 +129,7 @@ def _build_targets(test_data, n_eig):
     zp_diffuse, lb, nb = zeroPad(diffuse, edges, return_inv=False, dtype=cp.float32)
     zp_source, lb, nb = zeroPad(source, edges, return_inv=False, dtype=cp.float32)
     zp_vec, _, _ = zeroPad(vec, edges, return_inv=False, dtype=cp.float32)
+    # zp_gains, _, _ = zeroPad(gains, edges, return_inv=False, dtype=cp.float32)
 
     zp_cplex_gain_mat = cupy_utils.zeropad_gains(gains, edges, ant_arrays[0], ant_arrays[1], cp, False)
 
@@ -162,9 +166,9 @@ def _build_targets(test_data, n_eig):
         },
 
         "applygains": {
-            "Custom GPU": (gpu_apply_gains, (noise, diffuse, source, vec, edges, out, True)),
-            "CuPy":       (cupy_utils.sparse_cov_times_vec, (zp_inv_noise, zp_diffuse, zp_source, zp_vec, True)),
-            "CPU":        (linalg.sparse_cov_times_vec, (cpu_sparse_cov, cpu_vec)),
+            "Custom GPU": (gpu_apply_gains, (noise, diffuse, ant1_arr, ant2_arr, None, True)),
+            "CuPy":       (cupy_utils.apply_gains, (zp_cplex_gain_mat, zp_diffuse, cp)),
+            "CPU":        (utils.apply_gains_to_mat, (cpu_gains, cpu_diffuse, cpu_ant1_arr, cpu_ant2_arr)),
         },
 
         # ---- stubs for functions still to come; fill in and uncomment ----
@@ -386,12 +390,12 @@ if __name__ == "__main__":
     # -------------------------------
     # "inv" | "logdet" | "logdet_vs_onlyinv" | (later) "matvec" | ...
     # target = "logdet_vs_onlyinv"
-    target = "matvec"
-    target = "apply_gains"
+    # target = "matvec"
+    target = "applygains"
 
     # Switch board
     # -------------------------------
-    one_timing_test = F
+    one_timing_test = T
     many_timing_tests = F
     bench_nant = T
     bench_neig = F
