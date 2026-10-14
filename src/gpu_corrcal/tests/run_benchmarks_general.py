@@ -43,6 +43,10 @@ from corrcal.sparse import *
 from corrcal import linalg
 from corrcal import utils
 
+from gpu_corrcal.sparse import GpuSparseCov
+from gpu_corrcal.optimize import nll as gpu_nll
+from corrcal.optimize import nll as cpu_nll
+
 
 # DATA_DIR = "/home/mikejafs/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
 
@@ -70,7 +74,9 @@ TARGET_DIRS = {
     "logdet":            "tests_logdet",
     "logdet_vs_onlyinv": "tests_logdet",
     "matvec":            "tests_matvec",
-    "applygains":       "tests_applygains"
+    "applygains":       "tests_applygains",
+    "applygains":       "tests_applygains",
+    "nll":              "tests_nll",
 }
 
 def data_dir(target):
@@ -134,6 +140,8 @@ def _build_targets(test_data, n_eig):
     zp_cplex_gain_mat = cupy_utils.zeropad_gains(gains, edges, ant_arrays[0], ant_arrays[1], cp, False)
 
     cpu_sparse_cov = SparseCov(cpu_noise, cpu_source, cpu_diffuse, cpu_edges, n_eig, False)
+    gpu_sparse_cov = GpuSparseCov(noise, source, diffuse, edges, n_eig)
+    cpu_ant1_64, cpu_ant2_64 = cpu_ant1_arr.astype(np.int64), cpu_ant2_arr.astype(np.int64)
 
     # Registry ----------------------------------------------------------
     targets = {
@@ -170,7 +178,11 @@ def _build_targets(test_data, n_eig):
             "CuPy":       (cupy_utils.apply_gains, (zp_cplex_gain_mat, zp_diffuse, cp)),
             "CPU":        (utils.apply_gains_to_mat, (cpu_gains, cpu_diffuse, cpu_ant1_arr, cpu_ant2_arr)),
         },
-
+        
+        "nll": {
+            "Custom GPU": (gpu_nll, (gains, gpu_sparse_cov, vec, ant1_arr, ant2_arr)),
+            "CPU":        (cpu_nll, (cpu_gains, cpu_sparse_cov, cpu_vec, cpu_ant1_64, cpu_ant2_64)),
+        },
         # ---- stubs for functions still to come; fill in and uncomment ----
         
         
@@ -391,13 +403,14 @@ if __name__ == "__main__":
     # "inv" | "logdet" | "logdet_vs_onlyinv" | (later) "matvec" | ...
     # target = "logdet_vs_onlyinv"
     # target = "matvec"
-    target = "applygains"
+    # target = "applygains"
+    target = "nll"
 
     # Switch board
     # -------------------------------
     one_timing_test = T
     many_timing_tests = F
-    bench_nant = T
+    bench_nant = F
     bench_neig = F
     bench_nsrc = F
     bench_neig_nsrc = F
