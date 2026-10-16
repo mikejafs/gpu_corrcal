@@ -314,3 +314,194 @@ def gpu_apply_gains(gains, mat, ant_1, ant_2, out=None, check=True):
     if ret != 0:
         raise RuntimeError(f"apply_gains dispatch failed: n_col={n_col}")
     return out
+
+
+
+
+# class GradWorkspace:
+#     """
+#     Preallocated scratch for launch_grad_nll, plus the antenna -> baseline
+#     CSR used by the gather kernel.
+ 
+#     ant_1 / ant_2 are fixed for a whole solve, so build this once before
+#     scipy.optimize.minimize and pass it to every gradient call.
+ 
+#     csr_idx entries are e = 2k + role (role 0: antenna is ant_1[k], role 1:
+#     ant_2[k]). Viewed as float2[2 n_bl], contrib is indexed directly by e.
+#     Entries are sorted by (antenna, e), so each warp's loads walk contrib in
+#     increasing address order.
+ 
+#     del_tmp, contrib, out: fully overwritten every call, cp.empty-safe.
+#     sig_tmp, phs_sum: atomic accumulators, zeroed inside the C launcher.
+#     """
+ 
+#     def __init__(self, ant_1, ant_2, n_ant, nb, n_eig, n_src):
+#         a1 = cp.asarray(ant_1, dtype=cp.int32)
+#         a2 = cp.asarray(ant_2, dtype=cp.int32)
+#         n_bl = a1.shape[0]
+#         self.n_ant, self.n_bl, self.nb = int(n_ant), int(n_bl), int(nb)
+#         self.n_eig, self.n_src = int(n_eig), int(n_src)
+ 
+#         owner = cp.concatenate([a1, a2])
+#         k = cp.arange(n_bl, dtype=cp.int32)
+#         entry = cp.concatenate([2 * k, 2 * k + 1])
+#         order = cp.lexsort(cp.stack([entry, owner]))       # primary key: owner
+#         self.csr_idx = cp.ascontiguousarray(entry[order]).astype(cp.int32)
+#         counts = cp.bincount(owner, minlength=self.n_ant)
+#         self.csr_ptr = cp.zeros(self.n_ant + 1, dtype=cp.int32)
+#         self.csr_ptr[1:] = cp.cumsum(counts).astype(cp.int32)
+ 
+#         self.del_tmp = cp.empty((self.nb, self.n_eig), dtype=cp.float32)
+#         self.sig_tmp = cp.empty(self.n_src, dtype=cp.float32)
+#         self.phs_sum = cp.empty(1, dtype=cp.float32)
+#         self.contrib = cp.empty((self.n_bl, 4), dtype=cp.float32)
+#         self.out = cp.empty(2 * self.n_ant, dtype=cp.float32)
+ 
+ 
+# def gpu_grad_nll(gains, p, gained, cinv, cov, ant_1, ant_2, ws,
+#                  phs_coef=0.0, inv_scale=1.0, check=True):
+#     """
+#     Launch the fused gradient (K1 reduce, K2 per-baseline, K3 per-antenna gather).
+ 
+#     gains  : (2 n_ant,) float32, ALREADY divided by scale
+#     p      : (n_row,) float32, C^-1 d
+#     gained : GpuSparseCov after apply_gains (diff_mat / src_mat = G Delta, G Sigma)
+#     cinv   : gained.inv() result (diff_mat / src_mat = Delta_bar, Sigma_bar)
+#     cov    : ungained GpuSparseCov (noise, Delta, Sigma)
+#     ant_1, ant_2 : (n_bl,) int32 device
+#     ws     : GradWorkspace
+ 
+#     Returns ws.out, the (2 n_ant,) float32 gradient on device. Overwritten by
+#     the next call; copy it if it must survive.
+#     """
+#     n_row = p.shape[0]
+#     n_bl = n_row // 2
+#     nb = cov.edges.shape[0] - 1
+#     n_eig, n_src = cov.diff_mat.shape[1], cov.src_mat.shape[1]
+#     n_ant = gains.shape[0] // 2
+ 
+#     if check:
+#         f32 = (gains, p, gained.diff_mat, gained.src_mat, cov.diff_mat, cov.src_mat,
+#                cinv.diff_mat, cinv.src_mat, cov.noise)
+#         assert all(a.dtype == cp.float32 and a.flags.c_contiguous for a in f32)
+#         assert ant_1.dtype == cp.int32 and ant_2.dtype == cp.int32
+#         assert cov.edges.dtype == cp.int32
+#         assert (ws.n_bl, ws.n_ant, ws.nb, ws.n_eig, ws.n_src) == (n_bl, n_ant, nb, n_eig, n_src), \
+#             "GradWorkspace shape does not match this problem"
+#         assert 1 <= n_eig <= MAX_N_COL and 1 <= n_src <= MAX_N_COL
+ 
+#     ret = grad_nll_launch(
+#         n_src, n_eig, nb, n_bl, n_ant,
+#         gained.diff_mat.data.ptr, gained.src_mat.data.ptr,
+#         cov.diff_mat.data.ptr, cov.src_mat.data.ptr,
+#         cinv.diff_mat.data.ptr, cinv.src_mat.data.ptr,
+#         cov.noise.data.ptr, p.data.ptr, gains.data.ptr,
+#         ant_1.data.ptr, ant_2.data.ptr, cov.edges.data.ptr,
+#         ws.csr_ptr.data.ptr, ws.csr_idx.data.ptr,
+#         ws.del_tmp.data.ptr, ws.sig_tmp.data.ptr, ws.phs_sum.data.ptr,
+#         ws.contrib.data.ptr, ws.out.data.ptr,
+#         ctypes.c_float(phs_coef), ctypes.c_float(inv_scale),
+#         ctypes.c_void_p(cp.cuda.get_current_stream().ptr),
+#     )
+#     if ret != 0:
+#         raise RuntimeError(f"grad_nll dispatch failed: n_src={n_src}, n_eig={n_eig}")
+#     return ws.out
+ 
+
+class GradWorkspace:
+    """
+    Preallocated scratch for launch_grad_nll, plus the antenna -> baseline
+    CSR used by the gather kernel.
+ 
+    ant_1 / ant_2 are fixed for a whole solve, so build this once before
+    scipy.optimize.minimize and pass it to every gradient call.
+ 
+    csr_idx entries are e = 2k + role (role 0: antenna is ant_1[k], role 1:
+    ant_2[k]). Viewed as float2[2 n_bl], contrib is indexed directly by e.
+    Entries are sorted by (antenna, e), so each warp's loads walk contrib in
+    increasing address order.
+ 
+    del_tmp, sig_tmp, contrib, out: fully overwritten every call, cp.empty-safe.
+    u_acc (float64), phs_sum: atomic accumulators, zeroed inside the C launcher.
+    """
+ 
+    def __init__(self, ant_1, ant_2, n_ant, nb, n_eig, n_src):
+        a1 = cp.asarray(ant_1, dtype=cp.int32)
+        a2 = cp.asarray(ant_2, dtype=cp.int32)
+        n_bl = a1.shape[0]
+        self.n_ant, self.n_bl, self.nb = int(n_ant), int(n_bl), int(nb)
+        self.n_eig, self.n_src = int(n_eig), int(n_src)
+ 
+        owner = cp.concatenate([a1, a2])
+        k = cp.arange(n_bl, dtype=cp.int32)
+        entry = cp.concatenate([2 * k, 2 * k + 1])
+        order = cp.lexsort(cp.stack([entry, owner]))       # primary key: owner
+        self.csr_idx = cp.ascontiguousarray(entry[order]).astype(cp.int32)
+        counts = cp.bincount(owner, minlength=self.n_ant)
+        self.csr_ptr = cp.zeros(self.n_ant + 1, dtype=cp.int32)
+        self.csr_ptr[1:] = cp.cumsum(counts).astype(cp.int32)
+ 
+        self.del_tmp = cp.empty((self.nb, self.n_eig), dtype=cp.float32)
+        self.sig_tmp = cp.empty(self.n_src, dtype=cp.float32)
+        self.u_acc = cp.empty(self.n_src, dtype=cp.float64)
+        self.phs_sum = cp.empty(1, dtype=cp.float32)
+        self.contrib = cp.empty((self.n_bl, 4), dtype=cp.float32)
+        self.out = cp.empty(2 * self.n_ant, dtype=cp.float32)
+ 
+ 
+def gpu_grad_nll(gains, p, data, gained, cinv, cov, ant_1, ant_2, ws,
+                 phs_coef=0.0, inv_scale=1.0, check=True):
+    """
+    Launch the fused gradient (K1 reduce, K2 per-baseline, K3 per-antenna gather).
+ 
+    gains  : (2 n_ant,) float32, ALREADY divided by scale
+    p      : (n_row,) float32, C^-1 d
+    data   : (n_row,) float32, d
+    gained : GpuSparseCov after apply_gains (diff_mat / src_mat = G Delta, G Sigma).
+             Its workspace gained.ws.inv must still hold the factors from the
+             inv() that produced cinv (L_del, B, L_sig_inv): no other inv() on
+             that workspace in between.
+    cinv   : gained.inv() result (diff_mat / src_mat = Delta_bar, Sigma_bar)
+    cov    : ungained GpuSparseCov (noise, Delta, Sigma)
+    ant_1, ant_2 : (n_bl,) int32 device
+    ws     : GradWorkspace
+ 
+    Returns ws.out, the (2 n_ant,) float32 gradient on device. Overwritten by
+    the next call; copy it if it must survive.
+    """
+    n_row = p.shape[0]
+    n_bl = n_row // 2
+    nb = cov.edges.shape[0] - 1
+    n_eig, n_src = cov.diff_mat.shape[1], cov.src_mat.shape[1]
+    n_ant = gains.shape[0] // 2
+ 
+    iw = gained.ws.inv
+    if check:
+        f32 = (gains, p, data, iw.L_del, iw.B, iw.L_sig_inv, gained.diff_mat, gained.src_mat, cov.diff_mat, cov.src_mat,
+               cinv.diff_mat, cinv.src_mat, cov.noise)
+        assert all(a.dtype == cp.float32 and a.flags.c_contiguous for a in f32)
+        assert ant_1.dtype == cp.int32 and ant_2.dtype == cp.int32
+        assert cov.edges.dtype == cp.int32
+        assert (ws.n_bl, ws.n_ant, ws.nb, ws.n_eig, ws.n_src) == (n_bl, n_ant, nb, n_eig, n_src), \
+            "GradWorkspace shape does not match this problem"
+        assert 1 <= n_eig <= MAX_N_COL and 1 <= n_src <= MAX_N_COL
+ 
+    ret = grad_nll_launch(
+        n_src, n_eig, nb, n_bl, n_ant,
+        gained.diff_mat.data.ptr, gained.src_mat.data.ptr,
+        cov.diff_mat.data.ptr, cov.src_mat.data.ptr,
+        cinv.diff_mat.data.ptr, cinv.src_mat.data.ptr,
+        iw.L_del.data.ptr, iw.B.data.ptr, iw.L_sig_inv.data.ptr,
+        cov.noise.data.ptr, p.data.ptr, data.data.ptr, gains.data.ptr,
+        ant_1.data.ptr, ant_2.data.ptr, cov.edges.data.ptr,
+        ws.csr_ptr.data.ptr, ws.csr_idx.data.ptr,
+        ws.u_acc.data.ptr, ws.phs_sum.data.ptr,
+        ws.del_tmp.data.ptr, ws.sig_tmp.data.ptr,
+        ws.contrib.data.ptr, ws.out.data.ptr,
+        ctypes.c_float(phs_coef), ctypes.c_float(inv_scale),
+        ctypes.c_void_p(cp.cuda.get_current_stream().ptr),
+    )
+    if ret != 0:
+        raise RuntimeError(f"grad_nll dispatch failed: n_src={n_src}, n_eig={n_eig}")
+    return ws.out
+ 

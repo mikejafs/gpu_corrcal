@@ -21,6 +21,7 @@ _diffuse_bar_kernel = _load("diffuse_bar_kernel")
 _sig_prime_kernels = _load("sig_prime_kernels_pta")
 _matvec_mul_kernels = _load("sparse_cov_times_vec")
 _apply_gains_kernel = _load("apply_gains")
+_grad_nll_kernels = _load("grad_nll_kernels")
 
 
 sync_device = _warp_reduction_kernel.sync_device
@@ -188,3 +189,75 @@ apply_gains_launch.argtypes = [
     ctypes.c_int,      # n_col
     ctypes.c_void_p,   # cudaStream_t
 ]
+
+
+# grad_nll_launch = _grad_nll_kernels.launch_grad_nll
+# grad_nll_launch.restype = ctypes.c_int
+# grad_nll_launch.argtypes = [
+#     ctypes.c_int,      # n_src
+#     ctypes.c_int,      # n_eig
+#     ctypes.c_int,      # nb
+#     ctypes.c_int,      # n_bl
+#     ctypes.c_int,      # n_ant
+#     ctypes.c_void_p,   # diff_g   (n_row, n_eig)  G Delta
+#     ctypes.c_void_p,   # src_g    (n_row, n_src)  G Sigma
+#     ctypes.c_void_p,   # diff     (n_row, n_eig)  Delta (ungained)
+#     ctypes.c_void_p,   # src      (n_row, n_src)  Sigma (ungained)
+#     ctypes.c_void_p,   # dbar     (n_row, n_eig)  Delta_bar
+#     ctypes.c_void_p,   # sbar     (n_row, n_src)  Sigma_bar
+#     ctypes.c_void_p,   # noise    (n_row,)        N (ungained)
+#     ctypes.c_void_p,   # p        (n_row,)        C^-1 d
+#     ctypes.c_void_p,   # gains    (2 n_ant,)      already / scale
+#     ctypes.c_void_p,   # ant_1    (n_bl,) int32
+#     ctypes.c_void_p,   # ant_2    (n_bl,) int32
+#     ctypes.c_void_p,   # edges    (nb+1,) int32
+#     ctypes.c_void_p,   # csr_ptr  (n_ant+1,) int32
+#     ctypes.c_void_p,   # csr_idx  (2 n_bl,) int32
+#     ctypes.c_void_p,   # del_tmp  (nb, n_eig)
+#     ctypes.c_void_p,   # sig_tmp  (n_src,)   zeroed in the launcher
+#     ctypes.c_void_p,   # phs_sum  (1,)       zeroed in the launcher
+#     ctypes.c_void_p,   # contrib  (n_bl, 4)
+#     ctypes.c_void_p,   # out      (2 n_ant,)
+#     ctypes.c_float,    # phs_coef = 2 / (n_ant^2 phs_norm_fac^2), 0 disables
+#     ctypes.c_float,    # inv_scale
+#     ctypes.c_void_p,   # cudaStream_t
+# ]
+
+
+grad_nll_launch = _grad_nll_kernels.launch_grad_nll
+grad_nll_launch.restype = ctypes.c_int
+grad_nll_launch.argtypes = [
+    ctypes.c_int,      # n_src
+    ctypes.c_int,      # n_eig
+    ctypes.c_int,      # nb
+    ctypes.c_int,      # n_bl
+    ctypes.c_int,      # n_ant
+    ctypes.c_void_p,   # diff_g   (n_row, n_eig)  G Delta
+    ctypes.c_void_p,   # src_g    (n_row, n_src)  G Sigma
+    ctypes.c_void_p,   # diff     (n_row, n_eig)  Delta (ungained)
+    ctypes.c_void_p,   # src      (n_row, n_src)  Sigma (ungained)
+    ctypes.c_void_p,   # dbar     (n_row, n_eig)  Delta_bar
+    ctypes.c_void_p,   # sbar     (n_row, n_src)  Sigma_bar
+    ctypes.c_void_p,   # R_del    (nb, n_eig, n_eig)  L_b^-T  (InvCovWorkspace.L_del)
+    ctypes.c_void_p,   # B        (nb, n_src, n_eig)          (InvCovWorkspace.B)
+    ctypes.c_void_p,   # L_sig_inv (n_src, n_src)             (InvCovWorkspace.L_sig_inv)
+    ctypes.c_void_p,   # noise    (n_row,)        N
+    ctypes.c_void_p,   # p        (n_row,)        C^-1 d
+    ctypes.c_void_p,   # data     (n_row,)        d
+    ctypes.c_void_p,   # gains    (2 n_ant,)      already / scale
+    ctypes.c_void_p,   # ant_1    (n_bl,) int32
+    ctypes.c_void_p,   # ant_2    (n_bl,) int32
+    ctypes.c_void_p,   # edges    (nb+1,) int32
+    ctypes.c_void_p,   # csr_ptr  (n_ant+1,) int32
+    ctypes.c_void_p,   # csr_idx  (2 n_bl,) int32
+    ctypes.c_void_p,   # u_acc    (n_src,) float64, zeroed in the launcher
+    ctypes.c_void_p,   # phs_sum  (1,)       zeroed in the launcher
+    ctypes.c_void_p,   # del_tmp  (nb, n_eig)
+    ctypes.c_void_p,   # sig_tmp  (n_src,)
+    ctypes.c_void_p,   # contrib  (n_bl, 4)
+    ctypes.c_void_p,   # out      (2 n_ant,)
+    ctypes.c_float,    # phs_coef = 2 / (n_ant^2 phs_norm_fac^2), 0 disables
+    ctypes.c_float,    # inv_scale
+    ctypes.c_void_p,   # cudaStream_t
+]
+ 

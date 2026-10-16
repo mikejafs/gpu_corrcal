@@ -46,6 +46,8 @@ from corrcal import utils
 from gpu_corrcal.sparse import GpuSparseCov
 from gpu_corrcal.optimize import nll as gpu_nll
 from corrcal.optimize import nll as cpu_nll
+from gpu_corrcal.optimize import grad_nll as gpu_grad_nll
+from corrcal.optimize import grad_nll as cpu_grad_nll
 
 
 # DATA_DIR = "/home/mikejafs/gpu_corrcal/gpu_corrcal/src/gpu_corrcal/tests2/benchmark_data"
@@ -74,9 +76,12 @@ TARGET_DIRS = {
     "logdet":            "tests_logdet",
     "logdet_vs_onlyinv": "tests_logdet",
     "matvec":            "tests_matvec",
-    "applygains":       "tests_applygains",
-    "applygains":       "tests_applygains",
-    "nll":              "tests_nll",
+    "applygains":        "tests_applygains",
+    "applygains":        "tests_applygains",
+    "nll":               "tests_nll",
+    "grad":              "tests_grad",
+    "likelihood_stack":  "tests_grad",
+    "likelihood_stack_cpu": "tests_grad",
 }
 
 def data_dir(target):
@@ -143,6 +148,18 @@ def _build_targets(test_data, n_eig):
     gpu_sparse_cov = GpuSparseCov(noise, source, diffuse, edges, n_eig)
     cpu_ant1_64, cpu_ant2_64 = cpu_ant1_arr.astype(np.int64), cpu_ant2_arr.astype(np.int64)
 
+    # Gradient workspace: antenna->baseline CSR + scratch, built once per
+    # dataset like the solver would (not inside the timed call).
+    n_ant = gains.shape[0] // 2
+    grad_ws = GradWorkspace(ant1_arr, ant2_arr, n_ant, len(edges) - 1,
+                            diffuse.shape[1], source.shape[1])
+    # positional: gains, cov, data, ant_1, ant_2, scale, phs_norm_fac, grad_ws
+    gpu_grad_args = (gains, gpu_sparse_cov, vec, ant1_arr, ant2_arr, 1, np.inf, grad_ws)
+    cpu_grad_args = (cpu_gains, cpu_sparse_cov, cpu_vec, cpu_ant1_64, cpu_ant2_64)
+    gpu_nll_args = (gains, gpu_sparse_cov, vec, ant1_arr, ant2_arr)
+    cpu_nll_args = (cpu_gains, cpu_sparse_cov, cpu_vec, cpu_ant1_64, cpu_ant2_64)
+
+
     # Registry ----------------------------------------------------------
     targets = {
         # custom vs CuPy vs CPU, inverse covariance only
@@ -179,10 +196,38 @@ def _build_targets(test_data, n_eig):
             "CPU":        (utils.apply_gains_to_mat, (cpu_gains, cpu_diffuse, cpu_ant1_arr, cpu_ant2_arr)),
         },
         
+        # "nll": {
+        #     "Custom GPU": (gpu_nll, (gains, gpu_sparse_cov, vec, ant1_arr, ant2_arr)),
+        #     "CPU":        (cpu_nll, (cpu_gains, cpu_sparse_cov, cpu_vec, cpu_ant1_64, cpu_ant2_64)),
+        # },
+        
         "nll": {
-            "Custom GPU": (gpu_nll, (gains, gpu_sparse_cov, vec, ant1_arr, ant2_arr)),
-            "CPU":        (cpu_nll, (cpu_gains, cpu_sparse_cov, cpu_vec, cpu_ant1_64, cpu_ant2_64)),
+            "Custom GPU": (gpu_nll, gpu_nll_args),
+            "CPU":        (cpu_nll, cpu_nll_args),
         },
+
+        # gradient: GPU (apply_gains + inv + matvec + 4 gradient kernels +
+        # 2*n_ant floats back to host) vs CorrCal grad_nll
+        "grad": {
+            "Custom GPU": (gpu_grad_nll, gpu_grad_args),
+            "CPU":        (cpu_grad_nll, cpu_grad_args),
+        },
+
+        # Pascua+ Fig. 2 analogue, one plot per device
+        "likelihood_stack": {
+            "Inv":        (inv_cov, (noise, diffuse, source, edges, ws, False)),
+            "Inv+logdet": (inv_cov, (noise, diffuse, source, edges, ws, True)),
+            "Likelihood": (gpu_nll, gpu_nll_args),
+            "Gradient":   (gpu_grad_nll, gpu_grad_args),
+        },
+        "likelihood_stack_cpu": {
+            "CPU Inv":        (cpu_sparse_cov.inv, ()),
+            "CPU Inv+logdet": (cpu_sparse_cov.inv, (True,)),
+            "CPU Likelihood": (cpu_nll, cpu_nll_args),
+            "CPU Gradient":   (cpu_grad_nll, cpu_grad_args),
+        },
+        
+        
         # ---- stubs for functions still to come; fill in and uncomment ----
         
         
@@ -220,7 +265,13 @@ def timing_test(n_eig, n_src, rc_tuple, threads_per_block, seed,
 
     names, times = [], []
     for name, (fn, args) in spec.items():
-        t = benchmark(fn, args, n_repeat=n_rep)
+        # t = benchmark(fn, args, n_repeat=n_rep)
+        if name.startswith("CPU"):
+            # CPU calls take ~0.1-10 s at large n_ant: one warmup, and stop
+            # after max_duration instead of running all n_rep repeats.
+            t = benchmark(fn, args, n_repeat=n_rep, n_warmup=1, max_duration=30.0)
+        else:
+            t = benchmark(fn, args, n_repeat=n_rep)
         names.append(name)
         times.append(float(cp.mean(t.gpu_times)))
 
@@ -389,8 +440,8 @@ if __name__ == "__main__":
     # -------------------------------
     rows = 32
     cols = 16
-    n_eig = 2
-    n_src = 1
+    n_eig = 3
+    n_src = 5
     rc = (rows, cols)
     random_seed = 42
     tpb = 128
@@ -404,7 +455,10 @@ if __name__ == "__main__":
     # target = "logdet_vs_onlyinv"
     # target = "matvec"
     # target = "applygains"
-    target = "nll"
+    # target = "nll"
+    # target = "grad"
+    # target = "likelihood_stack"       # GPU four-line plot
+    target = "likelihood_stack_cpu"   # CPU four-line plot
 
     # Switch board
     # -------------------------------

@@ -270,8 +270,8 @@ if __name__ == "__main__":
     # plot_benchmark(file_name, power_law_fits=True, fit_on=["CuPy"],
     #                chord_marker=True, min_t = 1e-5, save_plot=False)
 
-    plot_benchmark(file_name, power_law_fits=True, fit_on=["CPU"],
-                   chord_marker=True, min_t = 1e-5, save_plot=True)
+    plot_benchmark(file_name, power_law_fits=True, fit_on=["CPU", "Custom GPU"],
+                   chord_marker=True, min_t = 1e-5, save_plot=False)
 
 
     # Drop a series without regenerating data:

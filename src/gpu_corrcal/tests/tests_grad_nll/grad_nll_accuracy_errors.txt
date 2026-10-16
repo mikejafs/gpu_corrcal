@@ -1,0 +1,95 @@
+============================= test session starts ==============================
+platform linux -- Python 3.14.4, pytest-9.1.1, pluggy-1.6.0 -- /home/mikej/miniconda3/envs/gpu_corrcal/bin/python3.14
+cachedir: .pytest_cache
+rootdir: /home/mikej/main_phd_work/thesis_projects/gpu_corrcal
+configfile: pyproject.toml
+collecting ... collected 2 items
+
+tests_accuracy_grad_nll.py::test_grad_nll[18x32-eig3-src5-plain] 
+  grad_nll (plain)       max=2.54e-03                median=2.54e-03  over_tol=1/1  tol=1e-04  FAIL
+  worst entry 931: gpu=-5.256479e+04  cpu=-5.349484e+04
+FAILED
+tests_accuracy_grad_nll.py::test_grad_nll[18x32-eig3-src5-prior] 
+  grad_nll (prior)       max=2.17e-03                median=2.17e-03  over_tol=1/1  tol=1e-04  FAIL
+  worst entry 930: gpu=1.387599e+04  cpu=1.448307e+04
+FAILED
+
+=================================== FAILURES ===================================
+_____________________ test_grad_nll[18x32-eig3-src5-plain] _____________________
+
+rc = (18, 32), n_eig = 3, n_src = 5, seed = 12, refresh = False, case = 'plain'
+
+    @pytest.mark.parametrize("case", list(CASES))
+    def test_grad_nll(rc, n_eig, n_src, seed, refresh, case):
+        phs = CASES[case]
+        d = make_host_data(rc, n_eig, n_src, seed)
+        gains, a1, a2 = _gains_inputs(rc, seed)
+    
+        def _ref():
+            cov = _cov(d["noise"], d["diffuse"], d["source"], d["edges"], n_eig)
+            g = cpu_grad_nll(
+                gains.astype(np.float64), cov, np.asarray(d["vec"], dtype=np.float64),
+                a1.astype(np.int64), a2.astype(np.int64), scale=1, phs_norm_fac=phs,
+            )
+            return {"grad": np.asarray(g)}
+    
+        ref = cached(("grad_nll", case, rc, n_eig, n_src, seed), _ref, refresh)
+    
+        g = to_gpu(d)
+        cov = GpuSparseCov(g["noise"], g["source"], g["diffuse"], g["edges"], n_eig)
+        a1_d, a2_d = cp.asarray(a1), cp.asarray(a2)
+        ws = GradWorkspace(a1_d, a2_d, gains.size // 2, cov.n_grp, n_eig, n_src)
+        got = gpu_grad_nll(cp.asarray(gains), cov, g["vec"], a1_d, a2_d,
+                           scale=1, phs_norm_fac=phs, grad_ws=ws)
+    
+        want = ref["grad"]
+        err = np.linalg.norm(got - want) / np.linalg.norm(want)
+        passed, line = summarize(f"grad_nll ({case})", err, TOL)
+        worst = int(np.argmax(np.abs(got - want)))
+        print(f"\n  {line}\n  worst entry {worst}: gpu={got[worst]:.6e}  cpu={want[worst]:.6e}")
+>       assert passed, line
+E       AssertionError: grad_nll (plain)       max=2.54e-03                median=2.54e-03  over_tol=1/1  tol=1e-04  FAIL
+E       assert False
+
+tests_accuracy_grad_nll.py:68: AssertionError
+_____________________ test_grad_nll[18x32-eig3-src5-prior] _____________________
+
+rc = (18, 32), n_eig = 3, n_src = 5, seed = 12, refresh = False, case = 'prior'
+
+    @pytest.mark.parametrize("case", list(CASES))
+    def test_grad_nll(rc, n_eig, n_src, seed, refresh, case):
+        phs = CASES[case]
+        d = make_host_data(rc, n_eig, n_src, seed)
+        gains, a1, a2 = _gains_inputs(rc, seed)
+    
+        def _ref():
+            cov = _cov(d["noise"], d["diffuse"], d["source"], d["edges"], n_eig)
+            g = cpu_grad_nll(
+                gains.astype(np.float64), cov, np.asarray(d["vec"], dtype=np.float64),
+                a1.astype(np.int64), a2.astype(np.int64), scale=1, phs_norm_fac=phs,
+            )
+            return {"grad": np.asarray(g)}
+    
+        ref = cached(("grad_nll", case, rc, n_eig, n_src, seed), _ref, refresh)
+    
+        g = to_gpu(d)
+        cov = GpuSparseCov(g["noise"], g["source"], g["diffuse"], g["edges"], n_eig)
+        a1_d, a2_d = cp.asarray(a1), cp.asarray(a2)
+        ws = GradWorkspace(a1_d, a2_d, gains.size // 2, cov.n_grp, n_eig, n_src)
+        got = gpu_grad_nll(cp.asarray(gains), cov, g["vec"], a1_d, a2_d,
+                           scale=1, phs_norm_fac=phs, grad_ws=ws)
+    
+        want = ref["grad"]
+        err = np.linalg.norm(got - want) / np.linalg.norm(want)
+        passed, line = summarize(f"grad_nll ({case})", err, TOL)
+        worst = int(np.argmax(np.abs(got - want)))
+        print(f"\n  {line}\n  worst entry {worst}: gpu={got[worst]:.6e}  cpu={want[worst]:.6e}")
+>       assert passed, line
+E       AssertionError: grad_nll (prior)       max=2.17e-03                median=2.17e-03  over_tol=1/1  tol=1e-04  FAIL
+E       assert False
+
+tests_accuracy_grad_nll.py:68: AssertionError
+=========================== short test summary info ============================
+FAILED tests_accuracy_grad_nll.py::test_grad_nll[18x32-eig3-src5-plain] - Ass...
+FAILED tests_accuracy_grad_nll.py::test_grad_nll[18x32-eig3-src5-prior] - Ass...
+============================== 2 failed in 2.60s ===============================
