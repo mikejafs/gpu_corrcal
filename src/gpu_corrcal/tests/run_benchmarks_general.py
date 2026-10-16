@@ -457,8 +457,8 @@ if __name__ == "__main__":
     # target = "applygains"
     # target = "nll"
     # target = "grad"
-    # target = "likelihood_stack"       # GPU four-line plot
-    target = "likelihood_stack_cpu"   # CPU four-line plot
+    target = "likelihood_stack"       # GPU four-line plot
+    # target = "likelihood_stack_cpu"   # CPU four-line plot
 
     # Switch board
     # -------------------------------
