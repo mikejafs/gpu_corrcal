@@ -20,7 +20,9 @@ from matplotlib.ticker import FixedLocator, FixedFormatter
 
 # PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_matvec/benchmark_plots"
 # PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_logdet/benchmark_plots"
-PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_nll/benchmark_plots"
+# PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_nll/benchmark_plots"
+PLOT_DIR = ""
+
 
 X_LABELS = {
     "nant":      r"$\mathbf{Number\ of\ Antennas}$",
@@ -259,19 +261,14 @@ def compare_benchmarks(npz_paths, series_label=None, labels=None,
 # =========================================================================
 if __name__ == "__main__":
     # One file, all its series (2, 3, or 4 lines — whatever the target had):
-    # file_name = "src/gpu_corrcal/tests2/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_5070_20260730_183002.npz"
-    # file_name = "src/gpu_corrcal/tests2/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_A40_20260803_220244.npz"
-    # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_matvec/benchmark_data/nant_targetmatvec_n_eig3_n_src5_tpb128_seed42_A40_20261003_011036.npz"
-    # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_logdet/benchmark_data/nant_targetlogdet_vs_onlyinv_n_eig3_n_src5_tpb128_seed42_A40_20261003_003426.npz"
-    # plot_benchmark(file_name)
-    file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_nll/benchmark_data/nant_targetnll_n_eig2_n_src1_tpb128_seed42_A40_20261014_160626.npz"
-
+    # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_nll/benchmark_data/nant_targetnll_n_eig2_n_src1_tpb128_seed42_A40_20261014_160626.npz"
+    file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_grad_gpu_stack/benchmark_data/nant_targetlikelihood_stack_n_eig5_n_src3_tpb128_seed42_5070_20261016_181846.npz"
     # With fits, only fit the CPU line, mark CHORD's 512 antennas:
     # plot_benchmark(file_name, power_law_fits=True, fit_on=["CuPy"],
     #                chord_marker=True, min_t = 1e-5, save_plot=False)
 
-    plot_benchmark(file_name, power_law_fits=True, fit_on=["CPU", "Custom GPU"],
-                   chord_marker=True, min_t = 1e-5, save_plot=False)
+    plot_benchmark(file_name, power_law_fits=False,
+                   chord_marker=True, min_t = 1e-5, save_plot=True)
 
 
     # Drop a series without regenerating data:

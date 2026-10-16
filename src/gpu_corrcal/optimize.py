@@ -153,5 +153,5 @@ def grad_nll(
     phs_coef = 0.0 if np.isinf(phs_norm_fac) else 2.0 / (n_ant**2 * phs_norm_fac**2)
     out = gpu_grad_nll(gains, p, data, gained, cinv, cov, a1, a2, grad_ws,
                        phs_coef=phs_coef, inv_scale=1.0 / scale, check=cov.check)
-    return out
+    return out.get().astype(np.float64)
  

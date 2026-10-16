@@ -79,9 +79,9 @@ TARGET_DIRS = {
     "applygains":        "tests_applygains",
     "applygains":        "tests_applygains",
     "nll":               "tests_nll",
-    "grad":              "tests_grad",
-    "likelihood_stack":  "tests_grad",
-    "likelihood_stack_cpu": "tests_grad",
+    "grad":              "tests_grad_nll",
+    "likelihood_stack":  "tests_grad_gpu_stack",
+    "likelihood_stack_cpu": "tests_grad_cpu_stack",
 }
 
 def data_dir(target):
@@ -304,7 +304,7 @@ def pop_row_col_input_tens(iter_num):
                 if ant_val % i == 0:
                     row_col_list.append([i, ant_val // i])
                     break
-    return row_col_list[:-2]
+    return row_col_list
 
 
 # ============================================================
@@ -440,8 +440,8 @@ if __name__ == "__main__":
     # -------------------------------
     rows = 32
     cols = 16
-    n_eig = 3
-    n_src = 5
+    n_eig = 5
+    n_src = 3
     rc = (rows, cols)
     random_seed = 42
     tpb = 128

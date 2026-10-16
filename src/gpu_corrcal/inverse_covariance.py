@@ -94,7 +94,6 @@ def inv_cov(noise, diffuse, source, edges, init_workspace, compute_det=False):
 
     if compute_det:
         logdet = 2.0* (cp.sum(init_workspace.out_diffuse_det) + init_workspace.out_source_det[0]) #FOR NOW ONLY INCLUDE THE DIFFUSE PART
-        old_logdet = 2.0* (cp.sum(init_workspace.out_diffuse_det)) #FOR NOW ONLY INCLUDE THE DIFFUSE PART
 
         # print(f"CUSTOM: old={old_logdet}, new={logdet}")
 
