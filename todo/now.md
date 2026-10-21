@@ -7,6 +7,7 @@
 - [2026-04-15](#2026-04-15)
 - [2026-05-14](#2026-05-14)
 - [2026-10-01](#2026-10-01)
+- [2026-10-20](#2026-10-20)
 
 
 ## 2026-03-24
@@ -98,3 +99,20 @@
 - take a solid stab at curvature
 - start getting bandpass going
 
+
+
+
+## 2026-10-20
+
+- Essentially just make sure gpu implementation is working and computing the correct and reliable thing
+  - go back to notebook and ensure that necessary kinks are worked out 
+    - so far, this means checking the descrepancy between cpu and gpu gain solutions
+    - checking where losing precisin in the NLL
+    - examining the grad kernel and precision loss relative to the 512 notes jon suggested (less pressing)
+  - make sure we understand all the inputs to the sim and that it is simulating the correct thing
+    - experiment (don't go crazy) with some other representitive plots (if feel it's necessary) to better understand gain solutions
+  - add in true CHORD locations of antenna 
+  - ensure that airy pattern and current selection process for sky model is sound
+- create a single script that runs the whole simulation for different input params if need be
+- get started on curvature in parrallel with bandpass, BANDPASS IS MORE IMPORTANT THOUGH
+- get things merged with cpu_corrcal
