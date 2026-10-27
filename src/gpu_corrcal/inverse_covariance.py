@@ -94,7 +94,10 @@ def inv_cov(noise, diffuse, source, edges, init_workspace, compute_det=False):
 
     if compute_det:
         logdet = 2.0* (cp.sum(init_workspace.out_diffuse_det) + init_workspace.out_source_det[0]) #FOR NOW ONLY INCLUDE THE DIFFUSE PART
-
+        
+        # logdet = 2.0 * (cp.sum(init_workspace.out_diffuse_det, dtype=cp.float64)
+                # + init_workspace.out_source_det[0].astype(cp.float64))
+        
         # print(f"CUSTOM: old={old_logdet}, new={logdet}")
 
         return diffuse_bar, sig_prime, logdet

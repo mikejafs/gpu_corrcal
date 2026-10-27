@@ -11,7 +11,15 @@ import numpy as np
 from gpu_corrcal.sparse import GpuSparseCov
 from gpu_corrcal.linalg import GradWorkspace, gpu_grad_nll
 
-
+# def chisq_f64(cinv, data):
+#     """d^T C^-1 d with C^-1 = N^-1 - Dbar Dbar^T - Sbar Sbar^T, accumulated in float64."""
+#     d = data.astype(cp.float64)
+#     t_noise = cp.sum(d * d * cinv.noise.astype(cp.float64))
+#     prod = cinv.diff_mat.astype(cp.float64) * d[:, None]              # (n_row, n_eig)
+#     cs = cp.concatenate([cp.zeros((1, prod.shape[1])), cp.cumsum(prod, axis=0)])
+#     y_del = cs[cinv.edges[1:]] - cs[cinv.edges[:-1]]                  # (n_grp, n_eig): Dbar_b^T d_b
+#     y_src = cinv.src_mat.astype(cp.float64).T @ d                     # (n_src,)
+#     return t_noise - cp.sum(y_del ** 2) - cp.sum(y_src ** 2)
 
 def nll(
     gains,
@@ -55,6 +63,8 @@ def nll(
     # accumulates in float64 so chi^2 keeps resolution as n_row grows.
     p = cinv @ data
     chisq = cp.sum(data * p, dtype=cp.float64)
+
+    # chisq = chisq_f64(cinv, data)
 
     phases = cp.arctan2(gains[1::2], gains[::2])
     phs_norm = cp.mean(phases) ** 2 / phs_norm_fac ** 2

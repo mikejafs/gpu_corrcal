@@ -115,4 +115,5 @@
   - ensure that airy pattern and current selection process for sky model is sound
 - create a single script that runs the whole simulation for different input params if need be
 - get started on curvature in parrallel with bandpass, BANDPASS IS MORE IMPORTANT THOUGH
+  - ***REALLY IMPORTANT!!!: NEED TO GET THIS SCRIPT RUNNING SO I CAN ASSESS AND BENCHMARK TIMES TO COMPUTE THE FULL CALIBRATION RUN AND BE ABLE TO OUTPUT SOLVER ITERATIONS, SOLUTIONS MINIMUMS ETC... FOR ASSESSIGN EFICACY OF CURVATURE IMPLEMENTATION -- CAN WORK ON CURVATURE, BUT NEED TO COMPLETE THE ABOVE IN ORDER TO BEST UNDERSTAND THE SOLUTION***
 - get things merged with cpu_corrcal
