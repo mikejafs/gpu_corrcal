@@ -117,3 +117,7 @@
 - get started on curvature in parrallel with bandpass, BANDPASS IS MORE IMPORTANT THOUGH
   - ***REALLY IMPORTANT!!!: NEED TO GET THIS SCRIPT RUNNING SO I CAN ASSESS AND BENCHMARK TIMES TO COMPUTE THE FULL CALIBRATION RUN AND BE ABLE TO OUTPUT SOLVER ITERATIONS, SOLUTIONS MINIMUMS ETC... FOR ASSESSIGN EFICACY OF CURVATURE IMPLEMENTATION -- CAN WORK ON CURVATURE, BUT NEED TO COMPLETE THE ABOVE IN ORDER TO BEST UNDERSTAND THE SOLUTION***
 - get things merged with cpu_corrcal
+  - after pull req and during script writing, need to check if would make sense to combine jac an nll as recommended in other places to speed things up -- maybe not worth it, but run this question then...
+
+
+  
