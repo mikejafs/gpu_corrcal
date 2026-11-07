@@ -47,6 +47,8 @@ from gpu_corrcal.sparse import GpuSparseCov
 from gpu_corrcal.optimize import nll as gpu_nll
 from corrcal.optimize import nll as cpu_nll
 from gpu_corrcal.optimize import grad_nll as gpu_grad_nll
+from gpu_corrcal.optimize import nll_and_grad, nll_and_grad_cupy_tail
+from gpu_corrcal.linalg import GradWorkspace, NllWorkspace
 from corrcal.optimize import grad_nll as cpu_grad_nll
 
 
@@ -82,6 +84,8 @@ TARGET_DIRS = {
     "grad":              "tests_grad_nll",
     "likelihood_stack":  "tests_grad_gpu_stack",
     "likelihood_stack_cpu": "tests_grad_cpu_stack",
+    "nll_and_grad":         "tests_nll_and_grad",
+    "nll_and_grad_vs_cpu":  "tests_nll_and_grad",
 }
 
 def data_dir(target):
@@ -159,6 +163,19 @@ def _build_targets(test_data, n_eig):
     gpu_nll_args = (gains, gpu_sparse_cov, vec, ant1_arr, ant2_arr)
     cpu_nll_args = (cpu_gains, cpu_sparse_cov, cpu_vec, cpu_ant1_64, cpu_ant2_64)
 
+    # Fused objective. Same inputs as the separate GPU calls; the NllWorkspace
+    # is built once, like grad_ws. "nll + grad" is one trial point of scipy
+    # with separate fun / jac: both calls, each with its own inverse.
+    nll_ws = NllWorkspace()
+    gpu_fused_args = (gains, gpu_sparse_cov, vec, ant1_arr, ant2_arr, 1, np.inf, grad_ws)
+    gpu_fused_k_args = gpu_fused_args + (nll_ws,)
+
+    def gpu_nll_plus_grad():
+        return gpu_nll(*gpu_nll_args), gpu_grad_nll(*gpu_grad_args)
+
+    def cpu_nll_plus_grad():
+        return cpu_nll(*cpu_nll_args), cpu_grad_nll(*cpu_grad_args)
+
 
     # Registry ----------------------------------------------------------
     targets = {
@@ -225,6 +242,20 @@ def _build_targets(test_data, n_eig):
             "CPU Inv+logdet": (cpu_sparse_cov.inv, (True,)),
             "CPU Likelihood": (cpu_nll, cpu_nll_args),
             "CPU Gradient":   (cpu_grad_nll, cpu_grad_args),
+        },
+
+        # Cost of one scipy trial point, GPU only: separate vs both fused versions
+        "nll_and_grad": {
+            "nll + grad":          (gpu_nll_plus_grad, ()),
+            "Fused (CuPy tail)":   (nll_and_grad_cupy_tail, gpu_fused_args),
+            "Fused (kernel tail)": (nll_and_grad, gpu_fused_k_args),
+        },
+
+        # The numbers quoted against CPU CorrCal: per trial point, both ways
+        "nll_and_grad_vs_cpu": {
+            "GPU nll + grad":  (gpu_nll_plus_grad, ()),
+            "GPU fused":       (nll_and_grad, gpu_fused_k_args),
+            "CPU nll + grad":  (cpu_nll_plus_grad, ()),
         },
         
         
@@ -459,6 +490,8 @@ if __name__ == "__main__":
     target = "grad"
     # target = "likelihood_stack"       # GPU four-line plot
     # target = "likelihood_stack_cpu"   # CPU four-line plot
+    # target = "nll_and_grad"           # separate vs fused, GPU only
+    # target = "nll_and_grad_vs_cpu"    # GPU separate, GPU fused, CPU separate
 
     # Switch board
     # -------------------------------

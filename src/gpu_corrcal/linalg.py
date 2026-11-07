@@ -505,3 +505,61 @@ def gpu_grad_nll(gains, p, data, gained, cinv, cov, ant_1, ant_2, ws,
         raise RuntimeError(f"grad_nll dispatch failed: n_src={n_src}, n_eig={n_eig}")
     return ws.out
  
+
+# ---------------------------------------------------------------------------
+# NLL scalar tail (nll_tail.cu)
+# ---------------------------------------------------------------------------
+NLL_TAIL_MAX_BLOCKS = 256      # must match TAIL_MAX_BLOCKS in nll_tail.cu
+
+
+class NllWorkspace:
+    """
+    Preallocated scratch for gpu_nll_tail. Problem-size independent, so one
+    instance serves every solve.
+
+    partials : per-block chi^2 partial sums, fully overwritten every call.
+    counter  : last-block counter, zeroed inside the C launcher.
+    out      : [nll, chisq, logdet, phs], fully overwritten every call.
+               Overwritten by the next call; copy it if it must survive.
+    """
+
+    def __init__(self):
+        self.partials = cp.empty(NLL_TAIL_MAX_BLOCKS, dtype=cp.float64)
+        self.counter = cp.zeros(1, dtype=cp.uint32)
+        self.out = cp.empty(4, dtype=cp.float64)
+
+
+def gpu_nll_tail(data, p, diffuse_det, source_det, gains64, phs_coef, ws, check=True):
+    """
+    One launch for everything in nll after p = C^-1 d:
+
+        out[0] = d.p + 2 (sum diffuse_det + source_det) + phs_coef * mean(phase)^2
+
+    data, p      : (n_row,) float32 device
+    diffuse_det  : (nb,) float32, InvCovWorkspace.out_diffuse_det after inv(compute_det=True)
+    source_det   : (1,)  float32, InvCovWorkspace.out_source_det
+    gains64      : (2 n_ant,) float64 device, Re/Im alternating, NOT divided by scale
+                   (nll computes the phase prior from the raw gains)
+    phs_coef     : 1 / phs_norm_fac^2, 0.0 for phs_norm_fac = inf
+    ws           : NllWorkspace
+
+    Returns ws.out, (4,) float64 on device: [nll, chisq, logdet, phs].
+    """
+    n_row = p.shape[0]
+    nb = diffuse_det.shape[0]
+    n_ant = gains64.shape[0] // 2
+    if check:
+        assert data.dtype == cp.float32 and p.dtype == cp.float32
+        assert data.shape == p.shape and data.flags.c_contiguous and p.flags.c_contiguous
+        assert diffuse_det.dtype == cp.float32 and source_det.dtype == cp.float32
+        assert gains64.dtype == cp.float64 and gains64.flags.c_contiguous
+    ret = nll_tail_launch(
+        data.data.ptr, p.data.ptr, ctypes.c_int(n_row),
+        diffuse_det.data.ptr, ctypes.c_int(nb), source_det.data.ptr,
+        gains64.data.ptr, ctypes.c_int(n_ant), ctypes.c_double(phs_coef),
+        ws.partials.data.ptr, ws.counter.data.ptr, ws.out.data.ptr,
+        ctypes.c_void_p(cp.cuda.get_current_stream().ptr),
+    )
+    if ret != 0:
+        raise RuntimeError(f"nll_tail launch failed: cudaError {ret}")
+    return ws.out

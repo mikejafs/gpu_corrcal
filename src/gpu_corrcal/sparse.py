@@ -150,7 +150,7 @@ class GpuSparseCov:
                                        out=self.ws.src_g, check=self.check)
 
     # ------------------------------------------------------------------
-    def inv(self, return_det=False):
+    def inv(self, return_det=False, assemble_det=True):
         """
         Woodbury inverse, as SparseCov.inv.
 
@@ -160,7 +160,9 @@ class GpuSparseCov:
             Its arrays are workspace buffers (see module docstring).
         logdet : 0-d device float32, log det C - log det N (same convention as
             CorrCal). Only if return_det. Left on device so no sync is forced;
-            float(logdet) when you need it on the host.
+            float(logdet) when you need it on the host. None if
+            assemble_det=False: the block log-determinants are then left in
+            ws.inv.out_diffuse_det / ws.inv.out_source_det for nll_tail.
         """
         if self.isinv:
             raise NotImplementedError(
@@ -168,7 +170,7 @@ class GpuSparseCov:
             )
         cp.reciprocal(self.noise, out=self.ws.ninv)
         res = inv_cov(self.noise, self.diff_mat, self.src_mat, self.edges,
-                      self.ws.inv, compute_det=return_det)
+                      self.ws.inv, compute_det=return_det, assemble_det=assemble_det)
         cinv = self._derive(noise=self.ws.ninv, diff_mat=res[0], src_mat=res[1], isinv=True)
         if return_det:
             return cinv, res[2]

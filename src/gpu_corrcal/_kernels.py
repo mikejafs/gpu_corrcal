@@ -22,6 +22,7 @@ _sig_prime_kernels = _load("sig_prime_kernels_pta")
 _matvec_mul_kernels = _load("sparse_cov_times_vec")
 _apply_gains_kernel = _load("apply_gains")
 _grad_nll_kernels = _load("grad_nll_kernels")
+_nll_tail_kernel = _load("nll_tail")
 
 
 sync_device = _warp_reduction_kernel.sync_device
@@ -261,3 +262,24 @@ grad_nll_launch.argtypes = [
     ctypes.c_void_p,   # cudaStream_t
 ]
  
+
+# --------------------------
+# NLL SCALAR TAIL (nll_tail.cu)
+# --------------------------
+nll_tail_launch = _nll_tail_kernel.launch_nll_tail
+nll_tail_launch.restype = ctypes.c_int
+nll_tail_launch.argtypes = [
+    ctypes.c_void_p,   # data        (n_row,) float32
+    ctypes.c_void_p,   # p           (n_row,) float32, C^-1 d
+    ctypes.c_int,      # n_row
+    ctypes.c_void_p,   # diffuse_det (nb,) float32   (InvCovWorkspace.out_diffuse_det)
+    ctypes.c_int,      # nb
+    ctypes.c_void_p,   # source_det  (1,) float32    (InvCovWorkspace.out_source_det)
+    ctypes.c_void_p,   # gains       (2 n_ant,) float64, not divided by scale
+    ctypes.c_int,      # n_ant
+    ctypes.c_double,   # phs_coef = 1 / phs_norm_fac^2, 0 disables
+    ctypes.c_void_p,   # partials    (NLL_TAIL_MAX_BLOCKS,) float64 scratch
+    ctypes.c_void_p,   # counter     (1,) uint32, zeroed in the launcher
+    ctypes.c_void_p,   # out         (4,) float64: nll, chisq, logdet, phs
+    ctypes.c_void_p,   # cudaStream_t
+]

@@ -36,12 +36,16 @@ class InvCovWorkspace:
         self.out_source_det = cp.empty((1), dtype = cp.float32)
 
 
-def inv_cov(noise, diffuse, source, edges, init_workspace, compute_det=False):
+def inv_cov(noise, diffuse, source, edges, init_workspace, compute_det=False, assemble_det=True):
     """
     Custom kernel inverse covariance.
-    
-    Function description and params
-    fill later ...
+
+    compute_det  : also write the block log-determinants into
+                   init_workspace.out_diffuse_det / out_source_det.
+    assemble_det : with compute_det, also sum them into logdet here (CuPy ops)
+                   and return (diffuse_bar, sig_prime, logdet). False returns
+                   (diffuse_bar, sig_prime, None) and leaves the sum to the
+                   caller (nll_tail does it inside its own launch).
     """
 
     temp2 = make_small_blocks(
@@ -91,6 +95,9 @@ def inv_cov(noise, diffuse, source, edges, init_workspace, compute_det=False):
     # ret = apply_sig_prime_launch(source, diffuse_bar, noise, edges, B, L_sig_inv, init_workspace.sig_prime)
     # if ret != 0:
     #     raise RuntimeError(f"apply_sig_prime dispatch failed: n_src={source.shape[1]}, n_eig={len(edges)-1}, ret={ret}")
+
+    if compute_det and not assemble_det:
+        return diffuse_bar, sig_prime, None
 
     if compute_det:
         logdet = 2.0* (cp.sum(init_workspace.out_diffuse_det) + init_workspace.out_source_det[0]) #FOR NOW ONLY INCLUDE THE DIFFUSE PART

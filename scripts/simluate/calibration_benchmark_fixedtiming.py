@@ -9,6 +9,10 @@ Reported per size and backend
 -----------------------------
 nll, grad   : median wall time of one objective / gradient call at the initial
               guess, after warm-up. Includes the host<->device copies scipy forces.
+              For gpu_fused, nll is the one fused (nll, grad) call and grad is blank.
+point       : cost of one scipy trial point: nll + grad, or the fused call.
+backends    : cpu (CorrCal), gpu (separate nll / grad_nll), gpu_fused (nll_and_grad,
+              passed to scipy with jac=True: one call per trial point).
 it, t       : iterations and wall seconds to reach the accuracy target (below).
 speedup     : CPU time-to-target / GPU time-to-target.
 gap         : rms of (GPU - CPU) solution at their target iterates, degenerate modes
@@ -233,6 +237,18 @@ def build_objective(backend, P, cfg):
         to_host = lambda x: cp.asnumpy(x) if isinstance(x, cp.ndarray) else np.asarray(x)
         fun = lambda g: float(nll(g, cov, d, a1, a2, 1.0, cfg.phs_norm))
         jac = lambda g: to_host(grad_nll(g, cov, d, a1, a2, 1.0, cfg.phs_norm, gws)).astype(np.float64)
+    elif backend == "gpu_fused":
+        from gpu_corrcal.sparse import GpuSparseCov
+        from gpu_corrcal.optimize import nll_and_grad
+        from gpu_corrcal.linalg import GradWorkspace, NllWorkspace
+        cov = GpuSparseCov(P["noise"], P["src_mat"], P["diff_mat"], P["edges"], n_eig=P["diff_mat"].shape[1])
+        d = cp.ascontiguousarray(cp.asarray(P["data"], dtype=cp.float32))
+        a1 = cp.asarray(P["ant_1"], dtype=cp.int32)
+        a2 = cp.asarray(P["ant_2"], dtype=cp.int32)
+        gws = GradWorkspace(a1, a2, P["n_ant"], cov.n_grp, cov.n_eig, cov.n_src)
+        nws = NllWorkspace()
+        fun = lambda g: nll_and_grad(g, cov, d, a1, a2, 1.0, cfg.phs_norm, gws, nws)
+        jac = True     # scipy: fun returns (f, grad)
     elif backend == "cpu":
         from corrcal.sparse import SparseCov
         from corrcal.optimize import nll, grad_nll
@@ -303,16 +319,25 @@ def run_size(layout, cfg, backends):
             if b == "cpu":
                 pools = ", ".join(f"{p['internal_api']}={p['num_threads']}" for p in threadpool_info())
                 print(f"  [cpu] thread pools: {pools}")
+            fused = jac is True
             t_nll = time_call(fun, x0, cfg.repeats)
-            t_grad = time_call(jac, x0, cfg.repeats)
+            t_grad = np.nan if fused else time_call(jac, x0, cfg.repeats)
+            t_point = t_nll if fused else t_nll + t_grad
             maxiter = cfg.cpu_maxiter if b == "cpu" else cfg.gpu_maxiter
             xs, ts, res, wall = solve_traced(fun, jac, x0, maxiter)
         err = np.array([nondegenerate_error(x, P["true_gains"], P["antpos"]) for x in xs])
-        out[b] = dict(t_nll=t_nll, t_grad=t_grad, xs=xs, ts=ts, err=err, nit=res.nit,
-                      nfev=res.nfev, njev=res.njev, wall=wall, msg=res.message)
-        print(f"  [{b}] nll {1e3 * t_nll:9.3f} ms   grad {1e3 * t_grad:9.3f} ms   "
-              f"full solve: {res.nit} it, {res.nfev} nll + {res.njev} grad calls, {wall:.2f} s "
-              f"({1e3 * wall / (res.nfev + res.njev):.3f} ms/call avg) ({res.message})")
+        # With jac=True scipy's njev counts gradients it read from the fused
+        # call's cache, not separate calls: the objective ran nfev times.
+        n_calls = res.nfev if fused else res.nfev + res.njev
+        out[b] = dict(t_nll=t_nll, t_grad=t_grad, t_point=t_point, xs=xs, ts=ts, err=err, nit=res.nit,
+                      nfev=res.nfev, njev=res.njev, n_calls=n_calls, wall=wall, msg=res.message)
+        times = (f"nll+grad {1e3 * t_nll:9.3f} ms" if fused else
+                 f"nll {1e3 * t_nll:9.3f} ms   grad {1e3 * t_grad:9.3f} ms")
+        calls = (f"{res.nfev} fused calls" if fused else
+                 f"{res.nfev} nll + {res.njev} grad calls")
+        print(f"  [{b}] {times}   point {1e3 * t_point:9.3f} ms   "
+              f"full solve: {res.nit} it, {calls}, {wall:.2f} s "
+              f"({1e3 * wall / n_calls:.3f} ms/call avg) ({res.message})")
 
     floor = min(o["err"].min() for o in out.values())
     target = (1 + cfg.target_tol) * floor
@@ -321,17 +346,20 @@ def run_size(layout, cfg, backends):
         o["it_target"] = int(hit[0]) if hit.size else -1
         o["t_target"] = float(o["ts"][hit[0]]) if hit.size else np.nan
     row = dict(layout=layout, n_ant=P["n_ant"], n_row=P["n_row"], floor=floor, target=target,
-               **{f"{b}_{k}": out[b][k] for b in out for k in ("t_nll", "t_grad", "it_target", "t_target",
-                                                                  "nit", "wall")})
-    if "cpu" in out and "gpu" in out and out["cpu"]["it_target"] >= 0 and out["gpu"]["it_target"] >= 0:
-        x_c = out["cpu"]["xs"][out["cpu"]["it_target"]]
-        x_g = out["gpu"]["xs"][out["gpu"]["it_target"]]
-        row["gap"] = nondegenerate_error(x_g, x_c[0::2] + 1j * x_c[1::2], P["antpos"])
+               **{f"{b}_{k}": out[b][k] for b in out for k in ("t_nll", "t_grad", "t_point", "it_target",
+                                                                  "t_target", "nit", "wall")})
+    # gap_<a>_<b>: rms(a - b) at their target iterates, degenerate modes removed
+    for a_, b_ in (("gpu", "cpu"), ("gpu_fused", "cpu"), ("gpu_fused", "gpu")):
+        if a_ in out and b_ in out and out[a_]["it_target"] >= 0 and out[b_]["it_target"] >= 0:
+            x_a = out[a_]["xs"][out[a_]["it_target"]]
+            x_b = out[b_]["xs"][out[b_]["it_target"]]
+            row[f"gap_{a_}_{b_}"] = nondegenerate_error(x_a, x_b[0::2] + 1j * x_b[1::2], P["antpos"])
     print(f"  noise floor {floor:.3e}, target {target:.3e} (+{100 * cfg.target_tol:.0f}%)")
     for b, o in out.items():
         print(f"  [{b}] reaches target at iteration {o['it_target']}, {o['t_target']:.3f} s")
-    if "gap" in row:
-        print(f"  GPU vs CPU at target: {row['gap']:.2e}")
+    for k in [k for k in row if k.startswith("gap_")]:
+        a_, b_ = k[4:].replace("gpu_fused", "gpu-fused").split("_")
+        print(f"  {a_} vs {b_} at target: {row[k]:.2e}")
     return row
 
 
@@ -339,7 +367,8 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--sizes", default="grid:8x8,grid:16x16,chord,grid:24x32",
                     help="comma list of grid:NXxNY or chord")
-    ap.add_argument("--backends", default=None, help="comma list; default gpu,cpu (cpu only without a GPU)")
+    ap.add_argument("--backends", default=None,
+                    help="comma list of gpu, gpu_fused, cpu; default all three (cpu only without a GPU)")
     ap.add_argument("--chord-csv", type=Path, default=DEFAULT_CSV)
     ap.add_argument("--snr", type=float, default=1e4)
     ap.add_argument("--n-src-cal", type=int, default=5)
@@ -361,24 +390,30 @@ def main():
     cfg.t_mean, cfg.t_rms, cfg.n_src_total, cfg.s_min, cfg.src_slope = 30.0, 5.0, 2000, 1.0, 2.5
     cfg.amp_jitter, cfg.init_amp_err, cfg.init_phs_err, cfg.phs_norm = 0.1, 0.1, 0.1, 0.1
 
-    backends = cfg.backends.split(",") if cfg.backends else (["gpu", "cpu"] if HAVE_CUPY else ["cpu"])
+    backends = (cfg.backends.split(",") if cfg.backends
+                else (["gpu", "gpu_fused", "cpu"] if HAVE_CUPY else ["cpu"]))
     rows = [run_size(s.strip(), cfg, backends) for s in cfg.sizes.split(",")]
 
     print("\n" + "=" * 110)
+    gpu_bs = [b for b in backends if b != "cpu"] if "cpu" in backends else []
     hdr = f"{'layout':>12} {'n_ant':>6} {'rows':>9} |"
     for b in backends:
-        hdr += f" {b + ' nll[ms]':>13} {b + ' grad[ms]':>14} {b + ' it':>7} {b + ' t[s]':>9} |"
-    hdr += f" {'speedup':>8} {'gap':>9}"
+        hdr += f" {b + ' point[ms]':>19} {b + ' it':>12} {b + ' t[s]':>14} |"
+    for b in gpu_bs:
+        hdr += f" {'speedup ' + b:>17} {'gap ' + b:>13}"
     print(hdr)
     for r in rows:
         line = f"{r['layout']:>12} {r['n_ant']:>6} {r['n_row']:>9,} |"
         for b in backends:
-            line += (f" {1e3 * r[b + '_t_nll']:>13.3f} {1e3 * r[b + '_t_grad']:>14.3f} "
-                     f"{r[b + '_it_target']:>7} {r[b + '_t_target']:>9.3f} |")
-        sp = r["cpu_t_target"] / r["gpu_t_target"] if {"cpu", "gpu"} <= set(backends) else np.nan
-        line += f" {sp:>8.1f} {r.get('gap', np.nan):>9.2e}"
+            line += (f" {1e3 * r[b + '_t_point']:>19.3f} {r[b + '_it_target']:>12} "
+                     f"{r[b + '_t_target']:>14.3f} |")
+        for b in gpu_bs:
+            sp = r["cpu_t_target"] / r[b + "_t_target"]
+            line += f" {sp:>17.1f} {r.get(f'gap_{b}_cpu', np.nan):>13.2e}"
         print(line)
-    print("speedup = CPU time-to-target / GPU time-to-target; gap = rms(GPU - CPU) at target, degenerate modes removed")
+    print("point = one scipy trial point (nll + grad, or one fused call); "
+          "speedup = CPU time-to-target / GPU time-to-target; "
+          "gap = rms(GPU - CPU) at target, degenerate modes removed")
 
     np.savez(cfg.out, rows=np.array(rows, dtype=object), backends=np.array(backends),
              config=np.array(vars(cfg), dtype=object))
