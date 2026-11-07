@@ -23,7 +23,8 @@ from matplotlib.ticker import FixedLocator, FixedFormatter
 # PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_nll/benchmark_plots"
 # PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_grad_cpu_stack/benchmark_plots"
 # PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_grad_gpu_stack/benchmark_plots"
-PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_grad_nll/benchmark_plots"
+# PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_grad_nll/benchmark_plots"
+PLOT_DIR = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_nll_and_grad/benchmark_plots"
 
 X_LABELS = {
     "nant":      r"$\mathbf{Number\ of\ Antennas}$",
@@ -145,7 +146,24 @@ def add_power_law_fits(ax, x, series, n_ant_ref=1000, n_ant_cutoff=500,
                   label=rf"{lbl} fit: $\propto N^{{{alpha:.2f}}}$")
 
 
-def add_nant_marker(ax, x, times, n_ant=512, color="red"):
+# def add_nant_marker(ax, x, times, n_ant=512, color="red"):
+#     """Mark an interpolated point (e.g. CHORD's 512 antennas) on a curve."""
+#     from scipy.interpolate import interp1d
+#     f = interp1d(np.log10(x), np.log10(times))
+#     t_mark = 10 ** float(f(np.log10(n_ant)))
+
+#     ax.plot(n_ant, t_mark, "o", color=color, markersize=5, zorder=5)
+#     xlim, ylim = ax.get_xlim(), ax.get_ylim()
+#     ax.plot([n_ant, n_ant], [ylim[0], t_mark], "--", color=color, alpha=0.4, lw=1)
+#     ax.plot([xlim[0], n_ant], [t_mark, t_mark], "--", color=color, alpha=0.4, lw=1)
+#     ax.set_xlim(xlim)
+#     ax.set_ylim(ylim)
+#     ax.text(n_ant * 1.3, t_mark,
+#             f"(N_ant={n_ant}, {t_mark*1e6:.0f} us)",
+#             fontsize=10, color=color, va="center")
+
+
+def add_nant_marker(ax, x, times, n_ant=512, color="red", label_prefix=""):
     """Mark an interpolated point (e.g. CHORD's 512 antennas) on a curve."""
     from scipy.interpolate import interp1d
     f = interp1d(np.log10(x), np.log10(times))
@@ -158,7 +176,7 @@ def add_nant_marker(ax, x, times, n_ant=512, color="red"):
     ax.set_xlim(xlim)
     ax.set_ylim(ylim)
     ax.text(n_ant * 1.3, t_mark,
-            f"(N_ant={n_ant}, {t_mark*1e6:.0f} us)",
+            f"{label_prefix}(N_ant={n_ant}, {t_mark*1e6:.0f} us)",
             fontsize=10, color=color, va="center")
 
 
@@ -199,8 +217,16 @@ def plot_benchmark(npz_path, save_plot=False, only=None, exclude=None,
         fit_series = series if fit_on is None else [(l, t) for l, t in series if l in fit_on]
         add_power_law_fits(ax, x, fit_series, **fit_kwargs)
 
+    # if sweep == "nant" and chord_marker and series:
+    #     add_nant_marker(ax, x, series[chord_series][1], n_ant=512)
+
     if sweep == "nant" and chord_marker and series:
-        add_nant_marker(ax, x, series[chord_series][1], n_ant=512)
+        picks = chord_series if isinstance(chord_series, (list, tuple)) else [chord_series]
+        labels = [l for l, _ in series]
+        data_colors = [line.get_color() for line in ax.get_lines()[:len(series)]]
+        for p in picks:
+            i = labels.index(p) if isinstance(p, str) else p
+            add_nant_marker(ax, x, series[i][1], n_ant=512, color=data_colors[i])
 
     ax.xaxis.set_major_locator(FixedLocator(x))
     ax.xaxis.set_major_formatter(FixedFormatter([rf"${int(v)}$" for v in x]))
@@ -265,7 +291,8 @@ if __name__ == "__main__":
     # One file, all its series (2, 3, or 4 lines — whatever the target had):
     # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_nll/benchmark_data/nant_targetnll_n_eig2_n_src1_tpb128_seed42_A40_20261014_160626.npz"
     # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_grad_gpu_stack/benchmark_data/nant_targetlikelihood_stack_n_eig5_n_src3_tpb128_seed42_A40_20261016_225056.npz"
-    file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_grad_nll/benchmark_data/nant_targetgrad_n_eig5_n_src3_tpb128_seed42_A40_20261016_230030.npz"
+    # file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_grad_nll/benchmark_data/nant_targetgrad_n_eig5_n_src3_tpb128_seed42_A40_20261016_230030.npz"
+    file_name = "/home/mikej/main_phd_work/thesis_projects/gpu_corrcal/src/gpu_corrcal/tests/tests_nll_and_grad/benchmark_data/nant_targetnll_and_grad_n_eig3_n_src5_tpb128_seed42_A40_20261107_004307.npz"
 
     # With fits, only fit the CPU line, mark CHORD's 512 antennas:
     # plot_benchmark(file_name, power_law_fits=True, fit_on=["CuPy"],
@@ -274,9 +301,13 @@ if __name__ == "__main__":
     # plot_benchmark(file_name, power_law_fits=True, fit_on=["Inv", "Inv+logdet", "Likelihood", "Gradient"],
     #                chord_marker=True, min_t = 1e-5, save_plot=True)
 
-    plot_benchmark(file_name, power_law_fits=True, fit_on=["CPU", "Custom GPU"],
-                   chord_marker=True, min_t = 1e-5, save_plot=True)
+    # plot_benchmark(file_name, power_law_fits=True, fit_on=["CPU", "Custom GPU"],
+    #                chord_marker=True, min_t = 1e-5, save_plot=True)
 
+    plot_benchmark(file_name, power_law_fits=True,
+                   fit_on=["nll + grad", "Fused (CuPy tail)", "Fused (kernel tail)"],
+                   chord_marker=True, chord_series=["nll + grad", "Fused (kernel tail)"],
+                   min_t=1e-5, save_plot=True)
 
 
     # Drop a series without regenerating data:
