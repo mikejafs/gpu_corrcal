@@ -327,7 +327,8 @@ def pop_row_col_input(end_iter_num):
 def pop_row_col_input_tens(iter_num):
     """Generates the same nant inputs as Bobby's paper plot."""
     row_col_list = []
-    coeff = [1, 2, 3, 5]
+    # coeff = [1, 2, 3, 5]
+    coeff = [1, 2]
     for n in range(iter_num + 1):
         for c in coeff:
             ant_val = c * 10 ** (n + 1)
@@ -495,9 +496,9 @@ if __name__ == "__main__":
 
     # Switch board
     # -------------------------------
-    one_timing_test = T
+    one_timing_test = F
     many_timing_tests = F
-    bench_nant = F
+    bench_nant = T
     bench_neig = F
     bench_nsrc = F
     bench_neig_nsrc = F
