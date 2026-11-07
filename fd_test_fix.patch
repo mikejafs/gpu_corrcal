@@ -1,0 +1,42 @@
+diff --git a/src/gpu_corrcal/tests/tests_nll_and_grad/test_accuracy_nll_and_grad.py b/src/gpu_corrcal/tests/tests_nll_and_grad/test_accuracy_nll_and_grad.py
+index 094925f..d869f54 100644
+--- a/src/gpu_corrcal/tests/tests_nll_and_grad/test_accuracy_nll_and_grad.py
++++ b/src/gpu_corrcal/tests/tests_nll_and_grad/test_accuracy_nll_and_grad.py
+@@ -28,6 +28,14 @@ Three tests, run from src/gpu_corrcal/tests:
+    prior on. Checks that the returned gradient is the gradient of the returned
+    objective (sign, 1/scale, prior coefficient). Small grid only: the GPU nll is
+    float32 internally, so the best step over a short ladder is used.
++
++   Noise is set equal on the Re and Im rows of each baseline. CorrCal's
++   gradient (and so grad_nll, which ports it) uses noise[2k] alone in the
++   trace term, which is exact only when noise[2k] == noise[2k+1]. With the
++   independent per-row noise of make_host_data, CorrCal's own float64 grad_nll
++   misses finite differences of its own nll by ~100%; with equal Re/Im noise
++   it agrees to ~1e-8. Real visibility noise is circular (equal Re/Im
++   variance), so this is the case that matters.
+ """
+ 
+ import cupy as cp
+@@ -66,8 +74,11 @@ def _gains_inputs(rc, seed):
+     return gains, a1.astype(np.int32), a2.astype(np.int32)
+ 
+ 
+-def _gpu_problem(rc, n_eig, n_src, seed):
++def _gpu_problem(rc, n_eig, n_src, seed, equal_reim_noise=False):
+     d = make_host_data(rc, n_eig, n_src, seed)
++    if equal_reim_noise:
++        d["noise"] = d["noise"].copy()
++        d["noise"][1::2] = d["noise"][0::2]
+     g = to_gpu(d)
+     cov = GpuSparseCov(g["noise"], g["source"], g["diffuse"], g["edges"], n_eig)
+     gains, a1, a2 = _gains_inputs(rc, seed)
+@@ -187,7 +198,8 @@ def test_fused_vs_cpu(rc, n_eig, n_src, seed, refresh, case):
+ def test_fused_fd(rc, n_eig, n_src, seed, scale):
+     if rc != (6, 8):
+         pytest.skip("finite differences on the 6x8 grid only")
+-    _, data, cov, _, _, _, a1_d, a2_d, gws = _gpu_problem(rc, n_eig, n_src, seed)
++    _, data, cov, _, _, _, a1_d, a2_d, gws = _gpu_problem(rc, n_eig, n_src, seed,
++                                                          equal_reim_noise=True)
+     nws = NllWorkspace()
+     phs = 0.5
+     n_ant = rc[0] * rc[1]

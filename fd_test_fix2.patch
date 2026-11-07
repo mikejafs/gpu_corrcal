@@ -1,0 +1,97 @@
+diff --git a/src/gpu_corrcal/tests/tests_nll_and_grad/test_accuracy_nll_and_grad.py b/src/gpu_corrcal/tests/tests_nll_and_grad/test_accuracy_nll_and_grad.py
+index d869f54..f329a0f 100644
+--- a/src/gpu_corrcal/tests/tests_nll_and_grad/test_accuracy_nll_and_grad.py
++++ b/src/gpu_corrcal/tests/tests_nll_and_grad/test_accuracy_nll_and_grad.py
+@@ -23,11 +23,12 @@ Three tests, run from src/gpu_corrcal/tests:
+        grad(x, scale) = grad_nll(x/scale, 1) / scale
+ 
+ 3. test_fused_fd
+-   Central-difference directional derivatives of the fused nll against
+-   grad . v for random unit directions v, at scale=1 and scale=2 with the phase
+-   prior on. Checks that the returned gradient is the gradient of the returned
+-   objective (sign, 1/scale, prior coefficient). Small grid only: the GPU nll is
+-   float32 internally, so the best step over a short ladder is used.
++   The fused GPU gradient projected on random unit directions v, against a
++   central difference of CorrCal's float64 nll along v, at scale=1 and
++   scale=2 with the phase prior on. Checks the gradient against the exact
++   derivative of the objective (sign, 1/scale, prior coefficient), small grid
++   only. The difference is taken on the CPU objective because the float32 GPU
++   objective's noise divided by 2h caps a GPU-side difference near 1e-2.
+ 
+    Noise is set equal on the Re and Im rows of each baseline. CorrCal's
+    gradient (and so grad_nll, which ports it) uses noise[2k] alone in the
+@@ -54,7 +55,7 @@ TOL_VS_SEP_F = 1e-6    # relative, nll
+ TOL_VS_SEP_G = 1e-6    # relative 2-norm, gradient
+ TOL_CPU_F = 1e-5       # as tests_accuracy_nll
+ TOL_CPU_G = 1e-4       # as tests_accuracy_grad_nll
+-TOL_FD = 1e-2
++TOL_FD = 1e-3
+ 
+ # (scale, phs_norm_fac)
+ CASES = {"plain": (1.0, np.inf), "prior": (1.0, 0.5), "scaled": (2.0, 0.5)}
+@@ -196,14 +197,31 @@ def test_fused_vs_cpu(rc, n_eig, n_src, seed, refresh, case):
+ # ---------------------------------------------------------------------------
+ @pytest.mark.parametrize("scale", [1.0, 2.0])
+ def test_fused_fd(rc, n_eig, n_src, seed, scale):
++    """
++    grad . v from the fused GPU call against a central difference of CorrCal's
++    float64 nll along v.
++
++    The difference is taken on the CPU objective, not the GPU one: the GPU nll
++    is a float32 computation with run-to-run noise from float atomics, and
++    dividing that noise by 2h limits a GPU-side difference to ~1e-2 relative
++    for any h, which hides real errors at that level. CorrCal's float64 nll
++    differences cleanly to ~1e-8, so the residual here is the GPU gradient's
++    own error (float32, ~1e-4) plus any formula mistake. The fused nll itself
++    is checked against CorrCal's nll in test_fused_vs_cpu.
++    """
+     if rc != (6, 8):
+         pytest.skip("finite differences on the 6x8 grid only")
+-    _, data, cov, _, _, _, a1_d, a2_d, gws = _gpu_problem(rc, n_eig, n_src, seed,
+-                                                          equal_reim_noise=True)
++    d, data, cov, _, a1, a2, a1_d, a2_d, gws = _gpu_problem(rc, n_eig, n_src, seed,
++                                                            equal_reim_noise=True)
+     nws = NllWorkspace()
+     phs = 0.5
+     n_ant = rc[0] * rc[1]
+ 
++    c = _cov(d["noise"], d["diffuse"], d["source"], d["edges"], n_eig)
++    data_h = np.asarray(d["vec"], dtype=np.float64)
++    a1_h, a2_h = a1.astype(np.int64), a2.astype(np.int64)
++    f_cpu = lambda y: cpu_nll(y, c, data_h, a1_h, a2_h, scale=scale, phs_norm_fac=phs)
++
+     # Gains near 1 (a realistic operating point). Random gains in [0, 1) put
+     # some |g_k1 g_k2| near zero, where the objective's curvature wrecks
+     # finite differences.
+@@ -213,22 +231,22 @@ def test_fused_fd(rc, n_eig, n_src, seed, scale):
+     x[0::2], x[1::2] = g.real, g.imag
+     x *= scale
+ 
+-    f = lambda y: nll_and_grad(y, cov, data, a1_d, a2_d, scale, phs, gws, nws)[0]
+     _, grad = nll_and_grad(x, cov, data, a1_d, a2_d, scale, phs, gws, nws)
+ 
++    # Error normalised by ||grad||, the same scale as the 2-norm metric of
++    # test_fused_vs_cpu. Normalising by |grad . v| instead blows up for
++    # directions nearly orthogonal to grad, where grad . v is small.
++    gnorm = float(np.linalg.norm(grad))
++    h = 1e-4
+     worst = 0.0
+     for trial in range(3):
+         v = rng.standard_normal(x.size)
+         v /= np.linalg.norm(v)
+         an = float(grad @ v)
+-        errs = []
+-        for h in (1e-2, 3e-3, 1e-3, 3e-4):
+-            fd = (f(x + h * v) - f(x - h * v)) / (2 * h)
+-            errs.append(abs(fd - an) / abs(an))
+-        best = min(errs)
+-        worst = max(worst, best)
+-        print(f"\n  scale={scale} dir {trial}: grad.v={an:.6e}  "
+-              f"rel err per h={['%.1e' % e for e in errs]}  best={best:.1e}")
++        fd = (f_cpu(x + h * v) - f_cpu(x - h * v)) / (2 * h)
++        err = abs(fd - an) / gnorm
++        worst = max(worst, err)
++        print(f"\n  scale={scale} dir {trial}: gpu grad.v={an:.8e}  cpu fd={fd:.8e}  |fd - grad.v|/|grad|={err:.1e}")
+     ok, line = summarize(f"fd (scale={scale})", worst, TOL_FD)
+     print(f"  {line}")
+     assert ok, line

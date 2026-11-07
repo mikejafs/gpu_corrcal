@@ -471,8 +471,8 @@ if __name__ == "__main__":
     # -------------------------------
     rows = 32
     cols = 16
-    n_eig = 5
-    n_src = 3
+    n_eig = 3
+    n_src = 5
     rc = (rows, cols)
     random_seed = 42
     tpb = 128
@@ -487,17 +487,17 @@ if __name__ == "__main__":
     # target = "matvec"
     # target = "applygains"
     # target = "nll"
-    target = "grad"
+    # target = "grad"
     # target = "likelihood_stack"       # GPU four-line plot
     # target = "likelihood_stack_cpu"   # CPU four-line plot
-    # target = "nll_and_grad"           # separate vs fused, GPU only
+    target = "nll_and_grad"           # separate vs fused, GPU only
     # target = "nll_and_grad_vs_cpu"    # GPU separate, GPU fused, CPU separate
 
     # Switch board
     # -------------------------------
-    one_timing_test = F
+    one_timing_test = T
     many_timing_tests = F
-    bench_nant = T
+    bench_nant = F
     bench_neig = F
     bench_nsrc = F
     bench_neig_nsrc = F
