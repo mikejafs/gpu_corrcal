@@ -1,0 +1,33 @@
+
+=== grid:8x8: 64 antennas, 1,914 baselines, 95 groups, 3,828 rows, nside 256, setup 1.9 s
+  [gpu] nll     0.350 ms   grad     0.309 ms   point     0.659 ms   full solve: 6 it, 31 nll + 20 grad calls, 0.02 s (0.450 ms/call avg) (Desired error not necessarily achieved due to precision loss.)
+  [gpu_fused] nll+grad     0.725 ms   point     0.725 ms   full solve: 7 it, 33 fused calls, 0.03 s (0.769 ms/call avg) (Desired error not necessarily achieved due to precision loss.)
+  [cpu] thread pools: openblas=1, openmp=1, openblas=1, openmp=1
+  [cpu] nll     0.335 ms   grad     0.863 ms   point     1.198 ms   full solve: 60 it, 115 nll + 115 grad calls, 0.18 s (0.777 ms/call avg) (Maximum number of iterations has been exceeded.)
+  noise floor 2.970e-03, target 3.119e-03 (+5%)
+  [gpu] reaches target at iteration 4, 0.007 s
+  [gpu_fused] reaches target at iteration 4, 0.007 s
+  [cpu] reaches target at iteration 4, 0.013 s
+  gpu vs cpu at target: 1.68e-07
+  gpu-fused vs cpu at target: 6.17e-08
+  gpu-fused vs gpu at target: 1.25e-07
+
+=== chord: 512 antennas, 130,268 baselines, 970 groups, 260,536 rows, nside 1024, setup 8.3 s
+  [gpu] nll     0.442 ms   grad     0.422 ms   point     0.864 ms   full solve: 7 it, 42 nll + 28 grad calls, 0.04 s (0.639 ms/call avg) (Desired error not necessarily achieved due to precision loss.)
+  [gpu_fused] nll+grad     0.511 ms   point     0.511 ms   full solve: 6 it, 35 fused calls, 0.02 s (0.530 ms/call avg) (Desired error not necessarily achieved due to precision loss.)
+  [cpu] thread pools: openblas=1, openmp=1, openblas=1, openmp=1
+  [cpu] nll    54.669 ms   grad    73.029 ms   point   127.698 ms   full solve: 60 it, 110 nll + 110 grad calls, 11.95 s (54.296 ms/call avg) (Maximum number of iterations has been exceeded.)
+  noise floor 1.634e-03, target 1.716e-03 (+5%)
+  [gpu] reaches target at iteration 4, 0.010 s
+  [gpu_fused] reaches target at iteration 4, 0.006 s
+  [cpu] reaches target at iteration 4, 1.030 s
+  gpu vs cpu at target: 1.14e-07
+  gpu-fused vs cpu at target: 1.11e-07
+  gpu-fused vs gpu at target: 3.23e-08
+
+==============================================================================================================
+      layout  n_ant      rows |       gpu point[ms]       gpu it       gpu t[s] | gpu_fused point[ms] gpu_fused it gpu_fused t[s] |       cpu point[ms]       cpu it       cpu t[s] |       speedup gpu       gap gpu speedup gpu_fused gap gpu_fused
+    grid:8x8     64     3,828 |               0.659            4          0.007 |               0.725            4          0.007 |               1.198            4          0.013 |               1.8      1.68e-07               1.8      6.17e-08
+       chord    512   260,536 |               0.864            4          0.010 |               0.511            4          0.006 |             127.698            4          1.030 |             100.9      1.14e-07             183.0      1.11e-07
+point = one scipy trial point (nll + grad, or one fused call); speedup = CPU time-to-target / GPU time-to-target; gap = rms(GPU - CPU) at target, degenerate modes removed
+saved benchmark_calibration.npz
